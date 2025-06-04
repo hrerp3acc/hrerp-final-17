@@ -7,8 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/Layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import EmployeeDirectory from "./pages/Employees/EmployeeDirectory";
+import EmployeeProfile from "./pages/Employees/EmployeeProfile";
 import TimeTracking from "./pages/Time/TimeTracking";
 import LeaveManagement from "./pages/Leave/LeaveManagement";
+import WorkforceAnalytics from "./pages/Analytics/WorkforceAnalytics";
+import WorkforcePlanning from "./pages/Planning/WorkforcePlanning";
+import ComplianceManagement from "./pages/Compliance/ComplianceManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,8 +27,12 @@ const App = () => (
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="employees" element={<EmployeeDirectory />} />
+            <Route path="employees/:id" element={<EmployeeProfile />} />
             <Route path="time/tracking" element={<TimeTracking />} />
             <Route path="leave/my-leaves" element={<LeaveManagement />} />
+            <Route path="analytics/workforce" element={<WorkforceAnalytics />} />
+            <Route path="planning/workforce" element={<WorkforcePlanning />} />
+            <Route path="compliance" element={<ComplianceManagement />} />
             <Route path="employees/add" element={<div className="p-6"><h1 className="text-2xl font-bold">Add Employee</h1><p className="text-gray-600">Employee registration form coming soon...</p></div>} />
             <Route path="employees/org-chart" element={<div className="p-6"><h1 className="text-2xl font-bold">Organizational Chart</h1><p className="text-gray-600">Interactive org chart coming soon...</p></div>} />
             <Route path="time/attendance" element={<div className="p-6"><h1 className="text-2xl font-bold">Attendance</h1><p className="text-gray-600">Attendance tracking coming soon...</p></div>} />

@@ -78,6 +78,35 @@ const Sidebar = ({ userRole }: SidebarProps) => {
       ]
     },
     {
+      id: 'analytics',
+      title: 'Analytics & Insights',
+      icon: TrendingUp,
+      roles: ['admin', 'manager'],
+      children: [
+        { title: 'Workforce Analytics', path: '/analytics/workforce' },
+        { title: 'Performance Analytics', path: '/analytics/performance' },
+        { title: 'Custom Reports', path: '/analytics/reports' }
+      ]
+    },
+    {
+      id: 'planning',
+      title: 'Workforce Planning',
+      icon: Target,
+      roles: ['admin', 'manager'],
+      children: [
+        { title: 'Capacity Planning', path: '/planning/workforce' },
+        { title: 'Skill Management', path: '/planning/skills' },
+        { title: 'Succession Planning', path: '/planning/succession' }
+      ]
+    },
+    {
+      id: 'compliance',
+      title: 'Compliance',
+      icon: Shield,
+      path: '/compliance',
+      roles: ['admin', 'manager']
+    },
+    {
       id: 'performance',
       title: 'Performance',
       icon: TrendingUp,
@@ -112,13 +141,13 @@ const Sidebar = ({ userRole }: SidebarProps) => {
     },
     {
       id: 'reports',
-      title: 'Analytics & Reports',
+      title: 'Reports',
       icon: FileText,
       roles: ['admin', 'manager'],
       children: [
         { title: 'HR Analytics', path: '/reports/analytics' },
         { title: 'Custom Reports', path: '/reports/custom' },
-        { title: 'Compliance', path: '/reports/compliance' }
+        { title: 'Compliance Reports', path: '/reports/compliance' }
       ]
     },
     {
