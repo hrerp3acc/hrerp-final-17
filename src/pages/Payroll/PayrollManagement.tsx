@@ -198,7 +198,7 @@ const PayrollManagement = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `$${(value / 1000).toFixed(0)}K`} />
+                  <Tooltip formatter={(value) => `$${(Number(value) / 1000).toFixed(0)}K`} />
                   <Bar dataKey="gross" fill="#3b82f6" name="Gross Pay" />
                   <Bar dataKey="net" fill="#10b981" name="Net Pay" />
                   <Bar dataKey="deductions" fill="#ef4444" name="Deductions" />
@@ -224,7 +224,7 @@ const PayrollManagement = () => {
                       cy="50%"
                       outerRadius={100}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${(Number(percent) * 100).toFixed(0)}%`}
                     >
                       {benefitsData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
