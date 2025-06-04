@@ -1,11 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Users, BarChart3, Calendar, Clock, CreditCard, 
   Settings, User, BookOpen, TrendingUp, Building,
-  FileText, Shield, ChevronDown, ChevronRight, Target
+  FileText, Shield, ChevronDown, ChevronRight, Target,
+  Award, UserPlus
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -56,6 +56,17 @@ const Sidebar = ({ userRole }: SidebarProps) => {
       ]
     },
     {
+      id: 'recruitment',
+      title: 'Recruitment & Talent',
+      icon: UserPlus,
+      roles: ['admin', 'manager'],
+      children: [
+        { title: 'Job Postings', path: '/recruitment' },
+        { title: 'Candidate Pipeline', path: '/recruitment/candidates' },
+        { title: 'Interview Schedule', path: '/recruitment/interviews' }
+      ]
+    },
+    {
       id: 'time',
       title: 'Time Management',
       icon: Clock,
@@ -75,6 +86,39 @@ const Sidebar = ({ userRole }: SidebarProps) => {
         { title: 'My Leaves', path: '/leave/my-leaves' },
         { title: 'Apply Leave', path: '/leave/apply' },
         { title: 'Team Calendar', path: '/leave/calendar' }
+      ]
+    },
+    {
+      id: 'performance',
+      title: 'Performance Management',
+      icon: Award,
+      roles: ['admin', 'manager', 'employee'],
+      children: [
+        { title: 'Goal Management', path: '/performance' },
+        { title: 'Performance Reviews', path: '/performance/reviews' },
+        { title: 'Development Plans', path: '/performance/development' }
+      ]
+    },
+    {
+      id: 'learning',
+      title: 'Learning & Development',
+      icon: BookOpen,
+      roles: ['admin', 'manager', 'employee'],
+      children: [
+        { title: 'Course Catalog', path: '/learning' },
+        { title: 'My Learning', path: '/learning/my-learning' },
+        { title: 'Certifications', path: '/learning/certifications' }
+      ]
+    },
+    {
+      id: 'payroll',
+      title: 'Payroll & Compensation',
+      icon: CreditCard,
+      roles: ['admin', 'manager'],
+      children: [
+        { title: 'Payroll Processing', path: '/payroll' },
+        { title: 'Compensation Plans', path: '/payroll/compensation' },
+        { title: 'Benefits Management', path: '/payroll/benefits' }
       ]
     },
     {
@@ -105,39 +149,6 @@ const Sidebar = ({ userRole }: SidebarProps) => {
       icon: Shield,
       path: '/compliance',
       roles: ['admin', 'manager']
-    },
-    {
-      id: 'performance',
-      title: 'Performance',
-      icon: TrendingUp,
-      roles: ['admin', 'manager', 'employee'],
-      children: [
-        { title: 'Goals', path: '/performance/goals' },
-        { title: 'Reviews', path: '/performance/reviews' },
-        { title: 'Analytics', path: '/performance/analytics' }
-      ]
-    },
-    {
-      id: 'payroll',
-      title: 'Payroll',
-      icon: CreditCard,
-      roles: ['admin'],
-      children: [
-        { title: 'Salary Management', path: '/payroll/salary' },
-        { title: 'Payslips', path: '/payroll/payslips' },
-        { title: 'Reports', path: '/payroll/reports' }
-      ]
-    },
-    {
-      id: 'learning',
-      title: 'Learning & Development',
-      icon: BookOpen,
-      roles: ['admin', 'manager', 'employee'],
-      children: [
-        { title: 'Training Catalog', path: '/learning/catalog' },
-        { title: 'My Learning', path: '/learning/my-learning' },
-        { title: 'Certifications', path: '/learning/certifications' }
-      ]
     },
     {
       id: 'reports',

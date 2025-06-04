@@ -13,6 +13,10 @@ import LeaveManagement from "./pages/Leave/LeaveManagement";
 import WorkforceAnalytics from "./pages/Analytics/WorkforceAnalytics";
 import WorkforcePlanning from "./pages/Planning/WorkforcePlanning";
 import ComplianceManagement from "./pages/Compliance/ComplianceManagement";
+import PerformanceManagement from "./pages/Performance/PerformanceManagement";
+import RecruitmentManagement from "./pages/Recruitment/RecruitmentManagement";
+import LearningDevelopment from "./pages/Learning/LearningDevelopment";
+import PayrollManagement from "./pages/Payroll/PayrollManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,15 +37,26 @@ const App = () => (
             <Route path="analytics/workforce" element={<WorkforceAnalytics />} />
             <Route path="planning/workforce" element={<WorkforcePlanning />} />
             <Route path="compliance" element={<ComplianceManagement />} />
+            
+            {/* Performance Management */}
+            <Route path="performance/*" element={<PerformanceManagement />} />
+            
+            {/* Recruitment & Talent */}
+            <Route path="recruitment/*" element={<RecruitmentManagement />} />
+            
+            {/* Learning & Development */}
+            <Route path="learning/*" element={<LearningDevelopment />} />
+            
+            {/* Payroll Management */}
+            <Route path="payroll/*" element={<PayrollManagement />} />
+            
+            {/* Placeholder routes */}
             <Route path="employees/add" element={<div className="p-6"><h1 className="text-2xl font-bold">Add Employee</h1><p className="text-gray-600">Employee registration form coming soon...</p></div>} />
             <Route path="employees/org-chart" element={<div className="p-6"><h1 className="text-2xl font-bold">Organizational Chart</h1><p className="text-gray-600">Interactive org chart coming soon...</p></div>} />
             <Route path="time/attendance" element={<div className="p-6"><h1 className="text-2xl font-bold">Attendance</h1><p className="text-gray-600">Attendance tracking coming soon...</p></div>} />
             <Route path="time/timesheets" element={<div className="p-6"><h1 className="text-2xl font-bold">Timesheets</h1><p className="text-gray-600">Timesheet management coming soon...</p></div>} />
             <Route path="leave/apply" element={<div className="p-6"><h1 className="text-2xl font-bold">Apply for Leave</h1><p className="text-gray-600">Leave application form coming soon...</p></div>} />
             <Route path="leave/calendar" element={<div className="p-6"><h1 className="text-2xl font-bold">Leave Calendar</h1><p className="text-gray-600">Team leave calendar coming soon...</p></div>} />
-            <Route path="performance/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Performance Management</h1><p className="text-gray-600">Performance features coming soon...</p></div>} />
-            <Route path="payroll/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Payroll Management</h1><p className="text-gray-600">Payroll features coming soon...</p></div>} />
-            <Route path="learning/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Learning & Development</h1><p className="text-gray-600">Learning management coming soon...</p></div>} />
             <Route path="reports/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports & Analytics</h1><p className="text-gray-600">Advanced reporting coming soon...</p></div>} />
             <Route path="admin/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Administration</h1><p className="text-gray-600">Admin panel coming soon...</p></div>} />
           </Route>
