@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import {
   Users, BarChart3, Calendar, Clock, CreditCard, 
   Settings, User, BookOpen, TrendingUp, Building,
-  FileText, Shield, ChevronDown, ChevronRight
+  FileText, Shield, ChevronDown, ChevronRight, Target
 } from 'lucide-react';
 
 interface SidebarProps {
