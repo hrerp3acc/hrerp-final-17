@@ -25,7 +25,6 @@ const App = () => (
             <Route path="employees" element={<EmployeeDirectory />} />
             <Route path="time/tracking" element={<TimeTracking />} />
             <Route path="leave/my-leaves" element={<LeaveManagement />} />
-            {/* Placeholder routes for sidebar navigation */}
             <Route path="employees/add" element={<div className="p-6"><h1 className="text-2xl font-bold">Add Employee</h1><p className="text-gray-600">Employee registration form coming soon...</p></div>} />
             <Route path="employees/org-chart" element={<div className="p-6"><h1 className="text-2xl font-bold">Organizational Chart</h1><p className="text-gray-600">Interactive org chart coming soon...</p></div>} />
             <Route path="time/attendance" element={<div className="p-6"><h1 className="text-2xl font-bold">Attendance</h1><p className="text-gray-600">Attendance tracking coming soon...</p></div>} />

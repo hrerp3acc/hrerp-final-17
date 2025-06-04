@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -13,8 +13,20 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ userRole }: SidebarProps) => {
-  const location = useLocation();
+  const [location, setLocation] = useState({ pathname: '/' });
   const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
+  
+  // Safely get location with error handling
+  let currentLocation;
+  try {
+    currentLocation = useLocation();
+    useEffect(() => {
+      setLocation(currentLocation);
+    }, [currentLocation]);
+  } catch (error) {
+    console.warn('Router context not available, using default location');
+    currentLocation = { pathname: '/' };
+  }
 
   const toggleExpanded = (item: string) => {
     setExpandedItems(prev => 
