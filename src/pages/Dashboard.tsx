@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import MetricCard from '@/components/Dashboard/MetricCard';
 import AttendanceChart from '@/components/Dashboard/Charts/AttendanceChart';
 import PerformanceChart from '@/components/Dashboard/Charts/PerformanceChart';
@@ -7,6 +8,11 @@ import RecentActivities from '@/components/Dashboard/RecentActivities';
 import { Users, Clock, Calendar, TrendingUp } from 'lucide-react';
 
 const Dashboard = () => {
+  // Ensure the dashboard loads properly
+  useEffect(() => {
+    console.log('Dashboard loaded successfully');
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
