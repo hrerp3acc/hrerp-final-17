@@ -97,17 +97,17 @@ const LeaveAttendance = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'present':
-        return 'bg-green-500';
+        return 'bg-emerald-500';
       case 'absent':
-        return 'bg-red-500';
+        return 'bg-rose-500';
       case 'leave':
-        return 'bg-yellow-500';
+        return 'bg-amber-500';
       case 'weekend':
-        return 'bg-blue-500';
+        return 'bg-indigo-500';
       case 'holiday':
         return 'bg-purple-500';
       default:
-        return 'bg-gray-300';
+        return 'bg-slate-400';
     }
   };
 
@@ -125,15 +125,15 @@ const LeaveAttendance = () => {
 
     return (
       <div
-        className={`relative w-full h-20 border border-gray-200 cursor-pointer hover:bg-gray-50 ${getStatusColor(status)} bg-opacity-10`}
+        className={`relative w-full h-20 border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all duration-200 ${getStatusColor(status)} bg-opacity-10 rounded-lg`}
         onClick={() => event && setSelectedEvent(event)}
       >
-        <div className="p-2">
-          <div className="text-sm font-medium">{format(date, 'd')}</div>
+        <div className="p-3">
+          <div className="text-sm font-semibold text-slate-700">{format(date, 'd')}</div>
           {event && (
             <div className="mt-1">
               <div className={`w-2 h-2 rounded-full ${getStatusColor(status)} mb-1`}></div>
-              <div className="text-xs text-gray-600">{event.shiftName}</div>
+              <div className="text-xs text-slate-600 font-medium">{event.shiftName}</div>
             </div>
           )}
         </div>
@@ -155,17 +155,19 @@ const LeaveAttendance = () => {
 
   if (activeTab === 'welcome') {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
         {/* Header */}
-        <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-gray-600" />
+        <div className="bg-white rounded-xl p-8 mb-8 shadow-lg border border-slate-200">
+          <div className="flex items-center space-x-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-blue-600">Welcome MOHANAVEL R</h1>
-              <p className="text-lg text-blue-500">Good Morning</p>
-              <p className="text-gray-600 mt-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Welcome MOHANAVEL R
+              </h1>
+              <p className="text-xl text-indigo-500 font-medium">Good Morning</p>
+              <p className="text-slate-600 mt-3 max-w-2xl">
                 Great to see you again! Thanks for trusting our HRM platform to keep your work organized and hassle-free. Let's make today another productive one!
               </p>
             </div>
@@ -173,24 +175,24 @@ const LeaveAttendance = () => {
         </div>
 
         {/* Quick Links */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-slate-800 mb-6">Quick Links</h3>
+          <div className="grid grid-cols-2 gap-6">
             <Button
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-blue-100 hover:bg-blue-200"
+              className="h-24 flex flex-col items-center justify-center space-y-3 bg-gradient-to-br from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 border-indigo-200 transition-all duration-300 shadow-md hover:shadow-lg"
               onClick={() => setActiveTab('calendar')}
             >
-              <Clock className="w-6 h-6" />
-              <span>Attendance</span>
+              <Clock className="w-8 h-8 text-indigo-600" />
+              <span className="font-semibold text-indigo-700">Attendance</span>
             </Button>
             <Button
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center space-y-2 bg-purple-100 hover:bg-purple-200"
+              className="h-24 flex flex-col items-center justify-center space-y-3 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-purple-200 transition-all duration-300 shadow-md hover:shadow-lg"
               onClick={() => setActiveTab('calendar')}
             >
-              <CheckCircle className="w-6 h-6" />
-              <span>Leave & Attendance</span>
+              <CheckCircle className="w-8 h-8 text-purple-600" />
+              <span className="font-semibold text-purple-700">Leave & Attendance</span>
             </Button>
           </div>
         </div>
@@ -199,38 +201,40 @@ const LeaveAttendance = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header with Tabs */}
-      <div className="bg-white shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
+      <div className="bg-white shadow-sm border-b border-slate-200">
+        <div className="px-8 py-6">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab('welcome')}
-                className="text-sm"
+                className="text-sm text-slate-600 hover:text-indigo-600 transition-colors"
               >
                 ← Back to Welcome
               </Button>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" className="border-slate-300 text-slate-700 hover:border-indigo-400 hover:text-indigo-600">
                 <Filter className="w-4 h-4 mr-2" />
                 All, Shifts, WeeklyOff, S...
               </Button>
-              <Button variant="outline" size="sm" className="bg-yellow-400 text-black">
+              <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md">
                 <Download className="w-4 h-4 mr-2" />
                 Apply
               </Button>
             </div>
           </div>
           
-          <div className="flex space-x-8 border-b">
+          <div className="flex space-x-8 border-b border-slate-200">
             {['Calendar', 'Shift Summary', 'Leave Balances', 'C-off History', 'Incident History'].map((tab) => (
               <button
                 key={tab}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 ${
-                  tab === 'Calendar' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'
+                className={`pb-3 px-2 text-sm font-medium border-b-2 transition-colors ${
+                  tab === 'Calendar' 
+                    ? 'border-indigo-500 text-indigo-600' 
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 {tab}
@@ -240,69 +244,69 @@ const LeaveAttendance = () => {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-8">
         {/* Attendance Period Info */}
-        <div className="bg-blue-50 p-4 rounded-lg mb-6">
-          <h3 className="font-semibold text-blue-800">Attendance Period 01-Jun-2025-05-Jun-2025</h3>
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl mb-8 border border-indigo-200">
+          <h3 className="font-bold text-indigo-800 text-lg">Attendance Period 01-Jun-2025-05-Jun-2025</h3>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-6 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-blue-600 font-semibold">Total Days: {attendanceStats.totalDays}</div>
+        <div className="grid grid-cols-6 gap-4 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-indigo-600 font-bold text-lg">Total Days: {attendanceStats.totalDays}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-green-600 font-semibold">Physical Present Days: {attendanceStats.physicalPresentDays}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-emerald-600 font-bold text-lg">Physical Present Days: {attendanceStats.physicalPresentDays}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-purple-600 font-semibold">Weekly offs: {attendanceStats.weeklyOffs}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-purple-600 font-bold text-lg">Weekly offs: {attendanceStats.weeklyOffs}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-yellow-600 font-semibold">Leaves: {attendanceStats.leaves}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-amber-600 font-bold text-lg">Leaves: {attendanceStats.leaves}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-orange-600 font-semibold">Holidays: {attendanceStats.holidays}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-orange-600 font-bold text-lg">Holidays: {attendanceStats.holidays}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-red-600 font-semibold">Absents: {attendanceStats.absents}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-rose-600 font-bold text-lg">Absents: {attendanceStats.absents}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-green-600 font-semibold">Paid Days: {attendanceStats.paidDays}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-emerald-600 font-bold text-lg">Paid Days: {attendanceStats.paidDays}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">No. of Late: {attendanceStats.lateCount}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">No. of Late: {attendanceStats.lateCount}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">No. of Early Going: {attendanceStats.earlyGoingCount}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">No. of Early Going: {attendanceStats.earlyGoingCount}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">Late Deduction Leaves: {attendanceStats.lateDeductionLeaves}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">Late Deduction Leaves: {attendanceStats.lateDeductionLeaves}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">Over Time Hours:</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">Over Time Hours:</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">Late Hours:</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">Late Hours:</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">Early Going Hours:</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">Early Going Hours:</div>
           </div>
-          <div className="bg-white p-4 rounded-lg">
-            <div className="text-gray-600">Coff: {attendanceStats.coff}</div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
+            <div className="text-slate-600 font-semibold">Coff: {attendanceStats.coff}</div>
           </div>
         </div>
 
         {/* Calendar */}
-        <div className="bg-white rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold">June 2025</h3>
+        <div className="bg-white rounded-xl p-8 shadow-lg border border-slate-200">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-2xl font-bold text-slate-800">June 2025</h3>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">Today</Button>
+              <Button variant="outline" size="sm" className="border-slate-300 hover:border-indigo-400 hover:text-indigo-600">Today</Button>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="hover:bg-slate-100">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="hover:bg-slate-100">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -310,39 +314,39 @@ const LeaveAttendance = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-0 border border-gray-200">
+          <div className="grid grid-cols-7 gap-2 border border-slate-200 rounded-lg overflow-hidden">
             {/* Header */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="p-3 bg-gray-50 border-b border-gray-200 text-center font-medium">
+              <div key={day} className="p-4 bg-slate-100 border-b border-slate-200 text-center font-bold text-slate-700">
                 {day}
               </div>
             ))}
             
             {/* Calendar Days */}
             {generateCalendarGrid().map((date, index) => (
-              <div key={index} className="border-b border-r border-gray-200">
+              <div key={index} className="border-b border-r border-slate-200 last:border-r-0">
                 {date ? renderCalendarDay(date) : <div className="h-20"></div>}
               </div>
             ))}
           </div>
 
           {/* Legend */}
-          <div className="mt-6 flex items-center space-x-6">
+          <div className="mt-8 flex items-center justify-center space-x-8">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-sm">Present</span>
+              <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-slate-700">Present</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-sm">Absent</span>
+              <div className="w-4 h-4 bg-rose-500 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-slate-700">Absent</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-              <span className="text-sm">Leave</span>
+              <div className="w-4 h-4 bg-amber-500 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-slate-700">Leave</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-500 rounded"></div>
-              <span className="text-sm">Weekend</span>
+              <div className="w-4 h-4 bg-indigo-500 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-slate-700">Weekend</span>
             </div>
           </div>
         </div>
@@ -350,19 +354,21 @@ const LeaveAttendance = () => {
 
       {/* Event Details Modal */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Events</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-slate-800">Events</DialogTitle>
           </DialogHeader>
           
           {selectedEvent && (
-            <div className="space-y-6">
-              <div className="flex space-x-8 border-b">
+            <div className="space-y-8">
+              <div className="flex space-x-8 border-b border-slate-200">
                 {['Details', 'Swipes', 'Leave', 'Incident', 'Summary'].map((tab) => (
                   <button
                     key={tab}
-                    className={`pb-2 px-1 text-sm font-medium border-b-2 ${
-                      tab === 'Details' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'
+                    className={`pb-3 px-2 text-sm font-medium border-b-2 transition-colors ${
+                      tab === 'Details' 
+                        ? 'border-indigo-500 text-indigo-600' 
+                        : 'border-transparent text-slate-500 hover:text-slate-700'
                     }`}
                   >
                     {tab}
@@ -371,69 +377,69 @@ const LeaveAttendance = () => {
               </div>
 
               {/* Event Header */}
-              <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-xl border border-emerald-200 flex items-center justify-between">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <ChevronLeft className="w-4 h-4" />
-                    <span className="font-medium">{format(selectedEvent.date, 'dd-MMM-yyyy')}</span>
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4 text-slate-600" />
+                    <span className="font-bold text-slate-800">{format(selectedEvent.date, 'dd-MMM-yyyy')}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-600" />
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-slate-600 mt-1">
                     G 9:30AM - 6:30PM
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium">Status: {selectedEvent.status}</div>
-                  <div className="text-sm text-gray-600">Time Spent:</div>
+                  <div className="font-bold text-slate-800">Status: {selectedEvent.status}</div>
+                  <div className="text-sm text-slate-600">Time Spent:</div>
                 </div>
               </div>
 
               {/* Event Details */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Employee ID</span>
-                    <span className="font-medium">{selectedEvent.employeeId}</span>
+                    <span className="text-slate-600 font-medium">Employee ID</span>
+                    <span className="font-bold text-slate-800">{selectedEvent.employeeId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shift (Name)</span>
-                    <span className="font-medium">{selectedEvent.shiftName}</span>
+                    <span className="text-slate-600 font-medium">Shift (Name)</span>
+                    <span className="font-bold text-slate-800">{selectedEvent.shiftName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shift (Timing & Hours)</span>
-                    <span className="font-medium">{selectedEvent.shiftTiming}</span>
+                    <span className="text-slate-600 font-medium">Shift (Timing & Hours)</span>
+                    <span className="font-bold text-slate-800">{selectedEvent.shiftTiming}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">In Time</span>
-                    <span className="font-medium">{selectedEvent.inTime}</span>
+                    <span className="text-slate-600 font-medium">In Time</span>
+                    <span className="font-bold text-slate-800">{selectedEvent.inTime}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Out Time</span>
-                    <span className="font-medium">{selectedEvent.outTime}</span>
+                    <span className="text-slate-600 font-medium">Out Time</span>
+                    <span className="font-bold text-slate-800">{selectedEvent.outTime}</span>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Time Spent</span>
-                    <span className="font-medium">{selectedEvent.timeSpent}</span>
+                    <span className="text-slate-600 font-medium">Total Time Spent</span>
+                    <span className="font-bold text-slate-800">{selectedEvent.timeSpent}</span>
                   </div>
                   {selectedEvent.productiveTime && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Productive Time Spent</span>
-                      <span className="font-medium">{selectedEvent.productiveTime}</span>
+                      <span className="text-slate-600 font-medium">Productive Time Spent</span>
+                      <span className="font-bold text-slate-800">{selectedEvent.productiveTime}</span>
                     </div>
                   )}
                   {selectedEvent.nonProductiveTime && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Non Productive Time Spent</span>
-                      <span className="font-medium">{selectedEvent.nonProductiveTime}</span>
+                      <span className="text-slate-600 font-medium">Non Productive Time Spent</span>
+                      <span className="font-bold text-slate-800">{selectedEvent.nonProductiveTime}</span>
                     </div>
                   )}
                   {selectedEvent.otHours && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">OT Hours</span>
-                      <span className="font-medium">{selectedEvent.otHours}</span>
+                      <span className="text-slate-600 font-medium">OT Hours</span>
+                      <span className="font-bold text-slate-800">{selectedEvent.otHours}</span>
                     </div>
                   )}
                 </div>
