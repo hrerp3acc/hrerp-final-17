@@ -74,6 +74,18 @@ const EmployeeDirectory = () => {
     return matchesSearch && matchesDepartment;
   });
 
+  const handleViewProfile = (employeeId: string) => {
+    console.log('Viewing profile for employee:', employeeId);
+    // Navigate to employee profile page
+    window.location.href = `/employees/${employeeId}`;
+  };
+
+  const handleEditEmployee = (employeeId: string) => {
+    console.log('Editing employee:', employeeId);
+    // In a real app, this would open an edit modal or navigate to edit page
+    alert(`Edit functionality for employee ${employeeId} would be implemented here`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -162,10 +174,20 @@ const EmployeeDirectory = () => {
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-200 flex space-x-2">
-              <Button variant="outline" size="sm" className="flex-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleViewProfile(employee.id)}
+              >
                 View Profile
               </Button>
-              <Button variant="outline" size="sm" className="flex-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleEditEmployee(employee.id)}
+              >
                 Edit
               </Button>
             </div>

@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/contexts/UserContext';
 import {
   Users, BarChart3, Calendar, Clock, CreditCard, 
   Settings, User, BookOpen, TrendingUp, Building,
@@ -16,6 +16,7 @@ interface SidebarProps {
 const Sidebar = ({ userRole }: SidebarProps) => {
   const [location, setLocation] = useState({ pathname: '/' });
   const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
+  const { user } = useUser();
   
   // Safely get location with error handling
   let currentLocation;
@@ -257,8 +258,8 @@ const Sidebar = ({ userRole }: SidebarProps) => {
             <User className="w-4 h-4 text-gray-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">John Doe</p>
-            <p className="text-xs text-gray-500 capitalize">{userRole}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'Guest'}</p>
+            <p className="text-xs text-gray-500 capitalize">{user?.role || 'anonymous'}</p>
           </div>
         </div>
       </div>

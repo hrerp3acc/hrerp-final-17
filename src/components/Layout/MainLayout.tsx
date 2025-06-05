@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { useUser } from '@/contexts/UserContext';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const userRole = 'admin'; // This would come from authentication context
+  const { user } = useUser();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -17,7 +18,7 @@ const MainLayout = () => {
       {/* Sidebar */}
       <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out`}>
-        <Sidebar userRole={userRole} />
+        <Sidebar userRole={user?.role || 'employee'} />
       </div>
 
       {/* Main Content */}
