@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,7 @@ const Sidebar = ({ userRole }: SidebarProps) => {
       roles: ['admin', 'manager', 'employee'],
       children: [
         { title: 'My Leaves', path: '/leave/my-leaves' },
+        { title: 'Leave & Attendance', path: '/leave/attendance' },
         { title: 'Apply Leave', path: '/leave/apply' },
         { title: 'Team Calendar', path: '/leave/calendar' }
       ]

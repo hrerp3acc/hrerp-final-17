@@ -10,6 +10,7 @@ import EmployeeDirectory from "./pages/Employees/EmployeeDirectory";
 import EmployeeProfile from "./pages/Employees/EmployeeProfile";
 import TimeTracking from "./pages/Time/TimeTracking";
 import LeaveManagement from "./pages/Leave/LeaveManagement";
+import LeaveAttendance from "./pages/Leave/LeaveAttendance";
 import WorkforceAnalytics from "./pages/Analytics/WorkforceAnalytics";
 import WorkforcePlanning from "./pages/Planning/WorkforcePlanning";
 import ComplianceManagement from "./pages/Compliance/ComplianceManagement";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="employees/:id" element={<EmployeeProfile />} />
             <Route path="time/tracking" element={<TimeTracking />} />
             <Route path="leave/my-leaves" element={<LeaveManagement />} />
+            <Route path="leave/attendance" element={<LeaveAttendance />} />
             <Route path="analytics/workforce" element={<WorkforceAnalytics />} />
             <Route path="planning/workforce" element={<WorkforcePlanning />} />
             <Route path="compliance" element={<ComplianceManagement />} />
