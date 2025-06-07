@@ -5,11 +5,13 @@ import { Calendar, Download } from 'lucide-react';
 import AttendanceStats from '@/components/Attendance/AttendanceStats';
 import AttendanceFilters from '@/components/Attendance/AttendanceFilters';
 import AttendanceTable from '@/components/Attendance/AttendanceTable';
+import DetailsPanel from '@/components/Common/DetailsPanel';
 
 const Attendance = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
 
   const attendanceData = [
     {
@@ -68,41 +70,112 @@ const Attendance = () => {
     total: attendanceData.length
   };
 
+  const handleAttendanceSelect = (record: any) => {
+    setSelectedAttendance(record);
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Attendance Management</h1>
-          <p className="text-gray-600">Track and manage employee attendance</p>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Attendance Management</h1>
+            <p className="text-gray-600">Track and manage employee attendance</p>
+          </div>
+          <div className="flex space-x-3">
+            <Button variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export Report
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Calendar className="w-4 h-4 mr-2" />
+              Mark Attendance
+            </Button>
+          </div>
         </div>
-        <div className="flex space-x-3">
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Calendar className="w-4 h-4 mr-2" />
-            Mark Attendance
-          </Button>
-        </div>
+
+        {/* Stats Cards */}
+        <AttendanceStats stats={attendanceStats} />
+
+        {/* Filters */}
+        <AttendanceFilters
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
+
+        {/* Attendance Table */}
+        <AttendanceTable 
+          data={filteredData} 
+          selectedDate={selectedDate}
+          onRecordSelect={handleAttendanceSelect}
+        />
       </div>
 
-      {/* Stats Cards */}
-      <AttendanceStats stats={attendanceStats} />
-
-      {/* Filters */}
-      <AttendanceFilters
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-      />
-
-      {/* Attendance Table */}
-      <AttendanceTable data={filteredData} selectedDate={selectedDate} />
+      <div>
+        <DetailsPanel
+          title="Attendance Details"
+          isEmpty={!selectedAttendance}
+          emptyMessage="Select an attendance record to view detailed information"
+        >
+          {selectedAttendance && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">{selectedAttendance.employee}</h3>
+              <p className="text-gray-600">{selectedAttendance.department} Department</p>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Check In</p>
+                    <p className="font-medium">{selectedAttendance.checkIn}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Check Out</p>
+                    <p className="font-medium">{selectedAttendance.checkOut}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Hours</p>
+                    <p className="font-medium">{selectedAttendance.totalHours}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Overtime</p>
+                    <p className="font-medium">{selectedAttendance.overtime}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                    selectedAttendance.status === 'present' ? 'bg-green-100 text-green-800' :
+                    selectedAttendance.status === 'late' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {selectedAttendance.status}
+                  </span>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-500">Date</p>
+                  <p className="font-medium">{selectedDate}</p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t space-y-2">
+                <Button className="w-full">Edit Record</Button>
+                <Button className="w-full" variant="outline">View History</Button>
+                <Button className="w-full" variant="outline">Generate Report</Button>
+              </div>
+            </div>
+          )}
+        </DetailsPanel>
+      </div>
     </div>
   );
 };
