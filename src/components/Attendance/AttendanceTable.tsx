@@ -17,9 +17,10 @@ interface AttendanceRecord {
 interface AttendanceTableProps {
   data: AttendanceRecord[];
   selectedDate: string;
+  onRecordSelect: (record: AttendanceRecord) => void;
 }
 
-const AttendanceTable = ({ data, selectedDate }: AttendanceTableProps) => {
+const AttendanceTable = ({ data, selectedDate, onRecordSelect }: AttendanceTableProps) => {
   const getStatusBadge = (status: string) => {
     const styles = {
       present: 'bg-green-100 text-green-800',
@@ -65,7 +66,11 @@ const AttendanceTable = ({ data, selectedDate }: AttendanceTableProps) => {
             </thead>
             <tbody>
               {data.map((record) => (
-                <tr key={record.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr 
+                  key={record.id} 
+                  className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onRecordSelect(record)}
+                >
                   <td className="py-3 px-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -88,7 +93,14 @@ const AttendanceTable = ({ data, selectedDate }: AttendanceTableProps) => {
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle edit action separately from row click
+                      }}
+                    >
                       Edit
                     </Button>
                   </td>
