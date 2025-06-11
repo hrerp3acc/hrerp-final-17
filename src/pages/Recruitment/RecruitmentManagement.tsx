@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,7 @@ import {
 } from 'recharts';
 import { 
   UserPlus, Briefcase, Calendar, Clock, FileText, 
-  Search, Filter, Users, TrendingUp, CheckCircle 
+  Search, Filter, Users, TrendingUp, CheckCircle, Plus 
 } from 'lucide-react';
 import DetailsPanel from '@/components/Common/DetailsPanel';
 
