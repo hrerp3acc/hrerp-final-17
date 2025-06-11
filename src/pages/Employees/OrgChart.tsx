@@ -5,39 +5,20 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Users, Building, User, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-interface Employee {
-  id: string;
-  name: string;
-  position: string;
-  department: string;
-  managerId?: string;
-  avatar?: string;
-}
+import { useEmployees } from '@/hooks/useEmployees';
 
 const OrgChart = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const { employees, getDepartments } = useEmployees();
 
-  const employees: Employee[] = [
-    { id: '1', name: 'John Smith', position: 'CEO', department: 'Executive' },
-    { id: '2', name: 'Sarah Johnson', position: 'VP Marketing', department: 'Marketing', managerId: '1' },
-    { id: '3', name: 'Michael Chen', position: 'VP Engineering', department: 'Engineering', managerId: '1' },
-    { id: '4', name: 'Emily Rodriguez', position: 'HR Director', department: 'HR', managerId: '1' },
-    { id: '5', name: 'David Kim', position: 'Finance Director', department: 'Finance', managerId: '1' },
-    { id: '6', name: 'Lisa Wang', position: 'Marketing Manager', department: 'Marketing', managerId: '2' },
-    { id: '7', name: 'Tom Wilson', position: 'Senior Developer', department: 'Engineering', managerId: '3' },
-    { id: '8', name: 'Anna Garcia', position: 'HR Specialist', department: 'HR', managerId: '4' },
-    { id: '9', name: 'Mark Brown', position: 'Financial Analyst', department: 'Finance', managerId: '5' },
-  ];
-
-  const departments = ['all', 'Executive', 'Marketing', 'Engineering', 'HR', 'Finance'];
+  const departments = ['all', ...getDepartments()];
 
   const getDirectReports = (managerId: string) => {
     return employees.filter(emp => emp.managerId === managerId);
   };
 
-  const getEmployeeLevel = (employee: Employee): number => {
+  const getEmployeeLevel = (employee: any): number => {
     if (!employee.managerId) return 0;
     const manager = employees.find(emp => emp.id === employee.managerId);
     return manager ? 1 + getEmployeeLevel(manager) : 1;
@@ -47,7 +28,7 @@ const OrgChart = () => {
     const ceo = employees.find(emp => !emp.managerId);
     if (!ceo) return [];
 
-    const buildHierarchy = (employee: Employee): any => {
+    const buildHierarchy = (employee: any): any => {
       const directReports = getDirectReports(employee.id);
       return {
         ...employee,
@@ -198,7 +179,7 @@ const OrgChart = () => {
               <div>
                 <p className="text-sm text-gray-600">Avg Team Size</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(employees.length / departments.length)}
+                  {departments.length > 1 ? Math.round(employees.length / (departments.length - 1)) : 0}
                 </p>
               </div>
             </div>
@@ -207,15 +188,31 @@ const OrgChart = () => {
       </div>
 
       {/* Organizational Chart */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Company Hierarchy</h2>
-        {hierarchy.map(employee => (
-          <EmployeeCard key={employee.id} employee={employee} />
-        ))}
-      </div>
+      {employees.length > 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Company Hierarchy</h2>
+          {hierarchy.map(employee => (
+            <EmployeeCard key={employee.id} employee={employee} />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
+          <p className="text-gray-600 mb-6">
+            Get started by adding your first employee to build the organizational chart.
+          </p>
+          <Link to="/employees/add">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Employee
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Search Results (when filtering) */}
-      {(searchTerm || selectedDepartment !== 'all') && (
+      {(searchTerm || selectedDepartment !== 'all') && employees.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">
             Search Results ({filteredEmployees.length} found)

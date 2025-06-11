@@ -19,35 +19,7 @@ interface TimesheetEntry {
 const Timesheets = () => {
   const { toast } = useToast();
   const [selectedWeek, setSelectedWeek] = useState(new Date().toISOString().split('T')[0]);
-  const [entries, setEntries] = useState<TimesheetEntry[]>([
-    {
-      id: '1',
-      date: '2024-06-03',
-      project: 'Website Redesign',
-      task: 'Frontend Development',
-      hours: 8,
-      description: 'Implemented responsive navigation component',
-      status: 'approved'
-    },
-    {
-      id: '2',
-      date: '2024-06-04',
-      project: 'Mobile App',
-      task: 'Bug Fixes',
-      hours: 6,
-      description: 'Fixed login authentication issues',
-      status: 'submitted'
-    },
-    {
-      id: '3',
-      date: '2024-06-05',
-      project: 'Website Redesign',
-      task: 'Backend Integration',
-      hours: 7.5,
-      description: 'Connected frontend with API endpoints',
-      status: 'draft'
-    }
-  ]);
+  const [entries, setEntries] = useState<TimesheetEntry[]>([]);
 
   const [newEntry, setNewEntry] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -279,56 +251,66 @@ const Timesheets = () => {
           <CardTitle>Time Entries</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Project</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Task</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Hours</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Description</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((entry) => (
-                  <tr key={entry.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-gray-900">
-                      {new Date(entry.date).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-4 text-gray-900">{entry.project}</td>
-                    <td className="py-3 px-4 text-gray-600">{entry.task}</td>
-                    <td className="py-3 px-4 text-gray-900">{entry.hours}h</td>
-                    <td className="py-3 px-4 text-gray-600 max-w-xs truncate">
-                      {entry.description}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(entry.status)}`}>
-                        {entry.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex space-x-2">
-                        {entry.status === 'draft' && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleStatusChange(entry.id, 'submitted')}
-                          >
-                            Submit
-                          </Button>
-                        )}
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </td>
+          {entries.length === 0 ? (
+            <div className="text-center py-12">
+              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No time entries yet</h3>
+              <p className="text-gray-600 mb-6">
+                Start tracking your time by adding your first entry above.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Project</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Task</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Hours</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Description</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {entries.map((entry) => (
+                    <tr key={entry.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-gray-900">
+                        {new Date(entry.date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-gray-900">{entry.project}</td>
+                      <td className="py-3 px-4 text-gray-600">{entry.task}</td>
+                      <td className="py-3 px-4 text-gray-900">{entry.hours}h</td>
+                      <td className="py-3 px-4 text-gray-600 max-w-xs truncate">
+                        {entry.description}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(entry.status)}`}>
+                          {entry.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex space-x-2">
+                          {entry.status === 'draft' && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleStatusChange(entry.id, 'submitted')}
+                            >
+                              Submit
+                            </Button>
+                          )}
+                          <Button variant="outline" size="sm">
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

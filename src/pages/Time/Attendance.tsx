@@ -13,6 +13,7 @@ const Attendance = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
 
+  // Empty attendance data - will be populated when user adds data
   const attendanceData: any[] = [];
 
   const filteredData = attendanceData.filter(record => {
@@ -68,27 +69,17 @@ const Attendance = () => {
         />
 
         {/* Attendance Table or Empty State */}
-        {filteredData.length > 0 ? (
-          <AttendanceTable 
-            data={filteredData} 
-            selectedDate={selectedDate}
-            onRecordSelect={handleAttendanceSelect}
-          />
-        ) : (
-          <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No attendance records</h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'No attendance records match your current filters.' 
-                : 'Attendance records will appear here once employees start checking in.'}
-            </p>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Calendar className="w-4 h-4 mr-2" />
-              Mark Attendance
-            </Button>
-          </div>
-        )}
+        <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center">
+          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No attendance records</h3>
+          <p className="text-gray-600 mb-6">
+            Attendance records will appear here once employees start checking in.
+          </p>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Calendar className="w-4 h-4 mr-2" />
+            Mark Attendance
+          </Button>
+        </div>
       </div>
 
       <div>

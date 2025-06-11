@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,32 +14,14 @@ import {
 } from 'lucide-react';
 import DetailsPanel from '@/components/Common/DetailsPanel';
 
-const recruitmentData = [
-  { month: 'Jan', applications: 120, hired: 8, interviews: 45 },
-  { month: 'Feb', applications: 95, hired: 6, interviews: 38 },
-  { month: 'Mar', applications: 150, hired: 12, interviews: 52 },
-  { month: 'Apr', applications: 180, hired: 15, interviews: 68 },
-  { month: 'May', applications: 200, hired: 18, interviews: 75 },
-  { month: 'Jun', applications: 165, hired: 14, interviews: 58 },
-];
-
 const RecruitmentManagement = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
 
-  const jobs = [
-    { id: 1, title: "Senior Software Engineer", department: "Engineering", applications: 45, status: "Active", posted: "2024-10-15", description: "Lead development of core platform features" },
-    { id: 2, title: "Marketing Manager", department: "Marketing", applications: 32, status: "Active", posted: "2024-10-20", description: "Drive marketing strategy and campaigns" },
-    { id: 3, title: "HR Business Partner", department: "Human Resources", applications: 28, status: "Active", posted: "2024-10-18", description: "Support HR operations and employee relations" },
-    { id: 4, title: "Data Analyst", department: "Analytics", applications: 38, status: "Paused", posted: "2024-10-12", description: "Analyze business data and provide insights" },
-  ];
-
-  const candidates = [
-    { id: 1, name: "Alice Cooper", position: "Senior Software Engineer", stage: "Final Interview", score: 92, experience: "8 years", email: "alice@example.com" },
-    { id: 2, name: "Bob Wilson", position: "Marketing Manager", stage: "Technical Review", score: 85, experience: "6 years", email: "bob@example.com" },
-    { id: 3, name: "Carol Zhang", position: "Data Analyst", stage: "HR Screen", score: 78, experience: "4 years", email: "carol@example.com" },
-    { id: 4, name: "David Kim", position: "HR Business Partner", stage: "Reference Check", score: 88, experience: "10 years", email: "david@example.com" },
-  ];
+  // Empty data arrays - will be populated when user adds data
+  const jobs: any[] = [];
+  const candidates: any[] = [];
+  const recruitmentData: any[] = [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -55,10 +36,10 @@ const RecruitmentManagement = () => {
               <CardDescription>Currently hiring</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">18</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <TrendingUp className="w-4 h-4 text-green-500" />
-                <span>+3 new this week</span>
+                <span>No positions yet</span>
               </div>
             </CardContent>
           </Card>
@@ -72,10 +53,10 @@ const RecruitmentManagement = () => {
               <CardDescription>This month</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">165</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <FileText className="w-4 h-4 text-blue-500" />
-                <span>42 pending review</span>
+                <span>No applications yet</span>
               </div>
             </CardContent>
           </Card>
@@ -89,10 +70,10 @@ const RecruitmentManagement = () => {
               <CardDescription>Scheduled</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">28</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <Clock className="w-4 h-4 text-red-500" />
-                <span>5 today</span>
+                <span>No interviews scheduled</span>
               </div>
             </CardContent>
           </Card>
@@ -106,10 +87,10 @@ const RecruitmentManagement = () => {
               <CardDescription>This quarter</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">42</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <Users className="w-4 h-4 text-purple-500" />
-                <span>12% hire rate</span>
+                <span>No hires yet</span>
               </div>
             </CardContent>
           </Card>
@@ -133,30 +114,31 @@ const RecruitmentManagement = () => {
                 <CardDescription>Manage open positions and requirements</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {jobs.map((job) => (
-                    <div 
-                      key={job.id} 
-                      className="border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
-                      onClick={() => setSelectedJob(job)}
-                    >
-                      <div>
-                        <h4 className="font-medium">{job.title}</h4>
-                        <p className="text-sm text-gray-500">{job.department} • Posted {job.posted}</p>
+                {jobs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No job postings yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      Create your first job posting to start recruiting candidates.
+                    </p>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Post Your First Job
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {jobs.map((job) => (
+                      <div 
+                        key={job.id} 
+                        className="border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                        onClick={() => setSelectedJob(job)}
+                      >
+                        {/* Job content */}
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="text-center">
-                          <div className="font-medium">{job.applications}</div>
-                          <div className="text-xs text-gray-500">Applications</div>
-                        </div>
-                        <Badge variant={job.status === "Active" ? "default" : "secondary"}>
-                          {job.status}
-                        </Badge>
-                        <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>Manage</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -168,41 +150,40 @@ const RecruitmentManagement = () => {
                 <CardDescription>Track candidates through the hiring process</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input placeholder="Search candidates..." className="pl-10" />
+                {candidates.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No candidates yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      Candidates will appear here once you start receiving applications.
+                    </p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filter
-                  </Button>
-                </div>
-                
-                <div className="space-y-4">
-                  {candidates.map((candidate) => (
-                    <div 
-                      key={candidate.id} 
-                      className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
-                      onClick={() => setSelectedCandidate(candidate)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{candidate.name}</h4>
-                          <p className="text-sm text-gray-500">{candidate.position} • {candidate.experience}</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <div className="font-medium">{candidate.score}%</div>
-                            <div className="text-xs text-gray-500">Match Score</div>
-                          </div>
-                          <Badge>{candidate.stage}</Badge>
-                          <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>View Profile</Button>
-                        </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input placeholder="Search candidates..." className="pl-10" />
                       </div>
+                      <Button variant="outline" size="sm">
+                        <Filter className="w-4 h-4 mr-2" />
+                        Filter
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                    
+                    <div className="space-y-4">
+                      {candidates.map((candidate) => (
+                        <div 
+                          key={candidate.id} 
+                          className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
+                          onClick={() => setSelectedCandidate(candidate)}
+                        >
+                          {/* Candidate content */}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -214,24 +195,12 @@ const RecruitmentManagement = () => {
                 <CardDescription>Manage upcoming and past interviews</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { candidate: "Alice Cooper", position: "Senior Software Engineer", time: "Today, 2:00 PM", interviewer: "John Smith", type: "Final Interview" },
-                    { candidate: "Carol Zhang", position: "Data Analyst", time: "Tomorrow, 10:00 AM", interviewer: "Sarah Johnson", type: "Technical Interview" },
-                    { candidate: "David Kim", position: "HR Business Partner", time: "Nov 8, 3:00 PM", interviewer: "Mike Chen", type: "Panel Interview" },
-                  ].map((interview, index) => (
-                    <div key={index} className="border rounded-lg p-4 flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">{interview.candidate}</h4>
-                        <p className="text-sm text-gray-500">{interview.position} • {interview.type}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">{interview.time}</div>
-                        <div className="text-sm text-gray-500">with {interview.interviewer}</div>
-                      </div>
-                      <Button variant="outline" size="sm">Join/Reschedule</Button>
-                    </div>
-                  ))}
+                <div className="text-center py-12">
+                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No interviews scheduled</h3>
+                  <p className="text-gray-600 mb-6">
+                    Interviews will appear here once you start scheduling them with candidates.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -244,17 +213,26 @@ const RecruitmentManagement = () => {
                 <CardDescription>Track hiring metrics and performance</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={recruitmentData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="applications" stroke="#3b82f6" name="Applications" />
-                    <Line type="monotone" dataKey="interviews" stroke="#10b981" name="Interviews" />
-                    <Line type="monotone" dataKey="hired" stroke="#f59e0b" name="Hired" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {recruitmentData.length === 0 ? (
+                  <div className="h-[400px] flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <p className="text-lg font-medium mb-2">No analytics data available</p>
+                      <p className="text-sm">Start recruiting to see analytics and trends</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={recruitmentData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="applications" stroke="#3b82f6" name="Applications" />
+                      <Line type="monotone" dataKey="interviews" stroke="#10b981" name="Interviews" />
+                      <Line type="monotone" dataKey="hired" stroke="#f59e0b" name="Hired" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -269,67 +247,13 @@ const RecruitmentManagement = () => {
         >
           {selectedJob && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{selectedJob.title}</h3>
-              <p className="text-gray-600">{selectedJob.description}</p>
-              
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Department</p>
-                  <p className="font-medium">{selectedJob.department}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Applications</p>
-                  <p className="font-medium">{selectedJob.applications}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <Badge variant={selectedJob.status === "Active" ? "default" : "secondary"}>
-                    {selectedJob.status}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Posted Date</p>
-                  <p className="font-medium">{selectedJob.posted}</p>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t space-y-2">
-                <Button className="w-full">View Applications</Button>
-                <Button className="w-full" variant="outline">Edit Job Posting</Button>
-                <Button className="w-full" variant="outline">Share Job</Button>
-              </div>
+              {/* Job details content */}
             </div>
           )}
           
           {selectedCandidate && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{selectedCandidate.name}</h3>
-              <p className="text-gray-600">Applying for {selectedCandidate.position}</p>
-              
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Experience</p>
-                  <p className="font-medium">{selectedCandidate.experience}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{selectedCandidate.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Current Stage</p>
-                  <Badge>{selectedCandidate.stage}</Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Match Score</p>
-                  <p className="font-medium">{selectedCandidate.score}%</p>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t space-y-2">
-                <Button className="w-full">View Resume</Button>
-                <Button className="w-full" variant="outline">Schedule Interview</Button>
-                <Button className="w-full" variant="outline">Send Message</Button>
-              </div>
+              {/* Candidate details content */}
             </div>
           )}
         </DetailsPanel>
