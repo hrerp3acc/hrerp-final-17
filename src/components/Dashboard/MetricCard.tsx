@@ -7,13 +7,39 @@ interface MetricCardProps {
   value: string | number;
   change?: {
     value: number;
-    type: 'increase' | 'decrease';
+    type: 'increase' | 'decrease' | 'neutral';
   };
   icon: LucideIcon;
   className?: string;
 }
 
 const MetricCard = ({ title, value, change, icon: Icon, className }: MetricCardProps) => {
+  const getChangeColor = (type: string) => {
+    switch (type) {
+      case 'increase':
+        return 'text-green-600';
+      case 'decrease':
+        return 'text-red-600';
+      case 'neutral':
+        return 'text-gray-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  const getChangeIcon = (type: string) => {
+    switch (type) {
+      case 'increase':
+        return '↗';
+      case 'decrease':
+        return '↘';
+      case 'neutral':
+        return '→';
+      default:
+        return '→';
+    }
+  };
+
   return (
     <div className={cn("bg-white rounded-xl p-6 shadow-sm border border-gray-200", className)}>
       <div className="flex items-center justify-between">
@@ -23,12 +49,15 @@ const MetricCard = ({ title, value, change, icon: Icon, className }: MetricCardP
           {change && (
             <p className={cn(
               "text-sm mt-2 flex items-center",
-              change.type === 'increase' ? 'text-green-600' : 'text-red-600'
+              getChangeColor(change.type)
             )}>
               <span className="mr-1">
-                {change.type === 'increase' ? '↗' : '↘'}
+                {getChangeIcon(change.type)}
               </span>
-              {Math.abs(change.value)}% from last month
+              {change.type === 'neutral' 
+                ? 'No change from last month'
+                : `${Math.abs(change.value)}% from last month`
+              }
             </p>
           )}
         </div>

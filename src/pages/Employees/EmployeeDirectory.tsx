@@ -2,22 +2,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Filter, Plus, Mail, Phone } from 'lucide-react';
+import { Search, Filter, Plus, Mail, Phone, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DetailsPanel from '@/components/Common/DetailsPanel';
 import { useEmployees } from '@/hooks/useEmployees';
-
-interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  department: string;
-  position: string;
-  location: string;
-  status: 'active' | 'inactive';
-  avatar?: string;
-}
+import { Employee } from '@/types/employee';
 
 const EmployeeDirectory = () => {
   const [searchTerm, setSearchTerm] = useState('');
