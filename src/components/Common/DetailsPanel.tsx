@@ -22,10 +22,12 @@ const DetailsPanel = ({ title, isEmpty, emptyMessage, children }: DetailsPanelPr
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <FileText className="w-12 h-12 text-gray-400 mb-4" />
-            <p className="text-gray-500">{emptyMessage}</p>
+            <p className="text-gray-500 max-w-sm">{emptyMessage}</p>
           </div>
         ) : (
-          children
+          <div className="space-y-4">
+            {children}
+          </div>
         )}
       </CardContent>
     </Card>

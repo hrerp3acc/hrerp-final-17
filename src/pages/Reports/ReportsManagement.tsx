@@ -1,320 +1,343 @@
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { BarChart3, Download, Calendar, Users, TrendingUp, FileText, Filter } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  FileText, Download, Calendar, Clock, TrendingUp, 
+  BarChart3, PieChart, Users, Search, Filter 
+} from 'lucide-react';
+import DetailsPanel from '@/components/Common/DetailsPanel';
 
 const ReportsManagement = () => {
-  const [selectedReport, setSelectedReport] = useState('');
-  const [dateRange, setDateRange] = useState('last-30-days');
-  const [department, setDepartment] = useState('all');
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const reportTypes = [
-    { id: 'attendance', name: 'Attendance Report', icon: Calendar },
-    { id: 'leave', name: 'Leave Analysis', icon: FileText },
-    { id: 'performance', name: 'Performance Report', icon: TrendingUp },
-    { id: 'headcount', name: 'Headcount Report', icon: Users },
-    { id: 'payroll', name: 'Payroll Summary', icon: BarChart3 },
-    { id: 'compliance', name: 'Compliance Report', icon: FileText }
+  const reports = [
+    { id: 1, name: "Monthly Attendance Report", type: "Attendance", status: "Ready", lastGenerated: "2024-11-05", size: "2.4 MB", description: "Comprehensive attendance analysis for October 2024" },
+    { id: 2, name: "Payroll Summary Q3", type: "Payroll", status: "Processing", lastGenerated: "2024-10-31", size: "5.1 MB", description: "Quarterly payroll breakdown and analysis" },
+    { id: 3, name: "Employee Performance Review", type: "Performance", status: "Ready", lastGenerated: "2024-11-03", size: "3.7 MB", description: "Performance metrics and evaluation summary" },
+    { id: 4, name: "Leave Balance Analysis", type: "Leave", status: "Scheduled", lastGenerated: "2024-10-28", size: "1.8 MB", description: "Leave balance and utilization report" },
   ];
 
-  const departments = ['all', 'Engineering', 'Marketing', 'Sales', 'HR', 'Finance'];
-  const dateRanges = [
-    { value: 'last-7-days', label: 'Last 7 Days' },
-    { value: 'last-30-days', label: 'Last 30 Days' },
-    { value: 'last-90-days', label: 'Last 90 Days' },
-    { value: 'ytd', label: 'Year to Date' },
-    { value: 'custom', label: 'Custom Range' }
+  const templates = [
+    { id: 1, name: "Attendance Summary", category: "Time & Attendance", frequency: "Monthly", fields: 12 },
+    { id: 2, name: "Payroll Register", category: "Compensation", frequency: "Bi-weekly", fields: 18 },
+    { id: 3, name: "Performance Dashboard", category: "Performance", frequency: "Quarterly", fields: 15 },
+    { id: 4, name: "Headcount Report", category: "Analytics", frequency: "Monthly", fields: 8 },
   ];
 
-  const quickReports = [
-    {
-      title: 'Today\'s Attendance',
-      value: '142/150',
-      change: '+5%',
-      trend: 'up'
-    },
-    {
-      title: 'Pending Leave Requests',
-      value: '12',
-      change: '-8%',
-      trend: 'down'
-    },
-    {
-      title: 'New Hires (This Month)',
-      value: '8',
-      change: '+25%',
-      trend: 'up'
-    },
-    {
-      title: 'Employee Satisfaction',
-      value: '4.2/5',
-      change: '+0.3',
-      trend: 'up'
-    }
-  ];
-
-  const recentReports = [
-    {
-      id: '1',
-      name: 'Monthly Attendance Report',
-      type: 'Attendance',
-      generatedBy: 'John Doe',
-      date: '2024-06-01',
-      status: 'Ready'
-    },
-    {
-      id: '2',
-      name: 'Q2 Performance Analysis',
-      type: 'Performance',
-      generatedBy: 'Sarah Johnson',
-      date: '2024-05-30',
-      status: 'Ready'
-    },
-    {
-      id: '3',
-      name: 'Leave Trends Report',
-      type: 'Leave',
-      generatedBy: 'Michael Chen',
-      date: '2024-05-28',
-      status: 'Processing'
-    }
-  ];
-
-  const generateReport = () => {
-    if (!selectedReport) {
-      alert('Please select a report type');
-      return;
-    }
-    
-    console.log('Generating report:', { selectedReport, dateRange, department });
-    alert(`Generating ${reportTypes.find(r => r.id === selectedReport)?.name} for ${department === 'all' ? 'all departments' : department} (${dateRange})`);
-  };
+  const filteredReports = reports.filter(report => 
+    report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    report.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-gray-600">Generate and manage HR reports</p>
-        </div>
-        <Button onClick={generateReport} className="bg-blue-600 hover:bg-blue-700">
-          <BarChart3 className="w-4 h-4 mr-2" />
-          Generate Report
-        </Button>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {quickReports.map((report, index) => (
-          <Card key={index}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{report.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{report.value}</p>
-                  <p className={`text-sm mt-1 ${report.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                    {report.change} from last period
-                  </p>
-                </div>
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  report.trend === 'up' ? 'bg-green-100' : 'bg-red-100'
-                }`}>
-                  <TrendingUp className={`w-6 h-6 ${
-                    report.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`} />
-                </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <span>Total Reports</span>
+              </CardTitle>
+              <CardDescription>Generated this month</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">247</div>
+              <div className="text-sm text-gray-500 flex items-center space-x-1">
+                <TrendingUp className="w-4 h-4 text-green-500" />
+                <span>+12% from last month</span>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Report Generator */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Generate New Report</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Report Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Select Report Type</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {reportTypes.map((report) => (
-                  <div
-                    key={report.id}
-                    onClick={() => setSelectedReport(report.id)}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedReport === report.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <report.icon className={`w-5 h-5 ${
-                        selectedReport === report.id ? 'text-blue-600' : 'text-gray-600'
-                      }`} />
-                      <span className={`font-medium ${
-                        selectedReport === report.id ? 'text-blue-900' : 'text-gray-900'
-                      }`}>
-                        {report.name}
-                      </span>
-                    </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Download className="w-4 h-4 text-green-500" />
+                <span>Downloads</span>
+              </CardTitle>
+              <CardDescription>Report downloads</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">1,842</div>
+              <div className="text-sm text-gray-500 flex items-center space-x-1">
+                <BarChart3 className="w-4 h-4 text-blue-500" />
+                <span>456 this week</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-orange-500" />
+                <span>Scheduled Reports</span>
+              </CardTitle>
+              <CardDescription>Automated reporting</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">18</div>
+              <div className="text-sm text-gray-500 flex items-center space-x-1">
+                <Calendar className="w-4 h-4 text-purple-500" />
+                <span>3 due today</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-purple-500" />
+                <span>Active Users</span>
+              </CardTitle>
+              <CardDescription>Report consumers</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">89</div>
+              <div className="text-sm text-gray-500 flex items-center space-x-1">
+                <PieChart className="w-4 h-4 text-green-500" />
+                <span>25 managers</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="reports" className="w-full">
+          <TabsList>
+            <TabsTrigger value="reports">Generated Reports</TabsTrigger>
+            <TabsTrigger value="templates">Report Templates</TabsTrigger>
+            <TabsTrigger value="scheduled">Scheduled Reports</TabsTrigger>
+            <TabsTrigger value="analytics">Report Analytics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reports">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Recent Reports</span>
+                  <Button>Generate New Report</Button>
+                </CardTitle>
+                <CardDescription>View and download generated reports</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Search reports..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                ))}
-              </div>
-            </div>
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                <Select value={dateRange} onValueChange={setDateRange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dateRanges.map(range => (
-                      <SelectItem key={range.value} value={range.value}>
-                        {range.label}
-                      </SelectItem>
+                <div className="space-y-4">
+                  {filteredReports.map((report) => (
+                    <div 
+                      key={report.id} 
+                      className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{report.name}</h4>
+                        <Badge variant={
+                          report.status === "Ready" ? "secondary" : 
+                          report.status === "Processing" ? "default" : "outline"
+                        }>
+                          {report.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-500 mb-2">{report.type} Report</p>
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>Generated: {report.lastGenerated}</span>
+                        <div className="flex items-center space-x-4">
+                          <span>Size: {report.size}</span>
+                          <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <Card>
+              <CardHeader>
+                <CardTitle>Report Templates</CardTitle>
+                <CardDescription>Predefined report formats and structures</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {templates.map((template) => (
+                    <div key={template.id} className="border rounded-lg p-4 flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">{template.name}</h4>
+                        <p className="text-sm text-gray-500">{template.category} • {template.fields} fields</p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge variant="outline">{template.frequency}</Badge>
+                        <Button variant="outline" size="sm">Use Template</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="scheduled">
+            <Card>
+              <CardHeader>
+                <CardTitle>Scheduled Reports</CardTitle>
+                <CardDescription>Automated report generation settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { name: "Weekly Attendance Summary", schedule: "Every Monday 9:00 AM", recipients: 3, nextRun: "Nov 11, 2024" },
+                    { name: "Monthly Payroll Report", schedule: "1st of every month", recipients: 5, nextRun: "Dec 1, 2024" },
+                    { name: "Quarterly Performance Review", schedule: "Last day of quarter", recipients: 8, nextRun: "Dec 31, 2024" },
+                  ].map((scheduled, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{scheduled.name}</h4>
+                        <Button variant="outline" size="sm">Edit Schedule</Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-500">
+                        <div>
+                          <p>Schedule: {scheduled.schedule}</p>
+                          <p>Recipients: {scheduled.recipients}</p>
+                        </div>
+                        <div>
+                          <p>Next Run: {scheduled.nextRun}</p>
+                          <Badge variant="default">Active</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <Card>
+              <CardHeader>
+                <CardTitle>Report Analytics</CardTitle>
+                <CardDescription>Usage statistics and insights</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Most Popular Reports</h4>
+                    {[
+                      { name: "Attendance Summary", downloads: 342, percentage: 85 },
+                      { name: "Payroll Register", downloads: 289, percentage: 72 },
+                      { name: "Performance Dashboard", downloads: 234, percentage: 58 },
+                    ].map((popular, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{popular.name}</p>
+                          <p className="text-sm text-gray-500">{popular.downloads} downloads</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="w-16 h-2 bg-gray-200 rounded">
+                            <div 
+                              className="h-2 bg-blue-500 rounded" 
+                              style={{ width: `${popular.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map(dept => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept === 'all' ? 'All Departments' : dept}
-                      </SelectItem>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Report Categories</h4>
+                    {[
+                      { category: "Time & Attendance", count: 156, color: "bg-blue-500" },
+                      { category: "Payroll", count: 89, color: "bg-green-500" },
+                      { category: "Performance", count: 67, color: "bg-purple-500" },
+                      { category: "Analytics", count: 45, color: "bg-orange-500" },
+                    ].map((category, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded ${category.color}`} />
+                          <span>{category.category}</span>
+                        </div>
+                        <span className="font-medium">{category.count}</span>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {dateRange === 'custom' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                  <Input type="date" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                  <Input type="date" />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Report Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Report Preview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedReport ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900">
-                    {reportTypes.find(r => r.id === selectedReport)?.name}
-                  </h4>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Department: {department === 'all' ? 'All Departments' : department}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Period: {dateRanges.find(r => r.value === dateRange)?.label}
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h5 className="font-medium text-gray-900">Will Include:</h5>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Summary statistics</li>
-                    <li>• Detailed breakdowns</li>
-                    <li>• Trend analysis</li>
-                    <li>• Export options (PDF, Excel)</li>
-                  </ul>
-                </div>
-                
-                <Button onClick={generateReport} className="w-full">
-                  <Download className="w-4 h-4 mr-2" />
-                  Generate & Download
-                </Button>
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-8">
-                Select a report type to see preview
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Recent Reports */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Report Name</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Type</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Generated By</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentReports.map((report) => (
-                  <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium text-gray-900">{report.name}</td>
-                    <td className="py-3 px-4 text-gray-600">{report.type}</td>
-                    <td className="py-3 px-4 text-gray-600">{report.generatedBy}</td>
-                    <td className="py-3 px-4 text-gray-600">{new Date(report.date).toLocaleDateString()}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        report.status === 'Ready' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {report.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <div>
+        <DetailsPanel
+          title="Report Details"
+          isEmpty={!selectedReport}
+          emptyMessage="Select a report to view detailed information"
+        >
+          {selectedReport && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">{selectedReport.name}</h3>
+              <p className="text-gray-600">{selectedReport.description}</p>
+              
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-500">Report Type</p>
+                  <p className="font-medium">{selectedReport.type}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <Badge variant={
+                    selectedReport.status === "Ready" ? "secondary" : 
+                    selectedReport.status === "Processing" ? "default" : "outline"
+                  }>
+                    {selectedReport.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Last Generated</p>
+                  <p className="font-medium">{selectedReport.lastGenerated}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">File Size</p>
+                  <p className="font-medium">{selectedReport.size}</p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t space-y-2">
+                <Button className="w-full">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Report
+                </Button>
+                <Button className="w-full" variant="outline">Schedule Report</Button>
+                <Button className="w-full" variant="outline">Share Report</Button>
+              </div>
+            </div>
+          )}
+        </DetailsPanel>
+      </div>
     </div>
   );
 };
