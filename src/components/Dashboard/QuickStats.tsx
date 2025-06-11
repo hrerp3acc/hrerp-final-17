@@ -1,54 +1,58 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, UserX, Calendar, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useEmployees } from '@/hooks/useEmployees';
 
 const QuickStats = () => {
+  const { getEmployeeStats } = useEmployees();
+  const employeeStats = getEmployeeStats();
+
   const stats = [
     {
       title: 'Active Employees',
-      value: '1,234',
-      change: '+2.5%',
-      changeType: 'positive' as const,
+      value: employeeStats.active.toString(),
+      change: employeeStats.total > 0 ? `${employeeStats.total} total` : 'No employees yet',
+      changeType: 'neutral' as const,
       icon: Users,
       color: 'blue'
     },
     {
       title: 'Present Today',
-      value: '1,187',
-      change: '96.2%',
+      value: '0',
+      change: '0%',
       changeType: 'neutral' as const,
       icon: UserCheck,
       color: 'green'
     },
     {
       title: 'On Leave',
-      value: '23',
-      change: '-5 from yesterday',
+      value: '0',
+      change: 'No leave requests',
       changeType: 'neutral' as const,
       icon: Calendar,
       color: 'yellow'
     },
     {
       title: 'Late Arrivals',
-      value: '8',
-      change: '+3 from yesterday',
-      changeType: 'negative' as const,
+      value: '0',
+      change: 'No late arrivals',
+      changeType: 'neutral' as const,
       icon: Clock,
       color: 'red'
     },
     {
       title: 'Pending Reviews',
-      value: '45',
-      change: 'Due this week',
+      value: '0',
+      change: 'No pending reviews',
       changeType: 'neutral' as const,
       icon: TrendingUp,
       color: 'purple'
     },
     {
       title: 'Open Positions',
-      value: '12',
-      change: '+3 new postings',
-      changeType: 'positive' as const,
+      value: '0',
+      change: 'No open positions',
+      changeType: 'neutral' as const,
       icon: AlertTriangle,
       color: 'orange'
     }

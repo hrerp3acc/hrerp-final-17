@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Download } from 'lucide-react';
+import { Calendar, Download, Users } from 'lucide-react';
 import AttendanceStats from '@/components/Attendance/AttendanceStats';
 import AttendanceFilters from '@/components/Attendance/AttendanceFilters';
 import AttendanceTable from '@/components/Attendance/AttendanceTable';
@@ -12,48 +13,7 @@ const Attendance = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
 
-  const attendanceData = [
-    {
-      id: '1',
-      employee: 'Sarah Johnson',
-      department: 'Marketing',
-      checkIn: '09:00 AM',
-      checkOut: '06:00 PM',
-      totalHours: '9:00',
-      status: 'present',
-      overtime: '1:00'
-    },
-    {
-      id: '2',
-      employee: 'Michael Chen',
-      department: 'Engineering',
-      checkIn: '08:30 AM',
-      checkOut: '05:30 PM',
-      totalHours: '9:00',
-      status: 'present',
-      overtime: '1:00'
-    },
-    {
-      id: '3',
-      employee: 'Emily Rodriguez',
-      department: 'HR',
-      checkIn: '09:15 AM',
-      checkOut: '06:15 PM',
-      totalHours: '9:00',
-      status: 'late',
-      overtime: '1:00'
-    },
-    {
-      id: '4',
-      employee: 'David Kim',
-      department: 'Finance',
-      checkIn: '-',
-      checkOut: '-',
-      totalHours: '0:00',
-      status: 'absent',
-      overtime: '0:00'
-    }
-  ];
+  const attendanceData: any[] = [];
 
   const filteredData = attendanceData.filter(record => {
     const matchesSearch = record.employee.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,10 +23,10 @@ const Attendance = () => {
   });
 
   const attendanceStats = {
-    present: attendanceData.filter(r => r.status === 'present').length,
-    absent: attendanceData.filter(r => r.status === 'absent').length,
-    late: attendanceData.filter(r => r.status === 'late').length,
-    total: attendanceData.length
+    present: 0,
+    absent: 0,
+    late: 0,
+    total: 0
   };
 
   const handleAttendanceSelect = (record: any) => {
@@ -107,12 +67,28 @@ const Attendance = () => {
           setStatusFilter={setStatusFilter}
         />
 
-        {/* Attendance Table */}
-        <AttendanceTable 
-          data={filteredData} 
-          selectedDate={selectedDate}
-          onRecordSelect={handleAttendanceSelect}
-        />
+        {/* Attendance Table or Empty State */}
+        {filteredData.length > 0 ? (
+          <AttendanceTable 
+            data={filteredData} 
+            selectedDate={selectedDate}
+            onRecordSelect={handleAttendanceSelect}
+          />
+        ) : (
+          <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No attendance records</h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || statusFilter !== 'all' 
+                ? 'No attendance records match your current filters.' 
+                : 'Attendance records will appear here once employees start checking in.'}
+            </p>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Calendar className="w-4 h-4 mr-2" />
+              Mark Attendance
+            </Button>
+          </div>
+        )}
       </div>
 
       <div>

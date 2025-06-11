@@ -1,9 +1,11 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Plus, Mail, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DetailsPanel from '@/components/Common/DetailsPanel';
+import { useEmployees } from '@/hooks/useEmployees';
 
 interface Employee {
   id: string;
@@ -22,50 +24,8 @@ const EmployeeDirectory = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-  const employees: Employee[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@company.com',
-      phone: '+1 (555) 123-4567',
-      department: 'Marketing',
-      position: 'Marketing Manager',
-      location: 'New York',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael.chen@company.com',
-      phone: '+1 (555) 234-5678',
-      department: 'Engineering',
-      position: 'Senior Developer',
-      location: 'San Francisco',
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      email: 'emily.rodriguez@company.com',
-      phone: '+1 (555) 345-6789',
-      department: 'HR',
-      position: 'HR Specialist',
-      location: 'Chicago',
-      status: 'active'
-    },
-    {
-      id: '4',
-      name: 'David Kim',
-      email: 'david.kim@company.com',
-      phone: '+1 (555) 456-7890',
-      department: 'Finance',
-      position: 'Financial Analyst',
-      location: 'Boston',
-      status: 'inactive'
-    }
-  ];
-
-  const departments = ['all', 'Marketing', 'Engineering', 'HR', 'Finance', 'Sales'];
+  const { employees, getDepartments } = useEmployees();
+  const departments = ['all', ...getDepartments()];
 
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,82 +97,104 @@ const EmployeeDirectory = () => {
         </div>
 
         {/* Employee Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredEmployees.map((employee) => (
-            <div 
-              key={employee.id} 
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => handleEmployeeSelect(employee)}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-medium text-lg">
-                      {employee.name.split(' ').map(n => n[0]).join('')}
-                    </span>
+        {filteredEmployees.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredEmployees.map((employee) => (
+              <div 
+                key={employee.id} 
+                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleEmployeeSelect(employee)}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-medium text-lg">
+                        {employee.name.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{employee.name}</h3>
+                      <p className="text-sm text-gray-600">{employee.position}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{employee.name}</h3>
-                    <p className="text-sm text-gray-600">{employee.position}</p>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    employee.status === 'active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {employee.status}
+                  </span>
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <Mail className="w-4 h-4" />
+                    <span>{employee.email}</span>
                   </div>
+                  {employee.phone && (
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Phone className="w-4 h-4" />
+                      <span>{employee.phone}</span>
+                    </div>
+                  )}
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  employee.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {employee.status}
-                </span>
-              </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Mail className="w-4 h-4" />
-                  <span>{employee.email}</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">{employee.department}</span>
+                  {employee.location && <span className="text-gray-600">{employee.location}</span>}
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Phone className="w-4 h-4" />
-                  <span>{employee.phone}</span>
+
+                <div className="mt-4 pt-4 border-t border-gray-200 flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewProfile(employee.id);
+                    }}
+                  >
+                    View Profile
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditEmployee(employee.id);
+                    }}
+                  >
+                    Edit
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">{employee.department}</span>
-                <span className="text-gray-600">{employee.location}</span>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200 flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewProfile(employee.id);
-                  }}
-                >
-                  View Profile
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditEmployee(employee.id);
-                  }}
-                >
-                  Edit
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl p-12 shadow-sm border border-gray-200 text-center">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || selectedDepartment !== 'all' 
+                ? 'No employees match your current filters. Try adjusting your search or filters.' 
+                : 'Get started by adding your first employee to the directory.'}
+            </p>
+            <Link to="/employees/add">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add First Employee
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Results Summary */}
-        <div className="text-center text-gray-600">
-          Showing {filteredEmployees.length} of {employees.length} employees
-        </div>
+        {filteredEmployees.length > 0 && (
+          <div className="text-center text-gray-600">
+            Showing {filteredEmployees.length} of {employees.length} employees
+          </div>
+        )}
       </div>
 
       <div>
@@ -240,18 +222,22 @@ const EmployeeDirectory = () => {
                   <p className="text-sm text-gray-500">Department</p>
                   <p className="font-medium">{selectedEmployee.department}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Location</p>
-                  <p className="font-medium">{selectedEmployee.location}</p>
-                </div>
+                {selectedEmployee.location && (
+                  <div>
+                    <p className="text-sm text-gray-500">Location</p>
+                    <p className="font-medium">{selectedEmployee.location}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
                   <p className="font-medium">{selectedEmployee.email}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{selectedEmployee.phone}</p>
-                </div>
+                {selectedEmployee.phone && (
+                  <div>
+                    <p className="text-sm text-gray-500">Phone</p>
+                    <p className="font-medium">{selectedEmployee.phone}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
                   <span className={`px-2 py-1 text-xs rounded-full ${

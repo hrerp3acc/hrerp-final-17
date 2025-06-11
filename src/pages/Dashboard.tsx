@@ -9,14 +9,18 @@ import QuickStats from '@/components/Dashboard/QuickStats';
 import { Users, Clock, Calendar, TrendingUp } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useEmployees } from '@/hooks/useEmployees';
 
 const Dashboard = () => {
   const { user } = useUser();
   const { hasPermission } = usePermissions();
+  const { getEmployeeStats } = useEmployees();
 
   useEffect(() => {
     console.log('Dashboard loaded successfully');
   }, []);
+
+  const employeeStats = getEmployeeStats();
 
   return (
     <div className="space-y-6">
@@ -36,26 +40,26 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title="Total Employees"
-            value="1,247"
-            change={{ value: 5.2, type: 'increase' }}
+            value={employeeStats.total.toString()}
+            change={{ value: 0, type: 'neutral' }}
             icon={Users}
           />
           <MetricCard
             title="Attendance Rate"
-            value="94.2%"
-            change={{ value: 2.1, type: 'increase' }}
+            value="0%"
+            change={{ value: 0, type: 'neutral' }}
             icon={Clock}
           />
           <MetricCard
             title="Pending Leaves"
-            value="23"
-            change={{ value: 12, type: 'decrease' }}
+            value="0"
+            change={{ value: 0, type: 'neutral' }}
             icon={Calendar}
           />
           <MetricCard
             title="Performance Score"
-            value="88.5"
-            change={{ value: 3.7, type: 'increase' }}
+            value="0"
+            change={{ value: 0, type: 'neutral' }}
             icon={TrendingUp}
           />
         </div>

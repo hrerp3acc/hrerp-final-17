@@ -3,70 +3,8 @@ import { useState, useEffect } from 'react';
 import { Employee } from '@/types/employee';
 import { filterEmployees, sortEmployees } from '@/utils/employeeUtils';
 
-// Mock data for demonstration
-const mockEmployees: Employee[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@company.com',
-    phone: '+1 (555) 123-4567',
-    department: 'Marketing',
-    position: 'Marketing Manager',
-    location: 'New York',
-    status: 'active',
-    startDate: '2020-01-15',
-    salary: 75000,
-    skills: ['Digital Marketing', 'SEO', 'Content Strategy'],
-    emergencyContact: {
-      name: 'John Johnson',
-      phone: '+1 (555) 987-6543',
-      relationship: 'Spouse'
-    }
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'michael.chen@company.com',
-    phone: '+1 (555) 234-5678',
-    department: 'Engineering',
-    position: 'Senior Developer',
-    location: 'San Francisco',
-    status: 'active',
-    startDate: '2019-06-10',
-    salary: 95000,
-    skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
-    managerId: '3'
-  },
-  {
-    id: '3',
-    name: 'Emily Rodriguez',
-    email: 'emily.rodriguez@company.com',
-    phone: '+1 (555) 345-6789',
-    department: 'Engineering',
-    position: 'Engineering Manager',
-    location: 'San Francisco',
-    status: 'active',
-    startDate: '2018-03-20',
-    salary: 110000,
-    skills: ['Team Leadership', 'System Architecture', 'Project Management']
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    email: 'david.kim@company.com',
-    phone: '+1 (555) 456-7890',
-    department: 'Finance',
-    position: 'Financial Analyst',
-    location: 'Boston',
-    status: 'active',
-    startDate: '2021-09-01',
-    salary: 65000,
-    skills: ['Financial Analysis', 'Excel', 'SQL']
-  }
-];
-
 export const useEmployees = () => {
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
