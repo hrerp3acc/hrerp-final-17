@@ -15,17 +15,9 @@ const LearningDevelopment = () => {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
 
-  const courses = [
-    { id: 1, title: "Leadership Fundamentals", instructor: "Sarah Johnson", duration: "6 weeks", enrolled: 24, progress: 85, status: "In Progress", description: "Build essential leadership skills for modern managers" },
-    { id: 2, title: "Data Analytics Mastery", instructor: "Michael Chen", duration: "8 weeks", enrolled: 18, progress: 45, status: "Active", description: "Master data analysis tools and techniques" },
-    { id: 3, title: "Communication Excellence", instructor: "Emily Davis", duration: "4 weeks", enrolled: 32, progress: 100, status: "Completed", description: "Enhance professional communication skills" },
-  ];
-
-  const programs = [
-    { id: 1, name: "Management Development Program", participants: 15, duration: "6 months", completion: 67, status: "Active", description: "Comprehensive leadership development program" },
-    { id: 2, name: "Technical Skills Bootcamp", participants: 28, duration: "3 months", completion: 89, status: "Active", description: "Intensive technical skills training" },
-    { id: 3, name: "Sales Excellence Program", participants: 12, duration: "4 months", completion: 45, status: "Active", description: "Advanced sales methodology training" },
-  ];
+  // Empty data arrays - will be populated when real data is available
+  const courses: any[] = [];
+  const programs: any[] = [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -40,10 +32,10 @@ const LearningDevelopment = () => {
               <CardDescription>Currently enrolled</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">12</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span>+3 this month</span>
+                <TrendingUp className="w-4 h-4 text-gray-400" />
+                <span>No courses yet</span>
               </div>
             </CardContent>
           </Card>
@@ -57,10 +49,10 @@ const LearningDevelopment = () => {
               <CardDescription>Completed this year</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">47</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
-                <Star className="w-4 h-4 text-gold-500" />
-                <span>23% increase</span>
+                <Star className="w-4 h-4 text-gray-400" />
+                <span>No certifications</span>
               </div>
             </CardContent>
           </Card>
@@ -74,10 +66,10 @@ const LearningDevelopment = () => {
               <CardDescription>This quarter</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">1,247</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
-                <Calendar className="w-4 h-4 text-blue-500" />
-                <span>Avg 15h per employee</span>
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span>No learning hours</span>
               </div>
             </CardContent>
           </Card>
@@ -91,10 +83,10 @@ const LearningDevelopment = () => {
               <CardDescription>Active learners</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">89</div>
+              <div className="text-3xl font-bold">0</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>85% completion rate</span>
+                <CheckCircle className="w-4 h-4 text-gray-400" />
+                <span>No participants</span>
               </div>
             </CardContent>
           </Card>
@@ -117,29 +109,13 @@ const LearningDevelopment = () => {
                 </CardTitle>
                 <CardDescription>Manage training courses and content</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {courses.map((course) => (
-                    <div 
-                      key={course.id} 
-                      className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
-                      onClick={() => setSelectedCourse(course)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{course.title}</h4>
-                        <Badge variant={course.status === "Completed" ? "secondary" : course.status === "In Progress" ? "default" : "outline"}>
-                          {course.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-2">by {course.instructor} • {course.duration}</p>
-                      <Progress value={course.progress} className="mb-2" />
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>{course.enrolled} enrolled</span>
-                        <span>{course.progress}% complete</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="p-12 text-center">
+                <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No courses available</h3>
+                <p className="text-gray-600 mb-6">
+                  Learning courses will appear here once you create and add them to the system.
+                </p>
+                <Button>Create First Course</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -150,33 +126,13 @@ const LearningDevelopment = () => {
                 <CardTitle>Development Programs</CardTitle>
                 <CardDescription>Long-term skill development initiatives</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {programs.map((program) => (
-                    <div 
-                      key={program.id} 
-                      className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
-                      onClick={() => setSelectedProgram(program)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{program.name}</h4>
-                        <Badge variant="default">{program.status}</Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mb-2">
-                        <div>
-                          <p className="text-sm text-gray-500">Participants</p>
-                          <p className="font-medium">{program.participants}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="font-medium">{program.duration}</p>
-                        </div>
-                      </div>
-                      <Progress value={program.completion} className="mb-2" />
-                      <div className="text-sm text-gray-500">{program.completion}% completion</div>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="p-12 text-center">
+                <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No development programs</h3>
+                <p className="text-gray-600 mb-6">
+                  Development programs will be listed here once you create comprehensive training initiatives.
+                </p>
+                <Button>Create First Program</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -187,30 +143,13 @@ const LearningDevelopment = () => {
                 <CardTitle>Resource Library</CardTitle>
                 <CardDescription>Access learning materials and resources</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { type: "Video", title: "Project Management Essentials", duration: "2h 30m", downloads: 156 },
-                    { type: "Document", title: "Leadership Best Practices Guide", size: "2.4 MB", downloads: 89 },
-                    { type: "Presentation", title: "Data Analysis Techniques", slides: "45 slides", downloads: 203 },
-                    { type: "eBook", title: "Communication Mastery", pages: "120 pages", downloads: 67 },
-                  ].map((resource, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline">{resource.type}</Badge>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                      <h4 className="font-medium mb-1">{resource.title}</h4>
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>{resource.duration || resource.size || resource.slides || resource.pages}</span>
-                        <span>{resource.downloads} downloads</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="p-12 text-center">
+                <Download className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No learning resources</h3>
+                <p className="text-gray-600 mb-6">
+                  Learning materials and resources will be available here once you upload them.
+                </p>
+                <Button>Upload Resources</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -221,27 +160,13 @@ const LearningDevelopment = () => {
                 <CardTitle>Skills Assessment</CardTitle>
                 <CardDescription>Evaluate and track skill development</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { skill: "Leadership", current: 75, target: 85, assessment: "Quarterly Review" },
-                    { skill: "Technical Skills", current: 82, target: 90, assessment: "Peer Evaluation" },
-                    { skill: "Communication", current: 90, target: 95, assessment: "360 Feedback" },
-                    { skill: "Problem Solving", current: 68, target: 80, assessment: "Case Study" },
-                  ].map((assessment, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{assessment.skill}</h4>
-                        <span className="text-sm text-gray-500">{assessment.current}% → {assessment.target}%</span>
-                      </div>
-                      <Progress value={assessment.current} className="mb-2" />
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>Assessment: {assessment.assessment}</span>
-                        <Button variant="outline" size="sm">Take Assessment</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="p-12 text-center">
+                <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No skills assessments</h3>
+                <p className="text-gray-600 mb-6">
+                  Skills assessments will be displayed here once you create evaluation criteria and conduct assessments.
+                </p>
+                <Button>Create Assessment</Button>
               </CardContent>
             </Card>
           </TabsContent>
