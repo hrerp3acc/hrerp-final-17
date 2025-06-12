@@ -30,7 +30,7 @@ const CourseCatalog = () => {
           <p className="text-gray-600 mb-6">
             Course catalog is empty. Courses will appear here once they are added to the system.
           </p>
-          <Button>Browse External Courses</Button>
+          <Button>Add First Course</Button>
         </CardContent>
       </Card>
     </div>

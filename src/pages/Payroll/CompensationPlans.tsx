@@ -51,7 +51,7 @@ const CompensationPlans = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">$0</div>
+            <div className="text-3xl font-bold">₹0</div>
           </CardContent>
         </Card>
 
