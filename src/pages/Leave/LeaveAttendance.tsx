@@ -1,15 +1,11 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Calendar as CalendarIcon, 
   Clock, 
   User, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -36,51 +32,16 @@ const LeaveAttendance = () => {
   const [selectedEvent, setSelectedEvent] = useState<AttendanceEvent | null>(null);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState('calendar');
-
-  // Sample attendance data
-  const attendanceData: AttendanceEvent[] = [
-    {
-      date: new Date(2025, 5, 1), // June 1st
-      status: 'leave',
-      timeSpent: '00:00',
-      inTime: '10:14',
-      outTime: '10:14',
-      shiftName: 'G',
-      shiftTiming: '9:30AM - 6:30PM',
-      employeeId: 'KPS00133'
-    },
-    {
-      date: new Date(2025, 5, 2),
-      status: 'present',
-      timeSpent: '08:30',
-      inTime: '09:15',
-      outTime: '18:00',
-      shiftName: 'G',
-      shiftTiming: '9:30AM - 6:30PM',
-      employeeId: 'KPS00133',
-      productiveTime: '07:45',
-      nonProductiveTime: '00:45'
-    },
-    {
-      date: new Date(2025, 5, 5),
-      status: 'absent',
-      timeSpent: '00:00',
-      inTime: '10:14',
-      outTime: '10:14',
-      shiftName: 'G',
-      shiftTiming: '9:30AM - 6:30PM',
-      employeeId: 'KPS00133'
-    }
-  ];
+  const [attendanceData, setAttendanceData] = useState<AttendanceEvent[]>([]);
 
   const attendanceStats = {
-    totalDays: 5,
-    physicalPresentDays: 2.5,
-    weeklyOffs: 1,
+    totalDays: 0,
+    physicalPresentDays: 0,
+    weeklyOffs: 0,
     leaves: 0,
     holidays: 0,
-    absents: 1.5,
-    paidDays: 3.5,
+    absents: 0,
+    paidDays: 0,
     lateCount: 0,
     earlyGoingCount: 0,
     lateDeductionLeaves: 0,
@@ -164,11 +125,11 @@ const LeaveAttendance = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Welcome MOHANAVEL R
+                Welcome to Attendance Tracking
               </h1>
               <p className="text-xl text-indigo-500 font-medium">Good Morning</p>
               <p className="text-slate-600 mt-3 max-w-2xl">
-                Great to see you again! Thanks for trusting our HRM platform to keep your work organized and hassle-free. Let's make today another productive one!
+                Track your attendance and working hours. Start by clicking the attendance button below.
               </p>
             </div>
           </div>
@@ -191,7 +152,7 @@ const LeaveAttendance = () => {
               className="h-24 flex flex-col items-center justify-center space-y-3 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-purple-200 transition-all duration-300 shadow-md hover:shadow-lg"
               onClick={() => setActiveTab('calendar')}
             >
-              <CheckCircle className="w-8 h-8 text-purple-600" />
+              <CalendarIcon className="w-8 h-8 text-purple-600" />
               <span className="font-semibold text-purple-700">Leave & Attendance</span>
             </Button>
           </div>
@@ -247,7 +208,9 @@ const LeaveAttendance = () => {
       <div className="p-8">
         {/* Attendance Period Info */}
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl mb-8 border border-indigo-200">
-          <h3 className="font-bold text-indigo-800 text-lg">Attendance Period 01-Jun-2025-05-Jun-2025</h3>
+          <h3 className="font-bold text-indigo-800 text-lg">
+            Attendance Period {format(startOfMonth(currentMonth), 'dd-MMM-yyyy')} - {format(endOfMonth(currentMonth), 'dd-MMM-yyyy')}
+          </h3>
         </div>
 
         {/* Stats Grid */}
@@ -270,43 +233,37 @@ const LeaveAttendance = () => {
           <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
             <div className="text-rose-600 font-bold text-lg">Absents: {attendanceStats.absents}</div>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-emerald-600 font-bold text-lg">Paid Days: {attendanceStats.paidDays}</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">No. of Late: {attendanceStats.lateCount}</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">No. of Early Going: {attendanceStats.earlyGoingCount}</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">Late Deduction Leaves: {attendanceStats.lateDeductionLeaves}</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">Over Time Hours:</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">Late Hours:</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">Early Going Hours:</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
-            <div className="text-slate-600 font-semibold">Coff: {attendanceStats.coff}</div>
-          </div>
         </div>
 
         {/* Calendar */}
         <div className="bg-white rounded-xl p-8 shadow-lg border border-slate-200">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold text-slate-800">June 2025</h3>
+            <h3 className="text-2xl font-bold text-slate-800">{format(currentMonth, 'MMMM yyyy')}</h3>
             <div className="flex items-center space-x-4">
               <Button variant="outline" size="sm" className="border-slate-300 hover:border-indigo-400 hover:text-indigo-600">Today</Button>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" className="hover:bg-slate-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hover:bg-slate-100"
+                  onClick={() => {
+                    const newDate = new Date(currentMonth);
+                    newDate.setMonth(newDate.getMonth() - 1);
+                    setCurrentMonth(newDate);
+                  }}
+                >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="hover:bg-slate-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hover:bg-slate-100"
+                  onClick={() => {
+                    const newDate = new Date(currentMonth);
+                    newDate.setMonth(newDate.getMonth() + 1);
+                    setCurrentMonth(newDate);
+                  }}
+                >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -314,21 +271,31 @@ const LeaveAttendance = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2 border border-slate-200 rounded-lg overflow-hidden">
-            {/* Header */}
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="p-4 bg-slate-100 border-b border-slate-200 text-center font-bold text-slate-700">
-                {day}
-              </div>
-            ))}
-            
-            {/* Calendar Days */}
-            {generateCalendarGrid().map((date, index) => (
-              <div key={index} className="border-b border-r border-slate-200 last:border-r-0">
-                {date ? renderCalendarDay(date) : <div className="h-20"></div>}
-              </div>
-            ))}
-          </div>
+          {attendanceData.length === 0 ? (
+            <div className="text-center py-12">
+              <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No attendance data available</h3>
+              <p className="text-gray-600 mb-6">
+                Start tracking your attendance to see data here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-7 gap-2 border border-slate-200 rounded-lg overflow-hidden">
+              {/* Header */}
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="p-4 bg-slate-100 border-b border-slate-200 text-center font-bold text-slate-700">
+                  {day}
+                </div>
+              ))}
+              
+              {/* Calendar Days */}
+              {generateCalendarGrid().map((date, index) => (
+                <div key={index} className="border-b border-r border-slate-200 last:border-r-0">
+                  {date ? renderCalendarDay(date) : <div className="h-20"></div>}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Legend */}
           <div className="mt-8 flex items-center justify-center space-x-8">
@@ -356,45 +323,18 @@ const LeaveAttendance = () => {
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-800">Events</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-slate-800">Attendance Details</DialogTitle>
           </DialogHeader>
           
           {selectedEvent && (
-            <div className="space-y-8">
-              <div className="flex space-x-8 border-b border-slate-200">
-                {['Details', 'Swipes', 'Leave', 'Incident', 'Summary'].map((tab) => (
-                  <button
-                    key={tab}
-                    className={`pb-3 px-2 text-sm font-medium border-b-2 transition-colors ${
-                      tab === 'Details' 
-                        ? 'border-indigo-500 text-indigo-600' 
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {/* Event Header */}
-              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-xl border border-emerald-200 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <ChevronLeft className="w-4 h-4 text-slate-600" />
-                    <span className="font-bold text-slate-800">{format(selectedEvent.date, 'dd-MMM-yyyy')}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-600" />
-                  </div>
-                  <div className="text-sm text-slate-600 mt-1">
-                    G 9:30AM - 6:30PM
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-slate-800">Status: {selectedEvent.status}</div>
-                  <div className="text-sm text-slate-600">Time Spent:</div>
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-xl border border-emerald-200">
+                <div className="text-lg font-bold text-slate-800">{format(selectedEvent.date, 'dd-MMM-yyyy')}</div>
+                <div className="text-sm text-slate-600 mt-1">
+                  {selectedEvent.shiftName} {selectedEvent.shiftTiming}
                 </div>
               </div>
 
-              {/* Event Details */}
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div className="flex justify-between">
@@ -402,12 +342,8 @@ const LeaveAttendance = () => {
                     <span className="font-bold text-slate-800">{selectedEvent.employeeId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-600 font-medium">Shift (Name)</span>
-                    <span className="font-bold text-slate-800">{selectedEvent.shiftName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600 font-medium">Shift (Timing & Hours)</span>
-                    <span className="font-bold text-slate-800">{selectedEvent.shiftTiming}</span>
+                    <span className="text-slate-600 font-medium">Status</span>
+                    <span className="font-bold text-slate-800 capitalize">{selectedEvent.status}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600 font-medium">In Time</span>
@@ -426,20 +362,14 @@ const LeaveAttendance = () => {
                   </div>
                   {selectedEvent.productiveTime && (
                     <div className="flex justify-between">
-                      <span className="text-slate-600 font-medium">Productive Time Spent</span>
+                      <span className="text-slate-600 font-medium">Productive Time</span>
                       <span className="font-bold text-slate-800">{selectedEvent.productiveTime}</span>
                     </div>
                   )}
                   {selectedEvent.nonProductiveTime && (
                     <div className="flex justify-between">
-                      <span className="text-slate-600 font-medium">Non Productive Time Spent</span>
+                      <span className="text-slate-600 font-medium">Non Productive Time</span>
                       <span className="font-bold text-slate-800">{selectedEvent.nonProductiveTime}</span>
-                    </div>
-                  )}
-                  {selectedEvent.otHours && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 font-medium">OT Hours</span>
-                      <span className="font-bold text-slate-800">{selectedEvent.otHours}</span>
                     </div>
                   )}
                 </div>

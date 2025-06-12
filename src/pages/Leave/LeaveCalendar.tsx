@@ -20,36 +20,7 @@ const LeaveCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedLeaveType, setSelectedLeaveType] = useState('all');
-
-  const leaveEvents: LeaveEvent[] = [
-    {
-      id: '1',
-      employee: 'Sarah Johnson',
-      department: 'Marketing',
-      leaveType: 'Annual Leave',
-      startDate: '2024-06-10',
-      endDate: '2024-06-14',
-      status: 'approved'
-    },
-    {
-      id: '2',
-      employee: 'Michael Chen',
-      department: 'Engineering',
-      leaveType: 'Sick Leave',
-      startDate: '2024-06-05',
-      endDate: '2024-06-05',
-      status: 'approved'
-    },
-    {
-      id: '3',
-      employee: 'Emily Rodriguez',
-      department: 'HR',
-      leaveType: 'Personal Leave',
-      startDate: '2024-06-20',
-      endDate: '2024-06-21',
-      status: 'pending'
-    }
-  ];
+  const [leaveEvents, setLeaveEvents] = useState<LeaveEvent[]>([]);
 
   const departments = ['all', 'Marketing', 'Engineering', 'HR', 'Finance', 'Sales'];
   const leaveTypes = ['all', 'Annual Leave', 'Sick Leave', 'Personal Leave', 'Emergency Leave'];

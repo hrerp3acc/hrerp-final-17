@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Download, Users } from 'lucide-react';
 import AttendanceStats from '@/components/Attendance/AttendanceStats';
 import AttendanceFilters from '@/components/Attendance/AttendanceFilters';
-import AttendanceTable from '@/components/Attendance/AttendanceTable';
 import DetailsPanel from '@/components/Common/DetailsPanel';
 
 const Attendance = () => {
@@ -12,9 +11,7 @@ const Attendance = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
-
-  // Empty attendance data - will be populated when user adds data
-  const attendanceData: any[] = [];
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
 
   const filteredData = attendanceData.filter(record => {
     const matchesSearch = record.employee.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,14 +21,19 @@ const Attendance = () => {
   });
 
   const attendanceStats = {
-    present: 0,
-    absent: 0,
-    late: 0,
-    total: 0
+    present: attendanceData.filter(record => record.status === 'present').length,
+    absent: attendanceData.filter(record => record.status === 'absent').length,
+    late: attendanceData.filter(record => record.status === 'late').length,
+    total: attendanceData.length
   };
 
   const handleAttendanceSelect = (record: any) => {
     setSelectedAttendance(record);
+  };
+
+  const handleMarkAttendance = () => {
+    // This would typically open a modal to mark attendance
+    console.log('Mark attendance clicked');
   };
 
   return (
@@ -48,7 +50,7 @@ const Attendance = () => {
               <Download className="w-4 h-4 mr-2" />
               Export Report
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleMarkAttendance}>
               <Calendar className="w-4 h-4 mr-2" />
               Mark Attendance
             </Button>
@@ -75,7 +77,7 @@ const Attendance = () => {
           <p className="text-gray-600 mb-6">
             Attendance records will appear here once employees start checking in.
           </p>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleMarkAttendance}>
             <Calendar className="w-4 h-4 mr-2" />
             Mark Attendance
           </Button>

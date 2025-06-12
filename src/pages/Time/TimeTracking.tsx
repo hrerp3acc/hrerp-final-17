@@ -1,34 +1,77 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, Pause, Square, Calendar } from 'lucide-react';
 
 const TimeTracking = () => {
   const [isTracking, setIsTracking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentTime, setCurrentTime] = useState('09:23:45');
-  const [todayHours, setTodayHours] = useState('7h 23m');
+  const [currentTime, setCurrentTime] = useState('00:00:00');
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [todayHours, setTodayHours] = useState('0h 0m');
+  const [timeEntries, setTimeEntries] = useState<any[]>([]);
+
+  // Update current time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isTracking && !isPaused && startTime) {
+        const now = new Date();
+        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000) + elapsedTime;
+        const hours = Math.floor(elapsed / 3600);
+        const minutes = Math.floor((elapsed % 3600) / 60);
+        const seconds = elapsed % 60;
+        setCurrentTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTracking, isPaused, startTime, elapsedTime]);
 
   const handleStartStop = () => {
     if (isTracking) {
+      // Stop tracking
       setIsTracking(false);
       setIsPaused(false);
+      if (startTime) {
+        const now = new Date();
+        const totalElapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000) + elapsedTime;
+        const hours = Math.floor(totalElapsed / 3600);
+        const minutes = Math.floor((totalElapsed % 3600) / 60);
+        
+        // Add to today's total
+        const currentTotalMinutes = parseInt(todayHours.split('h')[0]) * 60 + parseInt(todayHours.split('h')[1].split('m')[0]);
+        const newTotalMinutes = currentTotalMinutes + Math.floor(totalElapsed / 60);
+        const newHours = Math.floor(newTotalMinutes / 60);
+        const newMinutes = newTotalMinutes % 60;
+        setTodayHours(`${newHours}h ${newMinutes}m`);
+      }
+      setStartTime(null);
+      setElapsedTime(0);
+      setCurrentTime('00:00:00');
     } else {
+      // Start tracking
       setIsTracking(true);
       setIsPaused(false);
+      setStartTime(new Date());
+      setElapsedTime(0);
     }
   };
 
   const handlePause = () => {
-    setIsPaused(!isPaused);
+    if (isPaused) {
+      // Resume
+      setIsPaused(false);
+      setStartTime(new Date());
+    } else {
+      // Pause
+      setIsPaused(true);
+      if (startTime) {
+        const now = new Date();
+        setElapsedTime(prev => prev + Math.floor((now.getTime() - startTime.getTime()) / 1000));
+      }
+    }
   };
-
-  const recentEntries = [
-    { date: '2024-06-04', project: 'HR System Development', hours: '8h 15m', status: 'completed' },
-    { date: '2024-06-03', project: 'Team Meeting', hours: '1h 30m', status: 'completed' },
-    { date: '2024-06-03', project: 'Code Review', hours: '2h 45m', status: 'completed' },
-    { date: '2024-06-02', project: 'Documentation', hours: '3h 20m', status: 'completed' }
-  ];
 
   return (
     <div className="space-y-6">
@@ -100,7 +143,7 @@ const TimeTracking = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">This Week</p>
-              <p className="text-xl font-bold text-gray-900">38h 15m</p>
+              <p className="text-xl font-bold text-gray-900">0h 0m</p>
             </div>
           </div>
         </div>
@@ -112,7 +155,7 @@ const TimeTracking = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">This Month</p>
-              <p className="text-xl font-bold text-gray-900">156h 42m</p>
+              <p className="text-xl font-bold text-gray-900">0h 0m</p>
             </div>
           </div>
         </div>
@@ -124,7 +167,7 @@ const TimeTracking = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Average/Day</p>
-              <p className="text-xl font-bold text-gray-900">7h 48m</p>
+              <p className="text-xl font-bold text-gray-900">0h 0m</p>
             </div>
           </div>
         </div>
@@ -135,21 +178,16 @@ const TimeTracking = () => {
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Recent Time Entries</h3>
         </div>
-        <div className="divide-y divide-gray-200">
-          {recentEntries.map((entry, index) => (
-            <div key={index} className="p-6 flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-gray-900">{entry.project}</h4>
-                <p className="text-sm text-gray-600">{entry.date}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-medium text-gray-900">{entry.hours}</p>
-                <span className="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                  {entry.status}
-                </span>
-              </div>
-            </div>
-          ))}
+        <div className="p-12 text-center">
+          <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No time entries yet</h3>
+          <p className="text-gray-600 mb-6">
+            Start tracking your time to see entries here.
+          </p>
+          <Button onClick={handleStartStop} className="bg-blue-600 hover:bg-blue-700">
+            <Play className="w-4 h-4 mr-2" />
+            Start Tracking
+          </Button>
         </div>
       </div>
     </div>
