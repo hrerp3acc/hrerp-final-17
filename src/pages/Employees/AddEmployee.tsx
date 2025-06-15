@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,38 +10,38 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import LocationInput from '@/components/ui/LocationInput';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 
 const AddEmployee = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { addEmployee, departments, loading } = useSupabaseEmployees();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    department: '',
+    departmentId: '',
     position: '',
     location: '',
     startDate: '',
     salary: '',
     employeeId: '',
-    emergencyContact: '',
-    emergencyPhone: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
     address: '',
     notes: ''
   });
-
-  const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations'];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.department) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.departmentId) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields.",
@@ -52,16 +53,38 @@ const AddEmployee = () => {
     // Generate employee ID if not provided
     const employeeId = formData.employeeId || `EMP${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
     
-    console.log('New Employee Data:', { ...formData, employeeId });
-    
-    toast({
-      title: "Success!",
-      description: `Employee ${formData.firstName} ${formData.lastName} has been added successfully.`,
-    });
+    const employeeData = {
+      employee_id: employeeId,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      email: formData.email,
+      phone: formData.phone || null,
+      department_id: formData.departmentId,
+      position: formData.position || null,
+      location: formData.location || null,
+      start_date: formData.startDate || null,
+      salary: formData.salary ? parseFloat(formData.salary) : null,
+      emergency_contact_name: formData.emergencyContactName || null,
+      emergency_contact_phone: formData.emergencyContactPhone || null,
+      address: formData.address || null,
+      notes: formData.notes || null,
+      status: 'active' as const
+    };
 
-    // Navigate back to employee directory
-    navigate('/employees');
+    const { error } = await addEmployee(employeeData);
+    
+    if (!error) {
+      navigate('/employees');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -167,13 +190,13 @@ const AddEmployee = () => {
 
             <div>
               <Label htmlFor="department">Department *</Label>
-              <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
+              <Select value={formData.departmentId} onValueChange={(value) => handleInputChange('departmentId', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map(dept => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -226,20 +249,20 @@ const AddEmployee = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="emergencyContact">Emergency Contact Name</Label>
+                <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
                 <Input
-                  id="emergencyContact"
-                  value={formData.emergencyContact}
-                  onChange={(e) => handleInputChange('emergencyContact', e.target.value)}
+                  id="emergencyContactName"
+                  value={formData.emergencyContactName}
+                  onChange={(e) => handleInputChange('emergencyContactName', e.target.value)}
                   placeholder="Jane Doe"
                 />
               </div>
               <div>
-                <Label htmlFor="emergencyPhone">Emergency Contact Phone</Label>
+                <Label htmlFor="emergencyContactPhone">Emergency Contact Phone</Label>
                 <Input
-                  id="emergencyPhone"
-                  value={formData.emergencyPhone}
-                  onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
+                  id="emergencyContactPhone"
+                  value={formData.emergencyContactPhone}
+                  onChange={(e) => handleInputChange('emergencyContactPhone', e.target.value)}
                   placeholder="+1 (555) 987-6543"
                 />
               </div>
