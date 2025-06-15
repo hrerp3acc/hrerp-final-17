@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Bell, Search, Settings, User, LogOut } from 'lucide-react';
+import { Bell, Search, Settings, User, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,7 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
+interface HeaderProps {
+  onMenuToggle?: () => void;
+  isSidebarOpen?: boolean;
+}
+
+const Header = ({ onMenuToggle, isSidebarOpen }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -34,9 +39,21 @@ const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
-        {/* Search */}
-        <div className="flex items-center space-x-4 flex-1 max-w-md">
-          <div className="relative w-full">
+        {/* Mobile menu button */}
+        <div className="flex items-center space-x-4">
+          {onMenuToggle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={onMenuToggle}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+          
+          {/* Search */}
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               placeholder="Search employees, departments..."

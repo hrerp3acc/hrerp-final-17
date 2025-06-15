@@ -68,7 +68,9 @@ const AddEmployee = () => {
       emergency_contact_phone: formData.emergencyContactPhone || null,
       address: formData.address || null,
       notes: formData.notes || null,
-      status: 'active' as const
+      status: 'active' as const,
+      manager_id: null, // Can be added later
+      user_id: null // Will be linked when the employee creates an account
     };
 
     const { error } = await addEmployee(employeeData);
