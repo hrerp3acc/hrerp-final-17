@@ -7,16 +7,14 @@ import QuickActions from '@/components/Dashboard/QuickActions';
 import RecentActivities from '@/components/Dashboard/RecentActivities';
 import QuickStats from '@/components/Dashboard/QuickStats';
 import { Users, Clock, Calendar, TrendingUp } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
+import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import { useEmployees } from '@/hooks/useEmployees';
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const { profile } = useProfile();
+  const { user } = useUser();
   const { hasPermission } = usePermissions();
-  const { getEmployeeStats } = useSupabaseEmployees();
+  const { getEmployeeStats } = useEmployees();
 
   useEffect(() => {
     console.log('Dashboard loaded successfully');
@@ -24,19 +22,12 @@ const Dashboard = () => {
 
   const employeeStats = getEmployeeStats();
 
-  const getUserDisplayName = () => {
-    if (profile?.first_name) {
-      return profile.first_name;
-    }
-    return user?.email?.split('@')[0] || 'User';
-  };
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {getUserDisplayName()}
+          Welcome back, {user?.name?.split(' ')[0] || 'User'}
         </h1>
         <p className="text-gray-600">Here's what's happening in your organization today</p>
       </div>

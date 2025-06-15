@@ -1,7 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from './AuthContext';
-import { useProfile } from '@/hooks/useProfile';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface User {
   id: string;
@@ -35,34 +33,25 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const { user: authUser, signOut } = useAuth();
-  const { profile } = useProfile();
+  // For now, we'll use a mock user until we integrate with authentication
+  const [user, setUser] = useState<User | null>({
+    id: '1',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@company.com',
+    role: 'admin',
+    department: 'Executive',
+    position: 'CEO'
+  });
 
-  // Convert auth user and profile to legacy User format for compatibility
-  const user: User | null = authUser ? {
-    id: authUser.id,
-    name: profile?.first_name && profile?.last_name 
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile?.first_name || authUser.email?.split('@')[0] || 'User',
-    email: authUser.email || '',
-    role: 'employee', // Default role, will be enhanced with real roles later
-    avatar: profile?.avatar_url,
-    position: profile?.position || undefined
-  } : null;
-
-  const logout = async () => {
-    await signOut();
-  };
-
-  const setUser = () => {
-    // This is handled by the auth context now
-    console.warn('setUser is deprecated, use auth context instead');
+  const logout = () => {
+    setUser(null);
+    // In a real app, this would also handle API logout, clear tokens, etc.
   };
 
   const value = {
     user,
     setUser,
-    isAuthenticated: !!authUser,
+    isAuthenticated: !!user,
     logout
   };
 
