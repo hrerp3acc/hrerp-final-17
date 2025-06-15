@@ -7,12 +7,12 @@ import QuickActions from '@/components/Dashboard/QuickActions';
 import RecentActivities from '@/components/Dashboard/RecentActivities';
 import QuickStats from '@/components/Dashboard/QuickStats';
 import { Users, Clock, Calendar, TrendingUp } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useEmployees } from '@/hooks/useEmployees';
 
 const Dashboard = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { hasPermission } = usePermissions();
   const { getEmployeeStats } = useEmployees();
 
@@ -22,12 +22,23 @@ const Dashboard = () => {
 
   const employeeStats = getEmployeeStats();
 
+  // Get user's first name from email or user metadata
+  const getUserFirstName = () => {
+    if (user?.user_metadata?.first_name) {
+      return user.user_metadata.first_name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1);
+    }
+    return 'User';
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.name?.split(' ')[0] || 'User'}
+          Welcome back, {getUserFirstName()}
         </h1>
         <p className="text-gray-600">Here's what's happening in your organization today</p>
       </div>
