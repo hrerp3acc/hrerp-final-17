@@ -36,8 +36,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   // For now, we'll use a mock user until we integrate with authentication
   const [user, setUser] = useState<User | null>({
     id: '1',
-    name: 'John Doe',
-    email: 'john.doe@company.com',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@company.com',
     role: 'admin',
     department: 'Executive',
     position: 'CEO'
