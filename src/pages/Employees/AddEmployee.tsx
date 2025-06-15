@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import LocationInput from '@/components/ui/LocationInput';
 
 const AddEmployee = () => {
   const { toast } = useToast();
@@ -31,7 +31,6 @@ const AddEmployee = () => {
   });
 
   const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations'];
-  const locations = ['New York', 'San Francisco', 'Chicago', 'Boston', 'Remote'];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -190,19 +189,11 @@ const AddEmployee = () => {
               />
             </div>
 
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Select value={formData.location} onValueChange={(value) => handleInputChange('location', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map(location => (
-                    <SelectItem key={location} value={location}>{location}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <LocationInput
+              id="location"
+              value={formData.location}
+              onValueChange={(value) => handleInputChange('location', value)}
+            />
 
             <div>
               <Label htmlFor="startDate">Start Date</Label>
