@@ -5,22 +5,32 @@ import { Input } from '@/components/ui/input';
 import { Search, Filter, Plus, Mail, Phone, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DetailsPanel from '@/components/Common/DetailsPanel';
-import { useEmployees } from '@/hooks/useEmployees';
-import { Employee } from '@/types/employee';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import type { Tables } from '@/integrations/supabase/types';
+
+type Employee = Tables<'employees'>;
+type Department = Tables<'departments'>;
 
 const EmployeeDirectory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-  const { employees, getDepartments } = useEmployees();
-  const departments = ['all', ...getDepartments()];
+  const { employees, departments, loading } = useSupabaseEmployees();
+
+  // Create department options including 'all'
+  const departmentOptions = ['all', ...departments.map(dept => dept.name)];
 
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'all' || employee.department === selectedDepartment;
+    const matchesSearch = 
+      employee.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (employee.position && employee.position.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const employeeDeptName = departments.find(dept => dept.id === employee.department_id)?.name || '';
+    const matchesDepartment = selectedDepartment === 'all' || employeeDeptName === selectedDepartment;
+    
     return matchesSearch && matchesDepartment;
   });
 
@@ -37,6 +47,26 @@ const EmployeeDirectory = () => {
   const handleEmployeeSelect = (employee: Employee) => {
     setSelectedEmployee(employee);
   };
+
+  const getEmployeeDepartment = (employee: Employee) => {
+    return departments.find(dept => dept.id === employee.department_id)?.name || 'No Department';
+  };
+
+  const getEmployeeFullName = (employee: Employee) => {
+    return `${employee.first_name} ${employee.last_name}`;
+  };
+
+  const getEmployeeInitials = (employee: Employee) => {
+    return `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -72,7 +102,7 @@ const EmployeeDirectory = () => {
               onChange={(e) => setSelectedDepartment(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {departments.map(dept => (
+              {departmentOptions.map(dept => (
                 <option key={dept} value={dept}>
                   {dept === 'all' ? 'All Departments' : dept}
                 </option>
@@ -98,12 +128,12 @@ const EmployeeDirectory = () => {
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 font-medium text-lg">
-                        {employee.name.split(' ').map(n => n[0]).join('')}
+                        {getEmployeeInitials(employee)}
                       </span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{employee.name}</h3>
-                      <p className="text-sm text-gray-600">{employee.position}</p>
+                      <h3 className="font-semibold text-gray-900">{getEmployeeFullName(employee)}</h3>
+                      <p className="text-sm text-gray-600">{employee.position || 'No Position'}</p>
                     </div>
                   </div>
                   <span className={`px-2 py-1 text-xs rounded-full ${
@@ -129,7 +159,7 @@ const EmployeeDirectory = () => {
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">{employee.department}</span>
+                  <span className="text-gray-600">{getEmployeeDepartment(employee)}</span>
                   {employee.location && <span className="text-gray-600">{employee.location}</span>}
                 </div>
 
@@ -197,19 +227,19 @@ const EmployeeDirectory = () => {
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-blue-600 font-medium text-xl">
-                    {selectedEmployee.name.split(' ').map(n => n[0]).join('')}
+                    {getEmployeeInitials(selectedEmployee)}
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{selectedEmployee.name}</h3>
-                  <p className="text-gray-600">{selectedEmployee.position}</p>
+                  <h3 className="text-lg font-semibold">{getEmployeeFullName(selectedEmployee)}</h3>
+                  <p className="text-gray-600">{selectedEmployee.position || 'No Position'}</p>
                 </div>
               </div>
               
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-500">Department</p>
-                  <p className="font-medium">{selectedEmployee.department}</p>
+                  <p className="font-medium">{getEmployeeDepartment(selectedEmployee)}</p>
                 </div>
                 {selectedEmployee.location && (
                   <div>

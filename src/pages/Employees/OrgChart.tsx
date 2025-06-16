@@ -5,33 +5,38 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Users, Building, User, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import type { Tables } from '@/integrations/supabase/types';
+
+type Employee = Tables<'employees'>;
 
 const OrgChart = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const { employees, getDepartments } = useEmployees();
+  const { employees, departments, loading } = useSupabaseEmployees();
 
-  const departments = ['all', ...getDepartments()];
+  const departmentOptions = ['all', ...departments.map(dept => dept.name)];
 
   const getDirectReports = (managerId: string) => {
-    return employees.filter(emp => emp.managerId === managerId);
+    return employees.filter(emp => emp.manager_id === managerId);
   };
 
-  const getEmployeeLevel = (employee: any): number => {
-    if (!employee.managerId) return 0;
-    const manager = employees.find(emp => emp.id === employee.managerId);
+  const getEmployeeLevel = (employee: Employee): number => {
+    if (!employee.manager_id) return 0;
+    const manager = employees.find(emp => emp.id === employee.manager_id);
     return manager ? 1 + getEmployeeLevel(manager) : 1;
   };
 
   const organizeByHierarchy = () => {
-    const ceo = employees.find(emp => !emp.managerId);
+    const ceo = employees.find(emp => !emp.manager_id);
     if (!ceo) return [];
 
-    const buildHierarchy = (employee: any): any => {
+    const buildHierarchy = (employee: Employee): any => {
       const directReports = getDirectReports(employee.id);
       return {
         ...employee,
+        name: `${employee.first_name} ${employee.last_name}`,
+        department: departments.find(dept => dept.id === employee.department_id)?.name || 'No Department',
         reports: directReports.map(report => buildHierarchy(report))
       };
     };
@@ -40,9 +45,11 @@ const OrgChart = () => {
   };
 
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.position.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'all' || employee.department === selectedDepartment;
+    const fullName = `${employee.first_name} ${employee.last_name}`;
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (employee.position && employee.position.toLowerCase().includes(searchTerm.toLowerCase()));
+    const employeeDeptName = departments.find(dept => dept.id === employee.department_id)?.name || '';
+    const matchesDepartment = selectedDepartment === 'all' || employeeDeptName === selectedDepartment;
     return matchesSearch && matchesDepartment;
   });
 
@@ -57,7 +64,7 @@ const OrgChart = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">{employee.name}</h3>
-                <p className="text-sm text-gray-600">{employee.position}</p>
+                <p className="text-sm text-gray-600">{employee.position || 'No Position'}</p>
                 <p className="text-xs text-gray-500">{employee.department}</p>
               </div>
             </div>
@@ -79,6 +86,14 @@ const OrgChart = () => {
       ))}
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   const hierarchy = organizeByHierarchy();
 
@@ -115,7 +130,7 @@ const OrgChart = () => {
             onChange={(e) => setSelectedDepartment(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {departments.map(dept => (
+            {departmentOptions.map(dept => (
               <option key={dept} value={dept}>
                 {dept === 'all' ? 'All Departments' : dept}
               </option>
@@ -148,7 +163,7 @@ const OrgChart = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Departments</p>
-                <p className="text-2xl font-bold text-gray-900">{departments.length - 1}</p>
+                <p className="text-2xl font-bold text-gray-900">{departments.length}</p>
               </div>
             </div>
           </CardContent>
@@ -179,7 +194,7 @@ const OrgChart = () => {
               <div>
                 <p className="text-sm text-gray-600">Avg Team Size</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {departments.length > 1 ? Math.round(employees.length / (departments.length - 1)) : 0}
+                  {departments.length > 0 ? Math.round(employees.length / departments.length) : 0}
                 </p>
               </div>
             </div>
@@ -226,9 +241,11 @@ const OrgChart = () => {
                       <User className="w-5 h-5 text-blue-600" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{employee.name}</h3>
-                      <p className="text-sm text-gray-600">{employee.position}</p>
-                      <p className="text-xs text-gray-500">{employee.department}</p>
+                      <h3 className="font-medium text-gray-900">{employee.first_name} {employee.last_name}</h3>
+                      <p className="text-sm text-gray-600">{employee.position || 'No Position'}</p>
+                      <p className="text-xs text-gray-500">
+                        {departments.find(dept => dept.id === employee.department_id)?.name || 'No Department'}
+                      </p>
                     </div>
                   </div>
                 </CardContent>

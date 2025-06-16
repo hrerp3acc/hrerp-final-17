@@ -9,12 +9,12 @@ import QuickStats from '@/components/Dashboard/QuickStats';
 import { Users, Clock, Calendar, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
-  const { getEmployeeStats } = useEmployees();
+  const { getEmployeeStats } = useSupabaseEmployees();
 
   useEffect(() => {
     console.log('Dashboard loaded successfully');
