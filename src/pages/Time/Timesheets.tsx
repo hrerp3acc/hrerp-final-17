@@ -1,25 +1,29 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock, Plus, Download, Edit, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface TimesheetEntry {
-  id: string;
-  date: string;
-  project: string;
-  task: string;
-  hours: number;
-  description: string;
-  status: 'draft' | 'submitted' | 'approved' | 'rejected';
-}
+import { useTimesheets } from '@/hooks/useTimesheets';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 const Timesheets = () => {
   const { toast } = useToast();
   const [selectedWeek, setSelectedWeek] = useState(new Date().toISOString().split('T')[0]);
-  const [entries, setEntries] = useState<TimesheetEntry[]>([]);
+  
+  const { 
+    timesheets, 
+    loading: timesheetsLoading, 
+    createTimesheet, 
+    submitTimesheet,
+    getTimesheetEntries,
+    getWeekDates 
+  } = useTimesheets();
+  
+  const { projects, tasks, loading: trackingLoading } = useTimeTracking();
+  const [entries, setEntries] = useState<any[]>([]);
+  const [showAddEntry, setShowAddEntry] = useState(false);
 
   const [newEntry, setNewEntry] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -29,53 +33,27 @@ const Timesheets = () => {
     description: ''
   });
 
-  const projects = ['Website Redesign', 'Mobile App', 'E-commerce Platform', 'Internal Tools'];
-  const tasks = ['Frontend Development', 'Backend Development', 'Bug Fixes', 'Testing', 'Documentation'];
+  const loading = timesheetsLoading || trackingLoading;
 
-  const handleAddEntry = () => {
-    if (!newEntry.project || !newEntry.task || !newEntry.hours) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const entry: TimesheetEntry = {
-      id: Date.now().toString(),
-      date: newEntry.date,
-      project: newEntry.project,
-      task: newEntry.task,
-      hours: parseFloat(newEntry.hours),
-      description: newEntry.description,
-      status: 'draft'
+  useEffect(() => {
+    const fetchEntries = async () => {
+      const weekDates = getWeekDates(new Date(selectedWeek));
+      const weekEntries = await getTimesheetEntries(weekDates.start);
+      setEntries(weekEntries);
     };
 
-    setEntries([...entries, entry]);
-    setNewEntry({
-      date: new Date().toISOString().split('T')[0],
-      project: '',
-      task: '',
-      hours: '',
-      description: ''
-    });
+    if (!loading) {
+      fetchEntries();
+    }
+  }, [selectedWeek, loading]);
 
-    toast({
-      title: "Success!",
-      description: "Timesheet entry added successfully.",
-    });
+  const handleCreateTimesheet = async () => {
+    const weekDates = getWeekDates(new Date(selectedWeek));
+    await createTimesheet(weekDates.start);
   };
 
-  const handleStatusChange = (id: string, newStatus: TimesheetEntry['status']) => {
-    setEntries(entries.map(entry => 
-      entry.id === id ? { ...entry, status: newStatus } : entry
-    ));
-
-    toast({
-      title: "Status Updated",
-      description: `Timesheet entry ${newStatus === 'submitted' ? 'submitted for approval' : newStatus}.`,
-    });
+  const handleSubmitTimesheet = async (timesheetId: string) => {
+    await submitTimesheet(timesheetId);
   };
 
   const getStatusBadge = (status: string) => {
@@ -88,8 +66,21 @@ const Timesheets = () => {
     return styles[status as keyof typeof styles];
   };
 
-  const totalHours = entries.reduce((sum, entry) => sum + entry.hours, 0);
+  const totalHours = entries.reduce((sum, entry) => sum + (entry.total_hours || 0), 0);
   const weeklyTarget = 40;
+
+  const currentWeekTimesheet = timesheets.find(ts => {
+    const weekDates = getWeekDates(new Date(selectedWeek));
+    return ts.week_start_date === weekDates.start;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -100,14 +91,22 @@ const Timesheets = () => {
           <p className="text-gray-600">Track and manage your work hours</p>
         </div>
         <div className="flex space-x-3">
+          <Input
+            type="week"
+            value={selectedWeek.slice(0, 7)}
+            onChange={(e) => setSelectedWeek(e.target.value)}
+            className="w-40"
+          />
           <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            New Entry
-          </Button>
+          {!currentWeekTimesheet && (
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleCreateTimesheet}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Timesheet
+            </Button>
+          )}
         </div>
       </div>
 
@@ -121,7 +120,7 @@ const Timesheets = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Hours</p>
-                <p className="text-2xl font-bold text-gray-900">{totalHours}</p>
+                <p className="text-2xl font-bold text-gray-900">{Math.round(totalHours * 100) / 100}</p>
               </div>
             </div>
           </CardContent>
@@ -148,9 +147,9 @@ const Timesheets = () => {
                 <Check className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Approved</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {entries.filter(e => e.status === 'approved').length}
+                <p className="text-sm text-gray-600">Status</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {currentWeekTimesheet?.status || 'No Timesheet'}
                 </p>
               </div>
             </div>
@@ -164,88 +163,44 @@ const Timesheets = () => {
                 <Edit className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {entries.filter(e => e.status === 'submitted').length}
-                </p>
+                <p className="text-sm text-gray-600">Entries</p>
+                <p className="text-2xl font-bold text-gray-900">{entries.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Add New Entry */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Time Entry</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <Input
-                type="date"
-                value={newEntry.date}
-                onChange={(e) => setNewEntry({...newEntry, date: e.target.value})}
-              />
+      {/* Timesheet Status */}
+      {currentWeekTimesheet && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Timesheet Status</h3>
+                <div className="flex items-center space-x-4">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(currentWeekTimesheet.status || 'draft')}`}>
+                    {currentWeekTimesheet.status}
+                  </span>
+                  <span className="text-gray-600">
+                    Week of {new Date(currentWeekTimesheet.week_start_date).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              {currentWeekTimesheet.status === 'draft' && (
+                <Button 
+                  onClick={() => handleSubmitTimesheet(currentWeekTimesheet.id)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Submit for Approval
+                </Button>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
-              <select
-                value={newEntry.project}
-                onChange={(e) => setNewEntry({...newEntry, project: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select project</option>
-                {projects.map(project => (
-                  <option key={project} value={project}>{project}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Task</label>
-              <select
-                value={newEntry.task}
-                onChange={(e) => setNewEntry({...newEntry, task: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select task</option>
-                {tasks.map(task => (
-                  <option key={task} value={task}>{task}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hours</label>
-              <Input
-                type="number"
-                step="0.5"
-                min="0"
-                max="24"
-                value={newEntry.hours}
-                onChange={(e) => setNewEntry({...newEntry, hours: e.target.value})}
-                placeholder="8.0"
-              />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={handleAddEntry} className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Entry
-              </Button>
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <Input
-              value={newEntry.description}
-              onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
-              placeholder="Describe what you worked on..."
-            />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Timesheet Entries */}
+      {/* Time Entries */}
       <Card>
         <CardHeader>
           <CardTitle>Time Entries</CardTitle>
@@ -254,10 +209,17 @@ const Timesheets = () => {
           {entries.length === 0 ? (
             <div className="text-center py-12">
               <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No time entries yet</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No time entries for this week</h3>
               <p className="text-gray-600 mb-6">
-                Start tracking your time by adding your first entry above.
+                Time entries from your time tracking will appear here automatically.
               </p>
+              <Button 
+                onClick={handleCreateTimesheet}
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={!!currentWeekTimesheet}
+              >
+                {currentWeekTimesheet ? 'Timesheet Created' : 'Create Timesheet'}
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -270,40 +232,34 @@ const Timesheets = () => {
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Hours</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Description</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {entries.map((entry) => (
                     <tr key={entry.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4 text-gray-900">
-                        {new Date(entry.date).toLocaleDateString()}
+                        {new Date(entry.start_time).toLocaleDateString()}
                       </td>
-                      <td className="py-3 px-4 text-gray-900">{entry.project}</td>
-                      <td className="py-3 px-4 text-gray-600">{entry.task}</td>
-                      <td className="py-3 px-4 text-gray-900">{entry.hours}h</td>
+                      <td className="py-3 px-4 text-gray-900">
+                        {entry.projects?.name || 'No Project'}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {entry.tasks?.name || 'No Task'}
+                      </td>
+                      <td className="py-3 px-4 text-gray-900">
+                        {entry.total_hours ? `${Math.round(entry.total_hours * 100) / 100}h` : '-'}
+                      </td>
                       <td className="py-3 px-4 text-gray-600 max-w-xs truncate">
-                        {entry.description}
+                        {entry.description || '-'}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(entry.status)}`}>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          entry.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          entry.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
                           {entry.status}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex space-x-2">
-                          {entry.status === 'draft' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusChange(entry.id, 'submitted')}
-                            >
-                              Submit
-                            </Button>
-                          )}
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                        </div>
                       </td>
                     </tr>
                   ))}
@@ -313,6 +269,34 @@ const Timesheets = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Previous Timesheets */}
+      {timesheets.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Previous Timesheets</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {timesheets.slice(0, 5).map((timesheet) => (
+                <div key={timesheet.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div>
+                    <p className="font-medium">
+                      Week of {new Date(timesheet.week_start_date).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {timesheet.total_hours}h • {timesheet.status}
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(timesheet.status || 'draft')}`}>
+                    {timesheet.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

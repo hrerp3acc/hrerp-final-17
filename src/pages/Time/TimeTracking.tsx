@@ -3,99 +3,86 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, Pause, Square, Calendar } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 const TimeTracking = () => {
   const { user, isAuthenticated } = useUser();
-  const [isTracking, setIsTracking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const { 
+    activeEntry, 
+    loading, 
+    startTracking, 
+    stopTracking, 
+    pauseTracking, 
+    resumeTracking,
+    getTimeStats
+  } = useTimeTracking();
+  
   const [currentTime, setCurrentTime] = useState('00:00:00');
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [todayHours, setTodayHours] = useState('0h 0m');
-  const [timeEntries, setTimeEntries] = useState<any[]>([]);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  // Auto-start tracking when user logs in
-  useEffect(() => {
-    if (isAuthenticated && user && !isTracking) {
-      console.log('User logged in, starting time tracking automatically');
-      setIsTracking(true);
-      setIsPaused(false);
-      setStartTime(new Date());
-      setElapsedTime(0);
-    }
-  }, [isAuthenticated, user]);
+  const stats = getTimeStats();
+  const isTracking = !!activeEntry && !activeEntry.end_time;
+  const isPaused = activeEntry?.status === 'paused';
 
-  // Auto-stop tracking when user logs out
-  useEffect(() => {
-    if (!isAuthenticated && isTracking) {
-      console.log('User logged out, stopping time tracking');
-      handleStopTracking();
-    }
-  }, [isAuthenticated]);
-
-  // Update current time display
+  // Calculate elapsed time for active entry
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isTracking && !isPaused && startTime) {
+      if (activeEntry && activeEntry.start_time && !activeEntry.end_time && !isPaused) {
+        const startTime = new Date(activeEntry.start_time);
         const now = new Date();
-        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000) + elapsedTime;
+        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        setElapsedSeconds(elapsed);
+        
         const hours = Math.floor(elapsed / 3600);
         const minutes = Math.floor((elapsed % 3600) / 60);
         const seconds = elapsed % 60;
         setCurrentTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      } else if (!isTracking) {
+        setCurrentTime('00:00:00');
+        setElapsedSeconds(0);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isTracking, isPaused, startTime, elapsedTime]);
+  }, [activeEntry, isPaused, isTracking]);
 
-  const handleStopTracking = () => {
-    if (startTime) {
-      const now = new Date();
-      const totalElapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000) + elapsedTime;
-      const hours = Math.floor(totalElapsed / 3600);
-      const minutes = Math.floor((totalElapsed % 3600) / 60);
-      
-      // Add to today's total
-      const currentTotalMinutes = parseInt(todayHours.split('h')[0]) * 60 + parseInt(todayHours.split('h')[1].split('m')[0]);
-      const newTotalMinutes = currentTotalMinutes + Math.floor(totalElapsed / 60);
-      const newHours = Math.floor(newTotalMinutes / 60);
-      const newMinutes = newTotalMinutes % 60;
-      setTodayHours(`${newHours}h ${newMinutes}m`);
+  // Auto-start tracking when user logs in
+  useEffect(() => {
+    if (isAuthenticated && user && !isTracking && !loading) {
+      console.log('User logged in, starting time tracking automatically');
+      handleStartStop();
     }
-    setIsTracking(false);
-    setIsPaused(false);
-    setStartTime(null);
-    setElapsedTime(0);
-    setCurrentTime('00:00:00');
-  };
+  }, [isAuthenticated, user, loading]);
 
-  const handleStartStop = () => {
+  const handleStartStop = async () => {
     if (isTracking) {
-      handleStopTracking();
+      await stopTracking();
     } else {
-      // Start tracking
-      setIsTracking(true);
-      setIsPaused(false);
-      setStartTime(new Date());
-      setElapsedTime(0);
+      await startTracking();
     }
   };
 
-  const handlePause = () => {
+  const handlePause = async () => {
     if (isPaused) {
-      // Resume
-      setIsPaused(false);
-      setStartTime(new Date());
+      await resumeTracking();
     } else {
-      // Pause (break time)
-      setIsPaused(true);
-      if (startTime) {
-        const now = new Date();
-        setElapsedTime(prev => prev + Math.floor((now.getTime() - startTime.getTime()) / 1000));
-      }
+      await pauseTracking();
     }
   };
+
+  const formatHours = (hours: number) => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}h ${m}m`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -124,7 +111,7 @@ const TimeTracking = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {isTracking ? (isPaused ? 'On Break' : 'Working') : 'Not Tracking'}
             </h3>
-            <p className="text-gray-600">Today's total: {todayHours}</p>
+            <p className="text-gray-600">Today's total: {formatHours(stats.today)}</p>
             {isAuthenticated && (
               <p className="text-sm text-gray-500 mt-1">
                 {isTracking ? 'Automatically started when you logged in' : 'Ready to track your time'}
@@ -177,7 +164,7 @@ const TimeTracking = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">This Week</p>
-              <p className="text-xl font-bold text-gray-900">0h 0m</p>
+              <p className="text-xl font-bold text-gray-900">{formatHours(stats.week)}</p>
             </div>
           </div>
         </div>
@@ -189,7 +176,7 @@ const TimeTracking = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">This Month</p>
-              <p className="text-xl font-bold text-gray-900">0h 0m</p>
+              <p className="text-xl font-bold text-gray-900">{formatHours(stats.month)}</p>
             </div>
           </div>
         </div>
@@ -201,7 +188,7 @@ const TimeTracking = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Average/Day</p>
-              <p className="text-xl font-bold text-gray-900">0h 0m</p>
+              <p className="text-xl font-bold text-gray-900">{formatHours(stats.average)}</p>
             </div>
           </div>
         </div>

@@ -383,6 +383,207 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: {
+          client: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          client?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_hours: number | null
+          id: string
+          name: string
+          project_id: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_hours?: number | null
+          id?: string
+          name: string
+          project_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_hours?: number | null
+          id?: string
+          name?: string
+          project_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_entries: {
+        Row: {
+          break_duration: unknown | null
+          created_at: string
+          description: string | null
+          employee_id: string
+          end_time: string | null
+          id: string
+          is_billable: boolean | null
+          project_id: string | null
+          start_time: string
+          status: string | null
+          task_id: string | null
+          total_hours: number | null
+          updated_at: string
+        }
+        Insert: {
+          break_duration?: unknown | null
+          created_at?: string
+          description?: string | null
+          employee_id: string
+          end_time?: string | null
+          id?: string
+          is_billable?: boolean | null
+          project_id?: string | null
+          start_time: string
+          status?: string | null
+          task_id?: string | null
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Update: {
+          break_duration?: unknown | null
+          created_at?: string
+          description?: string | null
+          employee_id?: string
+          end_time?: string | null
+          id?: string
+          is_billable?: boolean | null
+          project_id?: string | null
+          start_time?: string
+          status?: string | null
+          task_id?: string | null
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timesheets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          notes: string | null
+          status: string | null
+          submitted_at: string | null
+          total_hours: number | null
+          updated_at: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          total_hours?: number | null
+          updated_at?: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          total_hours?: number | null
+          updated_at?: string
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timesheets_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheets_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
