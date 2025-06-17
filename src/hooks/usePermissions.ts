@@ -1,76 +1,44 @@
 
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
-export type Permission = 
-  | 'view_employees'
-  | 'add_employees'
-  | 'edit_employees'
-  | 'delete_employees'
-  | 'view_payroll'
-  | 'manage_payroll'
-  | 'approve_leaves'
+type Permission = 
   | 'view_analytics'
-  | 'system_admin'
-  | 'manage_recruitment'
-  | 'manage_performance'
-  | 'manage_learning';
-
-const rolePermissions: Record<string, Permission[]> = {
-  admin: [
-    'view_employees',
-    'add_employees', 
-    'edit_employees',
-    'delete_employees',
-    'view_payroll',
-    'manage_payroll',
-    'approve_leaves',
-    'view_analytics',
-    'system_admin',
-    'manage_recruitment',
-    'manage_performance',
-    'manage_learning'
-  ],
-  manager: [
-    'view_employees',
-    'add_employees',
-    'edit_employees',
-    'approve_leaves',
-    'view_analytics',
-    'manage_recruitment',
-    'manage_performance',
-    'manage_learning'
-  ],
-  employee: [
-    'view_employees'
-  ]
-};
+  | 'manage_employees'
+  | 'manage_departments'
+  | 'view_reports'
+  | 'manage_system';
 
 export const usePermissions = () => {
-  const { user } = useUser();
-  
+  const { user } = useAuth();
+
+  const getUserRole = (): 'admin' | 'manager' | 'employee' => {
+    if (user?.user_metadata?.role) {
+      return user.user_metadata.role;
+    }
+    return 'employee';
+  };
+
   const hasPermission = (permission: Permission): boolean => {
-    if (!user?.role) return false;
-    return rolePermissions[user.role]?.includes(permission) || false;
-  };
-
-  const hasAnyPermission = (permissions: Permission[]): boolean => {
-    return permissions.some(permission => hasPermission(permission));
-  };
-
-  const hasAllPermissions = (permissions: Permission[]): boolean => {
-    return permissions.every(permission => hasPermission(permission));
-  };
-
-  const getUserPermissions = (): Permission[] => {
-    if (!user?.role) return [];
-    return rolePermissions[user.role] || [];
+    const role = getUserRole();
+    
+    switch (permission) {
+      case 'view_analytics':
+        return ['admin', 'manager'].includes(role);
+      case 'manage_employees':
+        return ['admin', 'manager'].includes(role);
+      case 'manage_departments':
+        return role === 'admin';
+      case 'view_reports':
+        return ['admin', 'manager'].includes(role);
+      case 'manage_system':
+        return role === 'admin';
+      default:
+        return false;
+    }
   };
 
   return {
     hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-    getUserPermissions,
-    userRole: user?.role
+    userRole: getUserRole()
   };
 };

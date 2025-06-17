@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start with sidebar closed
-  const { user } = useUser();
+  const { user } = useAuth();
   const location = useLocation();
 
   // Close sidebar when route changes
@@ -19,12 +19,20 @@ const MainLayout = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Get user role from user metadata or default to employee
+  const getUserRole = () => {
+    if (user?.user_metadata?.role) {
+      return user.user_metadata.role as 'admin' | 'manager' | 'employee';
+    }
+    return 'employee';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out`}>
-        <Sidebar userRole={user?.role || 'employee'} />
+        <Sidebar userRole={getUserRole()} />
       </div>
 
       {/* Main Content */}
