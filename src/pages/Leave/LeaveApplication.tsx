@@ -9,10 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Clock, FileText, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useLeaveManagement } from '@/hooks/useLeaveManagement';
 
 const LeaveApplication = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { applyForLeave, getLeaveBalance } = useLeaveManagement();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     leaveType: '',
     startDate: '',
@@ -25,14 +28,15 @@ const LeaveApplication = () => {
   });
 
   const leaveTypes = [
-    'Annual Leave',
-    'Sick Leave',
-    'Personal Leave',
-    'Maternity/Paternity Leave',
-    'Emergency Leave',
-    'Bereavement Leave',
-    'Study Leave'
+    { value: 'annual', label: 'Annual Leave' },
+    { value: 'sick', label: 'Sick Leave' },
+    { value: 'personal', label: 'Personal Leave' },
+    { value: 'maternity', label: 'Maternity Leave' },
+    { value: 'paternity', label: 'Paternity Leave' },
+    { value: 'emergency', label: 'Emergency Leave' }
   ];
+
+  const leaveBalances = getLeaveBalance();
 
   const calculateDays = () => {
     if (formData.startDate && formData.endDate) {
@@ -49,7 +53,7 @@ const LeaveApplication = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.leaveType || !formData.startDate || !formData.endDate || !formData.reason) {
@@ -70,14 +74,24 @@ const LeaveApplication = () => {
       return;
     }
 
-    console.log('Leave Application:', { ...formData, days: calculateDays() });
-    
-    toast({
-      title: "Application Submitted!",
-      description: `Your ${formData.leaveType} application for ${calculateDays()} day(s) has been submitted for approval.`,
-    });
+    setIsSubmitting(true);
 
-    navigate('/leave/my-leaves');
+    try {
+      const result = await applyForLeave({
+        leave_type: formData.leaveType as any,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        reason: formData.reason
+      });
+
+      if (result) {
+        navigate('/leave/my-leaves');
+      }
+    } catch (error) {
+      console.error('Error submitting leave application:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -115,7 +129,7 @@ const LeaveApplication = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {leaveTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -235,26 +249,13 @@ const LeaveApplication = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm text-green-600 font-medium">Annual Leave</p>
-                <p className="text-2xl font-bold text-green-900">17</p>
-                <p className="text-xs text-green-600">days remaining</p>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-blue-600 font-medium">Sick Leave</p>
-                <p className="text-2xl font-bold text-blue-900">7</p>
-                <p className="text-xs text-blue-600">days remaining</p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="text-sm text-purple-600 font-medium">Personal Leave</p>
-                <p className="text-2xl font-bold text-purple-900">3</p>
-                <p className="text-xs text-purple-600">days remaining</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <p className="text-sm text-orange-600 font-medium">Emergency Leave</p>
-                <p className="text-2xl font-bold text-orange-900">5</p>
-                <p className="text-xs text-orange-600">days remaining</p>
-              </div>
+              {leaveBalances.map((balance) => (
+                <div key={balance.type} className="bg-green-50 p-4 rounded-lg">
+                  <p className="text-sm text-green-600 font-medium">{balance.type}</p>
+                  <p className="text-2xl font-bold text-green-900">{balance.remaining}</p>
+                  <p className="text-xs text-green-600">days remaining</p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -264,9 +265,9 @@ const LeaveApplication = () => {
           <Link to="/leave/my-leaves">
             <Button variant="outline">Cancel</Button>
           </Link>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
             <FileText className="w-4 h-4 mr-2" />
-            Submit Application
+            {isSubmitting ? 'Submitting...' : 'Submit Application'}
           </Button>
         </div>
       </form>

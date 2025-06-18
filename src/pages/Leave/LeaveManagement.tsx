@@ -3,17 +3,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLeaveManagement } from '@/hooks/useLeaveManagement';
 
 const LeaveManagement = () => {
+  const { leaveApplications, loading, getLeaveBalance, getLeaveStats } = useLeaveManagement();
   const [selectedTab, setSelectedTab] = useState('my-leaves');
-  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
 
-  const leaveBalances = [
-    { type: 'Annual Leave', used: 0, total: 25, color: 'bg-blue-500' },
-    { type: 'Sick Leave', used: 0, total: 10, color: 'bg-red-500' },
-    { type: 'Personal Leave', used: 0, total: 5, color: 'bg-green-500' },
-    { type: 'Maternity/Paternity', used: 0, total: 90, color: 'bg-purple-500' }
-  ];
+  const leaveBalances = getLeaveBalance();
+  const leaveStats = getLeaveStats();
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -27,6 +24,37 @@ const LeaveManagement = () => {
         return null;
     }
   };
+
+  const formatLeaveType = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      annual: 'Annual Leave',
+      sick: 'Sick Leave',
+      personal: 'Personal Leave',
+      emergency: 'Emergency Leave',
+      maternity: 'Maternity Leave',
+      paternity: 'Paternity Leave'
+    };
+    return typeMap[type] || type;
+  };
+
+  const calculateDays = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -50,7 +78,7 @@ const LeaveManagement = () => {
           <div key={balance.type} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-medium text-gray-900">{balance.type}</h3>
-              <div className={`w-3 h-3 rounded-full ${balance.color}`}></div>
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
             </div>
             
             <div className="space-y-2">
@@ -60,12 +88,12 @@ const LeaveManagement = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Remaining</span>
-                <span className="font-medium">{balance.total - balance.used} days</span>
+                <span className="font-medium">{balance.remaining} days</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className={`h-2 rounded-full ${balance.color}`}
-                  style={{ width: `${(balance.used / balance.total) * 100}%` }}
+                  className="h-2 rounded-full bg-blue-500"
+                  style={{ width: `${Math.min((balance.used / balance.total) * 100, 100)}%` }}
                 ></div>
               </div>
             </div>
@@ -79,7 +107,7 @@ const LeaveManagement = () => {
           <h3 className="text-lg font-semibold text-gray-900">Recent Leave Requests</h3>
         </div>
         
-        {leaveRequests.length === 0 ? (
+        {leaveApplications.length === 0 ? (
           <div className="p-12 text-center">
             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No leave requests yet</h3>
@@ -95,16 +123,16 @@ const LeaveManagement = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {leaveRequests.map((leave) => (
+            {leaveApplications.map((leave) => (
               <div key={leave.id} className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
                     <div className="mt-1">
-                      {getStatusIcon(leave.status)}
+                      {getStatusIcon(leave.status || 'pending')}
                     </div>
                     <div>
                       <div className="flex items-center space-x-3">
-                        <h4 className="font-medium text-gray-900">{leave.type}</h4>
+                        <h4 className="font-medium text-gray-900">{formatLeaveType(leave.leave_type)}</h4>
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           leave.status === 'approved' ? 'bg-green-100 text-green-800' :
                           leave.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -113,12 +141,18 @@ const LeaveManagement = () => {
                           {leave.status}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{leave.dates}</p>
-                      <p className="text-sm text-gray-600">{leave.reason}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                      </p>
+                      {leave.reason && (
+                        <p className="text-sm text-gray-600">{leave.reason}</p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">{leave.days} day{leave.days > 1 ? 's' : ''}</p>
+                    <p className="font-medium text-gray-900">
+                      {calculateDays(leave.start_date, leave.end_date)} day{calculateDays(leave.start_date, leave.end_date) > 1 ? 's' : ''}
+                    </p>
                     <Button variant="outline" size="sm" className="mt-2">
                       View Details
                     </Button>
@@ -138,8 +172,8 @@ const LeaveManagement = () => {
               <Calendar className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Next Leave</p>
-              <p className="font-semibold text-gray-900">No upcoming leaves</p>
+              <p className="text-sm text-gray-600">Total Applications</p>
+              <p className="font-semibold text-gray-900">{leaveStats.total}</p>
             </div>
           </div>
         </div>
@@ -147,23 +181,23 @@ const LeaveManagement = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">This Year</p>
-              <p className="font-semibold text-gray-900">0 days used</p>
+              <p className="text-sm text-gray-600">Approved</p>
+              <p className="font-semibold text-gray-900">{leaveStats.approved}</p>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Team Status</p>
-              <p className="font-semibold text-gray-900">No one on leave today</p>
+              <p className="text-sm text-gray-600">Pending</p>
+              <p className="font-semibold text-gray-900">{leaveStats.pending}</p>
             </div>
           </div>
         </div>
