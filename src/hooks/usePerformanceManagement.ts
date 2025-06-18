@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+type GoalStatus = Database['public']['Enums']['goal_status'];
+type ReviewStatus = Database['public']['Enums']['review_status'];
 
 export const usePerformanceManagement = () => {
   const { user } = useAuth();
@@ -116,7 +120,7 @@ export const usePerformanceManagement = () => {
     }: { 
       id: string; 
       progress: number;
-      status?: string;
+      status?: GoalStatus;
       notes?: string;
     }) => {
       const updates: any = {

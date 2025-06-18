@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+type LeaveType = Database['public']['Enums']['leave_type'];
+type LeaveStatus = Database['public']['Enums']['leave_status'];
 
 export const useLeaveManagement = () => {
   const { user } = useAuth();
@@ -68,7 +72,7 @@ export const useLeaveManagement = () => {
   // Create leave application mutation
   const createLeaveApplicationMutation = useMutation({
     mutationFn: async (leaveData: {
-      leave_type: string;
+      leave_type: LeaveType;
       start_date: string;
       end_date: string;
       reason?: string;
@@ -111,7 +115,7 @@ export const useLeaveManagement = () => {
       approved_by 
     }: { 
       id: string; 
-      status: 'approved' | 'rejected'; 
+      status: LeaveStatus; 
       approved_by?: string; 
     }) => {
       const updates: any = {
