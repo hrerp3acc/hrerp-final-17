@@ -339,125 +339,6 @@ export type Database = {
           },
         ]
       }
-      performance_goals: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          employee_id: string
-          id: string
-          notes: string | null
-          progress: number | null
-          status: Database["public"]["Enums"]["goal_status"] | null
-          target_date: string
-          title: string
-          updated_at: string | null
-          weight: number | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          employee_id: string
-          id?: string
-          notes?: string | null
-          progress?: number | null
-          status?: Database["public"]["Enums"]["goal_status"] | null
-          target_date: string
-          title: string
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          employee_id?: string
-          id?: string
-          notes?: string | null
-          progress?: number | null
-          status?: Database["public"]["Enums"]["goal_status"] | null
-          target_date?: string
-          title?: string
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_performance_goals_employee"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      performance_reviews: {
-        Row: {
-          achievements: string | null
-          areas_for_improvement: string | null
-          competencies_rating: number | null
-          created_at: string | null
-          development_notes: string | null
-          employee_id: string
-          goals_rating: number | null
-          id: string
-          overall_rating: number | null
-          review_period_end: string
-          review_period_start: string
-          reviewer_id: string | null
-          status: Database["public"]["Enums"]["review_status"] | null
-          updated_at: string | null
-        }
-        Insert: {
-          achievements?: string | null
-          areas_for_improvement?: string | null
-          competencies_rating?: number | null
-          created_at?: string | null
-          development_notes?: string | null
-          employee_id: string
-          goals_rating?: number | null
-          id?: string
-          overall_rating?: number | null
-          review_period_end: string
-          review_period_start: string
-          reviewer_id?: string | null
-          status?: Database["public"]["Enums"]["review_status"] | null
-          updated_at?: string | null
-        }
-        Update: {
-          achievements?: string | null
-          areas_for_improvement?: string | null
-          competencies_rating?: number | null
-          created_at?: string | null
-          development_notes?: string | null
-          employee_id?: string
-          goals_rating?: number | null
-          id?: string
-          overall_rating?: number | null
-          review_period_end?: string
-          review_period_start?: string
-          reviewer_id?: string | null
-          status?: Database["public"]["Enums"]["review_status"] | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_performance_reviews_employee"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_performance_reviews_reviewer"
-            columns: ["reviewer_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -747,7 +628,6 @@ export type Database = {
         | "hired"
         | "rejected"
       employee_status: "active" | "inactive" | "terminated"
-      goal_status: "not_started" | "in_progress" | "completed" | "overdue"
       leave_status: "pending" | "approved" | "rejected"
       leave_type:
         | "annual"
@@ -756,7 +636,6 @@ export type Database = {
         | "emergency"
         | "maternity"
         | "paternity"
-      review_status: "draft" | "in_progress" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -882,7 +761,6 @@ export const Constants = {
         "rejected",
       ],
       employee_status: ["active", "inactive", "terminated"],
-      goal_status: ["not_started", "in_progress", "completed", "overdue"],
       leave_status: ["pending", "approved", "rejected"],
       leave_type: [
         "annual",
@@ -892,7 +770,6 @@ export const Constants = {
         "maternity",
         "paternity",
       ],
-      review_status: ["draft", "in_progress", "completed"],
     },
   },
 } as const

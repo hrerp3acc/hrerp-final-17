@@ -1,173 +1,173 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useLeaveManagement } from '@/hooks/useLeaveManagement';
+import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const LeaveManagement = () => {
-  const { 
-    leaveApplications, 
-    isLoading, 
-    getLeaveBalance 
-  } = useLeaveManagement();
-  
-  const leaveBalance = getLeaveBalance();
+  const [selectedTab, setSelectedTab] = useState('my-leaves');
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+
+  const leaveBalances = [
+    { type: 'Annual Leave', used: 0, total: 25, color: 'bg-blue-500' },
+    { type: 'Sick Leave', used: 0, total: 10, color: 'bg-red-500' },
+    { type: 'Personal Leave', used: 0, total: 5, color: 'bg-green-500' },
+    { type: 'Maternity/Paternity', used: 0, total: 90, color: 'bg-purple-500' }
+  ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4 text-red-600" />;
       case 'pending':
         return <AlertCircle className="w-4 h-4 text-yellow-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return <XCircle className="w-4 h-4 text-red-600" />;
       default:
-        return 'bg-gray-100 text-gray-800';
+        return null;
     }
   };
-
-  const formatLeaveType = (type: string) => {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading leave applications...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Leave Applications</h1>
-          <p className="text-gray-600">Manage your leave requests and view balances</p>
+          <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
+          <p className="text-gray-600">Manage your time off and leave requests</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Apply for Leave
-        </Button>
+        <Link to="/leave/apply">
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Calendar className="w-4 h-4 mr-2" />
+            Apply for Leave
+          </Button>
+        </Link>
       </div>
 
       {/* Leave Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Leave Days</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{leaveBalance.total}</div>
-            <p className="text-xs text-gray-600">Annual allowance</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Used Days</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{leaveBalance.used}</div>
-            <p className="text-xs text-gray-600">Days taken this year</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Remaining Days</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{leaveBalance.remaining}</div>
-            <p className="text-xs text-gray-600">Available to use</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {leaveBalances.map((balance) => (
+          <div key={balance.type} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-gray-900">{balance.type}</h3>
+              <div className={`w-3 h-3 rounded-full ${balance.color}`}></div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Used</span>
+                <span className="font-medium">{balance.used} days</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Remaining</span>
+                <span className="font-medium">{balance.total - balance.used} days</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full ${balance.color}`}
+                  style={{ width: `${(balance.used / balance.total) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Leave Applications */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Leave Applications</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {leaveApplications.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No leave applications found</p>
-              <p className="text-sm text-gray-400">Apply for leave to see your requests here</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {leaveApplications.map((application) => (
-                <div key={application.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(application.status)}
-                      <span className="font-medium text-gray-900">
-                        {formatLeaveType(application.leave_type)}
-                      </span>
-                      <Badge className={getStatusColor(application.status)}>
-                        {application.status}
-                      </Badge>
+      {/* Leave History */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Leave Requests</h3>
+        </div>
+        
+        {leaveRequests.length === 0 ? (
+          <div className="p-12 text-center">
+            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No leave requests yet</h3>
+            <p className="text-gray-600 mb-6">
+              Your leave requests will appear here once you submit them.
+            </p>
+            <Link to="/leave/apply">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Calendar className="w-4 h-4 mr-2" />
+                Apply for Leave
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {leaveRequests.map((leave) => (
+              <div key={leave.id} className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="mt-1">
+                      {getStatusIcon(leave.status)}
                     </div>
-                    <span className="text-sm text-gray-500">
-                      Applied {new Date(application.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-600">Duration:</span>
-                      <span className="ml-2">
-                        {new Date(application.start_date).toLocaleDateString()} - {new Date(application.end_date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {application.reason && (
-                      <div>
-                        <span className="font-medium text-gray-600">Reason:</span>
-                        <span className="ml-2">{application.reason}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {application.approved_by_employee && (
-                    <div className="mt-2 text-sm">
-                      <span className="font-medium text-gray-600">
-                        {application.status === 'approved' ? 'Approved by:' : 'Reviewed by:'}
-                      </span>
-                      <span className="ml-2">
-                        {application.approved_by_employee.first_name} {application.approved_by_employee.last_name}
-                      </span>
-                      {application.approved_at && (
-                        <span className="ml-2 text-gray-500">
-                          on {new Date(application.approved_at).toLocaleDateString()}
+                      <div className="flex items-center space-x-3">
+                        <h4 className="font-medium text-gray-900">{leave.type}</h4>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          leave.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          leave.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {leave.status}
                         </span>
-                      )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{leave.dates}</p>
+                      <p className="text-sm text-gray-600">{leave.reason}</p>
                     </div>
-                  )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{leave.days} day{leave.days > 1 ? 's' : ''}</p>
+                    <Button variant="outline" size="sm" className="mt-2">
+                      View Details
+                    </Button>
+                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-blue-600" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div>
+              <p className="text-sm text-gray-600">Next Leave</p>
+              <p className="font-semibold text-gray-900">No upcoming leaves</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">This Year</p>
+              <p className="font-semibold text-gray-900">0 days used</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <User className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Team Status</p>
+              <p className="font-semibold text-gray-900">No one on leave today</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

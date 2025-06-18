@@ -1,262 +1,277 @@
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import type { Tables } from '@/integrations/supabase/types';
+
+type TimeEntry = Tables<'time_entries'>;
+type Project = Tables<'projects'>;
+type Task = Tables<'tasks'>;
 
 export const useTimeTracking = () => {
-  const { user } = useAuth();
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [activeEntry, setActiveEntry] = useState<TimeEntry | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [activeTimer, setActiveTimer] = useState<string | null>(null);
-  const [currentProjectId, setCurrentProjectId] = useState<string>('');
-  const [currentTaskId, setCurrentTaskId] = useState<string>('');
-  const [currentDescription, setCurrentDescription] = useState<string>('');
+  const { user } = useAuth();
+  const { employees } = useSupabaseEmployees();
 
-  // Get current employee
-  const { data: employee } = useQuery({
-    queryKey: ['current-employee', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
+  const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
 
-  // Fetch time entries
-  const { data: timeEntries = [], isLoading, refetch } = useQuery({
-    queryKey: ['time-entries', employee?.id],
-    queryFn: async () => {
-      if (!employee?.id) return [];
+  const fetchTimeEntries = async () => {
+    if (!currentEmployee) return;
+    
+    try {
       const { data, error } = await supabase
         .from('time_entries')
-        .select(`
-          *,
-          projects(name),
-          tasks(name)
-        `)
-        .eq('employee_id', employee.id)
+        .select('*')
+        .eq('employee_id', currentEmployee.id)
         .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!employee?.id,
-  });
 
-  // Fetch projects
-  const { data: projects = [] } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
+      if (error) throw error;
+      setTimeEntries(data || []);
+      
+      // Find active entry
+      const active = data?.find(entry => entry.status === 'active' && !entry.end_time);
+      setActiveEntry(active || null);
+    } catch (error) {
+      console.error('Error fetching time entries:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch time entries",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
         .eq('status', 'active')
         .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
 
-  // Fetch tasks for selected project
-  const { data: tasks = [] } = useQuery({
-    queryKey: ['tasks', currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  const fetchTasks = async () => {
+    try {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('project_id', currentProjectId)
         .eq('status', 'active')
         .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!currentProjectId,
-  });
 
-  // Create time entry mutation
-  const createTimeEntryMutation = useMutation({
-    mutationFn: async (timeEntry: {
-      project_id?: string;
-      task_id?: string;
-      description?: string;
-      start_time: string;
-      end_time?: string;
-    }) => {
-      if (!employee?.id) throw new Error('Employee not found');
-      
-      const { data, error } = await supabase
-        .from('time_entries')
-        .insert({
-          employee_id: employee.id,
-          ...timeEntry,
-        })
-        .select()
-        .single();
-      
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time-entries'] });
-      toast({
-        title: "Success",
-        description: "Time entry created successfully",
-      });
-    },
-    onError: (error) => {
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+
+  const startTracking = async (projectId?: string, taskId?: string, description?: string) => {
+    if (!currentEmployee) {
       toast({
         title: "Error",
-        description: error.message,
-        variant: "destructive",
+        description: "Employee not found",
+        variant: "destructive"
       });
-    },
-  });
-
-  // Update time entry mutation
-  const updateTimeEntryMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
-      const { data, error } = await supabase
-        .from('time_entries')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time-entries'] });
-    },
-  });
-
-  // Timer functions
-  const startTimer = () => {
-    if (!currentProjectId) {
-      toast({
-        title: "Error",
-        description: "Please select a project",
-        variant: "destructive",
-      });
-      return;
+      return null;
     }
 
-    const timeEntry = {
-      project_id: currentProjectId,
-      task_id: currentTaskId || undefined,
-      description: currentDescription,
-      start_time: new Date().toISOString(),
-    };
+    try {
+      // Stop any existing active entry
+      if (activeEntry) {
+        await stopTracking();
+      }
 
-    createTimeEntryMutation.mutate(timeEntry, {
-      onSuccess: (data) => {
-        setActiveTimer(data.id);
-        toast({
-          title: "Timer Started",
-          description: "Time tracking has begun",
-        });
-      },
-    });
+      const { data, error } = await supabase
+        .from('time_entries')
+        .insert([{
+          employee_id: currentEmployee.id,
+          project_id: projectId || null,
+          task_id: taskId || null,
+          start_time: new Date().toISOString(),
+          description: description || null,
+          status: 'active'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setActiveEntry(data);
+      await fetchTimeEntries();
+      
+      toast({
+        title: "Time Tracking Started",
+        description: "Timer started successfully"
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error starting time tracking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start time tracking",
+        variant: "destructive"
+      });
+      return null;
+    }
   };
 
-  const pauseTimer = () => {
-    if (!activeTimer) return;
-    
-    updateTimeEntryMutation.mutate({
-      id: activeTimer,
-      status: 'paused',
-    });
-    
-    setActiveTimer(null);
-    toast({
-      title: "Timer Paused",
-      description: "Time tracking has been paused",
-    });
+  const stopTracking = async () => {
+    if (!activeEntry) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('time_entries')
+        .update({
+          end_time: new Date().toISOString(),
+          status: 'completed'
+        })
+        .eq('id', activeEntry.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setActiveEntry(null);
+      await fetchTimeEntries();
+      
+      toast({
+        title: "Time Tracking Stopped",
+        description: "Timer stopped successfully"
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error stopping time tracking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to stop time tracking",
+        variant: "destructive"
+      });
+      return null;
+    }
   };
 
-  const stopTimer = () => {
-    if (!activeTimer) return;
-    
-    updateTimeEntryMutation.mutate({
-      id: activeTimer,
-      end_time: new Date().toISOString(),
-      status: 'completed',
-    });
-    
-    setActiveTimer(null);
-    toast({
-      title: "Timer Stopped",
-      description: "Time entry has been completed",
-    });
+  const pauseTracking = async () => {
+    if (!activeEntry) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('time_entries')
+        .update({ status: 'paused' })
+        .eq('id', activeEntry.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setActiveEntry(data);
+      await fetchTimeEntries();
+      
+      return data;
+    } catch (error) {
+      console.error('Error pausing time tracking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to pause time tracking",
+        variant: "destructive"
+      });
+      return null;
+    }
   };
 
-  const createTimeEntry = (timeEntry: {
-    project_id?: string;
-    task_id?: string;
-    description?: string;
-    start_time: string;
-    end_time?: string;
-  }) => {
-    createTimeEntryMutation.mutate(timeEntry);
+  const resumeTracking = async () => {
+    if (!activeEntry) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('time_entries')
+        .update({ status: 'active' })
+        .eq('id', activeEntry.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setActiveEntry(data);
+      await fetchTimeEntries();
+      
+      return data;
+    } catch (error) {
+      console.error('Error resuming time tracking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resume time tracking",
+        variant: "destructive"
+      });
+      return null;
+    }
   };
 
-  const getTodayEntries = () => {
-    const today = new Date().toDateString();
-    return timeEntries.filter(entry => 
-      new Date(entry.start_time).toDateString() === today
+  const getTimeStats = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const thisWeekStart = new Date();
+    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+    const thisMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+    const todayEntries = timeEntries.filter(entry => 
+      entry.start_time.startsWith(today) && entry.total_hours
     );
-  };
-
-  const getWeeklyStats = () => {
-    const now = new Date();
-    const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
     const weekEntries = timeEntries.filter(entry => 
-      new Date(entry.start_time) >= weekStart
+      new Date(entry.start_time) >= thisWeekStart && entry.total_hours
     );
-    
-    const totalHours = weekEntries.reduce((sum, entry) => 
-      sum + (entry.total_hours || 0), 0
+    const monthEntries = timeEntries.filter(entry => 
+      new Date(entry.start_time) >= thisMonthStart && entry.total_hours
     );
-    
+
+    const todayHours = todayEntries.reduce((sum, entry) => sum + (entry.total_hours || 0), 0);
+    const weekHours = weekEntries.reduce((sum, entry) => sum + (entry.total_hours || 0), 0);
+    const monthHours = monthEntries.reduce((sum, entry) => sum + (entry.total_hours || 0), 0);
+
     return {
-      totalHours,
-      totalEntries: weekEntries.length,
-      billableHours: weekEntries
-        .filter(entry => entry.is_billable)
-        .reduce((sum, entry) => sum + (entry.total_hours || 0), 0),
+      today: todayHours,
+      week: weekHours,
+      month: monthHours,
+      average: weekEntries.length > 0 ? weekHours / 7 : 0
     };
   };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchTimeEntries(), fetchProjects(), fetchTasks()]);
+      setLoading(false);
+    };
+
+    if (currentEmployee) {
+      loadData();
+    }
+  }, [currentEmployee]);
 
   return {
     timeEntries,
     projects,
     tasks,
-    isLoading,
-    activeTimer,
-    currentProjectId,
-    setCurrentProjectId,
-    currentTaskId,
-    setCurrentTaskId,
-    currentDescription,
-    setCurrentDescription,
-    startTimer,
-    pauseTimer,
-    stopTimer,
-    createTimeEntry,
-    getTodayEntries,
-    getWeeklyStats,
-    refetch,
+    activeEntry,
+    loading,
+    startTracking,
+    stopTracking,
+    pauseTracking,
+    resumeTracking,
+    getTimeStats,
+    refetch: fetchTimeEntries
   };
 };
