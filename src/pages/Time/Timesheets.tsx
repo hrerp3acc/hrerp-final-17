@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,7 +83,6 @@ const Timesheets = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Timesheets</h1>
@@ -110,7 +108,6 @@ const Timesheets = () => {
         </div>
       </div>
 
-      {/* Week Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
@@ -171,7 +168,6 @@ const Timesheets = () => {
         </Card>
       </div>
 
-      {/* Timesheet Status */}
       {currentWeekTimesheet && (
         <Card>
           <CardContent className="p-6">
@@ -200,7 +196,6 @@ const Timesheets = () => {
         </Card>
       )}
 
-      {/* Time Entries */}
       <Card>
         <CardHeader>
           <CardTitle>Time Entries</CardTitle>
@@ -270,7 +265,6 @@ const Timesheets = () => {
         </CardContent>
       </Card>
 
-      {/* Previous Timesheets */}
       {timesheets.length > 0 && (
         <Card>
           <CardHeader>

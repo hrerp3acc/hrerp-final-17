@@ -133,10 +133,15 @@ export const useTimeTracking = () => {
     if (!activeEntry) return null;
 
     try {
+      const endTime = new Date().toISOString();
+      const startTime = new Date(activeEntry.start_time);
+      const totalHours = (new Date(endTime).getTime() - startTime.getTime()) / (1000 * 60 * 60);
+
       const { data, error } = await supabase
         .from('time_entries')
         .update({
-          end_time: new Date().toISOString(),
+          end_time: endTime,
+          total_hours: totalHours,
           status: 'completed'
         })
         .eq('id', activeEntry.id)
