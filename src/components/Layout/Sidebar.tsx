@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Users, BarChart3, Calendar, Clock, CreditCard, 
   Settings, User, BookOpen, TrendingUp, Building,
@@ -16,7 +16,7 @@ interface SidebarProps {
 const Sidebar = ({ userRole }: SidebarProps) => {
   const [location, setLocation] = useState({ pathname: '/' });
   const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
-  const { user } = useUser();
+  const { user } = useAuth();
   
   // Safely get location with error handling
   let currentLocation;
@@ -29,6 +29,17 @@ const Sidebar = ({ userRole }: SidebarProps) => {
     console.warn('Router context not available, using default location');
     currentLocation = { pathname: '/' };
   }
+
+  // Get user's first name from email or user metadata
+  const getUserFirstName = () => {
+    if (user?.user_metadata?.first_name) {
+      return user.user_metadata.first_name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1);
+    }
+    return 'User';
+  };
 
   const toggleExpanded = (item: string) => {
     setExpandedItems(prev => 
@@ -258,8 +269,8 @@ const Sidebar = ({ userRole }: SidebarProps) => {
             <User className="w-4 h-4 text-gray-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'Guest'}</p>
-            <p className="text-xs text-gray-500 capitalize">{user?.role || 'anonymous'}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{getUserFirstName()}</p>
+            <p className="text-xs text-gray-500 capitalize">{userRole}</p>
           </div>
         </div>
       </div>
