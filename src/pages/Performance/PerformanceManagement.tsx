@@ -10,6 +10,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 import { Target, TrendingUp, Calendar, Star, Users, Award, Clock, CheckCircle, Plus } from 'lucide-react';
+import { format } from 'date-fns';
 import DetailsPanel from '@/components/Common/DetailsPanel';
 import { usePerformanceManagement } from '@/hooks/usePerformanceManagement';
 import { GoalDialog } from '@/components/Performance/GoalDialog';
