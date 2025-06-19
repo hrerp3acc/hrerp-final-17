@@ -9,24 +9,47 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
-import { Target, TrendingUp, Calendar, Star, Users, Award, Clock, CheckCircle } from 'lucide-react';
+import { Target, TrendingUp, Calendar, Star, Users, Award, Clock, CheckCircle, Plus } from 'lucide-react';
 import DetailsPanel from '@/components/Common/DetailsPanel';
+import { usePerformanceManagement } from '@/hooks/usePerformanceManagement';
+import { GoalDialog } from '@/components/Performance/GoalDialog';
+import { GoalCard } from '@/components/Performance/GoalCard';
+import type { Tables } from '@/integrations/supabase/types';
+
+type PerformanceGoal = Tables<'performance_goals'>;
+type PerformanceReview = Tables<'performance_reviews'>;
 
 const PerformanceManagement = () => {
-  const [selectedGoal, setSelectedGoal] = useState<any>(null);
-  const [selectedReview, setSelectedReview] = useState<any>(null);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [selectedGoal, setSelectedGoal] = useState<PerformanceGoal | null>(null);
+  const [selectedReview, setSelectedReview] = useState<PerformanceReview | null>(null);
+  const { goals, reviews, loading, getPerformanceStats } = usePerformanceManagement();
 
-  const performanceData: any[] = [];
-  const goalStatusData: any[] = [];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading performance data...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const attendanceStats = {
-    activeGoals: goals.length,
-    avgPerformance: 0,
-    reviewsDue: reviews.filter(review => review.status === 'pending').length,
-    goalsCompleted: goals.filter(goal => goal.status === 'completed').length
-  };
+  const stats = getPerformanceStats();
+
+  const performanceData = [
+    { month: 'Jan', progress: 65 },
+    { month: 'Feb', progress: 72 },
+    { month: 'Mar', progress: 78 },
+    { month: 'Apr', progress: stats.avgProgress },
+  ];
+
+  const goalStatusData = [
+    { name: 'Completed', value: stats.completedGoals, color: '#10b981' },
+    { name: 'In Progress', value: stats.inProgressGoals, color: '#3b82f6' },
+    { name: 'Not Started', value: stats.totalGoals - stats.completedGoals - stats.inProgressGoals - stats.overdueGoals, color: '#6b7280' },
+    { name: 'Overdue', value: stats.overdueGoals, color: '#ef4444' }
+  ];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -41,10 +64,10 @@ const PerformanceManagement = () => {
               <CardDescription>Current period</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{attendanceStats.activeGoals}</div>
+              <div className="text-3xl font-bold">{stats.totalGoals}</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <TrendingUp className="w-4 h-4 text-green-500" />
-                <span>Ready to set goals</span>
+                <span>{stats.completedGoals} completed</span>
               </div>
             </CardContent>
           </Card>
@@ -53,15 +76,15 @@ const PerformanceManagement = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Star className="w-4 h-4 text-yellow-500" />
-                <span>Avg Performance</span>
+                <span>Avg Progress</span>
               </CardTitle>
-              <CardDescription>Team average</CardDescription>
+              <CardDescription>Overall completion</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{attendanceStats.avgPerformance}%</div>
+              <div className="text-3xl font-bold">{stats.avgProgress}%</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
-                <Award className="w-4 h-4 text-gold-500" />
-                <span>No data yet</span>
+                <Award className="w-4 h-4 text-yellow-500" />
+                <span>Keep progressing!</span>
               </div>
             </CardContent>
           </Card>
@@ -72,13 +95,13 @@ const PerformanceManagement = () => {
                 <Clock className="w-4 h-4 text-orange-500" />
                 <span>Reviews Due</span>
               </CardTitle>
-              <CardDescription>This month</CardDescription>
+              <CardDescription>Pending reviews</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{attendanceStats.reviewsDue}</div>
+              <div className="text-3xl font-bold">{stats.pendingReviews}</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <Calendar className="w-4 h-4 text-red-500" />
-                <span>No pending reviews</span>
+                <span>{stats.completedReviews} completed</span>
               </div>
             </CardContent>
           </Card>
@@ -87,15 +110,15 @@ const PerformanceManagement = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Goals Completed</span>
+                <span>Avg Rating</span>
               </CardTitle>
-              <CardDescription>This quarter</CardDescription>
+              <CardDescription>Performance score</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{attendanceStats.goalsCompleted}</div>
+              <div className="text-3xl font-bold">{stats.avgRating || 'N/A'}</div>
               <div className="text-sm text-gray-500 flex items-center space-x-1">
                 <TrendingUp className="w-4 h-4 text-green-500" />
-                <span>Start achieving goals</span>
+                <span>Out of 5.0</span>
               </div>
             </CardContent>
           </Card>
@@ -114,19 +137,38 @@ const PerformanceManagement = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>My Goals</span>
-                  <Button>Add New Goal</Button>
+                  <GoalDialog>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add New Goal
+                    </Button>
+                  </GoalDialog>
                 </CardTitle>
                 <CardDescription>Track your objectives and key results</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No goals set yet</h3>
-                  <p className="text-gray-600 mb-6">
-                    Start by creating your first goal to track your progress and achievements.
-                  </p>
-                  <Button>Create Your First Goal</Button>
-                </div>
+                {goals.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {goals.map((goal) => (
+                      <GoalCard 
+                        key={goal.id} 
+                        goal={goal} 
+                        onSelect={setSelectedGoal}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No goals set yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      Start by creating your first goal to track your progress and achievements.
+                    </p>
+                    <GoalDialog>
+                      <Button>Create Your First Goal</Button>
+                    </GoalDialog>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -138,14 +180,52 @@ const PerformanceManagement = () => {
                 <CardDescription>Conduct and track performance evaluations</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <Star className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews scheduled</h3>
-                  <p className="text-gray-600 mb-6">
-                    Performance reviews will appear here once they are scheduled.
-                  </p>
-                  <Button>Schedule Review</Button>
-                </div>
+                {reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <Card key={review.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedReview(review)}>
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">
+                                {format(new Date(review.review_period_start), 'MMM yyyy')} - {format(new Date(review.review_period_end), 'MMM yyyy')}
+                              </h3>
+                              <p className="text-sm text-gray-600">Review Period</p>
+                            </div>
+                            <Badge variant={review.status === 'completed' ? 'default' : 'outline'}>
+                              {review.status}
+                            </Badge>
+                          </div>
+                          {review.overall_rating && (
+                            <div className="mt-4">
+                              <p className="text-sm text-gray-600">Overall Rating</p>
+                              <div className="flex items-center space-x-2">
+                                <div className="flex">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star 
+                                      key={star}
+                                      className={`w-4 h-4 ${star <= review.overall_rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-sm font-medium">{review.overall_rating}/5</span>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Star className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews scheduled</h3>
+                    <p className="text-gray-600 mb-6">
+                      Performance reviews will appear here once they are scheduled.
+                    </p>
+                    <Button>Schedule Review</Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -154,16 +234,54 @@ const PerformanceManagement = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Performance Trends</CardTitle>
-                <CardDescription>Quarterly performance vs goals comparison</CardDescription>
+                <CardDescription>Progress tracking over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No performance data</h3>
-                  <p className="text-gray-600 mb-6">
-                    Analytics will be available once you start tracking goals and performance.
-                  </p>
-                </div>
+                {stats.totalGoals > 0 ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-4">Progress Over Time</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={performanceData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="progress" stroke="#3b82f6" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-4">Goal Status Distribution</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={goalStatusData.filter(item => item.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            dataKey="value"
+                            label={({ name, value }) => `${name}: ${value}`}
+                          >
+                            {goalStatusData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No performance data</h3>
+                    <p className="text-gray-600 mb-6">
+                      Analytics will be available once you start tracking goals and performance.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -198,24 +316,32 @@ const PerformanceManagement = () => {
           {selectedGoal && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">{selectedGoal.title}</h3>
-              <p className="text-gray-600">{selectedGoal.description}</p>
+              {selectedGoal.description && (
+                <p className="text-gray-600">{selectedGoal.description}</p>
+              )}
               
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-500">Progress</p>
-                  <Progress value={selectedGoal.progress} className="mt-1" />
-                  <p className="text-sm font-medium mt-1">{selectedGoal.progress}% complete</p>
+                  <Progress value={selectedGoal.progress || 0} className="mt-1" />
+                  <p className="text-sm font-medium mt-1">{selectedGoal.progress || 0}% complete</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
-                  <Badge variant={selectedGoal.status === "On Track" ? "default" : selectedGoal.status === "Ahead" ? "secondary" : "outline"}>
-                    {selectedGoal.status}
+                  <Badge variant={selectedGoal.status === "completed" ? "default" : selectedGoal.status === "in_progress" ? "secondary" : "outline"}>
+                    {selectedGoal.status?.replace('_', ' ') || 'Not Started'}
                   </Badge>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Due Date</p>
-                  <p className="font-medium">{selectedGoal.due}</p>
+                  <p className="font-medium">{format(new Date(selectedGoal.target_date), 'MMM dd, yyyy')}</p>
                 </div>
+                {selectedGoal.category && (
+                  <div>
+                    <p className="text-sm text-gray-500">Category</p>
+                    <p className="font-medium">{selectedGoal.category}</p>
+                  </div>
+                )}
               </div>
               
               <div className="pt-4 border-t space-y-2">
@@ -228,31 +354,35 @@ const PerformanceManagement = () => {
           
           {selectedReview && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{selectedReview.employee}</h3>
-              <p className="text-gray-600">{selectedReview.type}</p>
+              <h3 className="text-lg font-semibold">Performance Review</h3>
+              <p className="text-gray-600">
+                {format(new Date(selectedReview.review_period_start), 'MMM yyyy')} - {format(new Date(selectedReview.review_period_end), 'MMM yyyy')}
+              </p>
               
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
-                  <Badge variant={selectedReview.status === "Completed" ? "secondary" : selectedReview.status === "Pending" ? "outline" : "default"}>
+                  <Badge variant={selectedReview.status === "completed" ? "secondary" : selectedReview.status === "draft" ? "outline" : "default"}>
                     {selectedReview.status}
                   </Badge>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Due Date</p>
-                  <p className="font-medium">{selectedReview.due}</p>
-                </div>
-                {selectedReview.score && (
+                {selectedReview.overall_rating && (
                   <div>
                     <p className="text-sm text-gray-500">Overall Score</p>
-                    <p className="font-medium">{selectedReview.score}/5.0</p>
+                    <p className="font-medium">{selectedReview.overall_rating}/5.0</p>
+                  </div>
+                )}
+                {selectedReview.achievements && (
+                  <div>
+                    <p className="text-sm text-gray-500">Key Achievements</p>
+                    <p className="text-sm">{selectedReview.achievements}</p>
                   </div>
                 )}
               </div>
               
               <div className="pt-4 border-t space-y-2">
                 <Button className="w-full">
-                  {selectedReview.status === "Completed" ? "View Report" : "Continue Review"}
+                  {selectedReview.status === "completed" ? "View Report" : "Continue Review"}
                 </Button>
                 <Button className="w-full" variant="outline">Schedule Meeting</Button>
                 <Button className="w-full" variant="outline">Send Reminder</Button>
