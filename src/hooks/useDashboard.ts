@@ -96,46 +96,72 @@ export const useDashboard = () => {
     try {
       const activities: RecentActivity[] = [];
 
-      // Recent leave applications
+      // Recent leave applications - use separate queries to avoid join issues
       const { data: leaves } = await supabase
         .from('leave_applications')
-        .select(`
-          id, created_at, leave_type, status,
-          employees!inner(first_name, last_name)
-        `)
+        .select('id, created_at, leave_type, status, employee_id')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      leaves?.forEach(leave => {
-        activities.push({
-          id: leave.id,
-          type: 'leave',
-          description: `${leave.employees.first_name} ${leave.employees.last_name} applied for ${leave.leave_type} leave`,
-          timestamp: leave.created_at,
-          employee_name: `${leave.employees.first_name} ${leave.employees.last_name}`
-        });
-      });
+      if (leaves) {
+        // Get employee names separately
+        const employeeIds = leaves.map(leave => leave.employee_id);
+        const { data: employees } = await supabase
+          .from('employees')
+          .select('id, first_name, last_name')
+          .in('id', employeeIds);
 
-      // Recent enrollments
+        const employeeMap = new Map(employees?.map(emp => [emp.id, emp]) || []);
+
+        leaves.forEach(leave => {
+          const employee = employeeMap.get(leave.employee_id);
+          if (employee) {
+            activities.push({
+              id: leave.id,
+              type: 'leave',
+              description: `${employee.first_name} ${employee.last_name} applied for ${leave.leave_type} leave`,
+              timestamp: leave.created_at,
+              employee_name: `${employee.first_name} ${employee.last_name}`
+            });
+          }
+        });
+      }
+
+      // Recent enrollments - use separate queries
       const { data: enrollments } = await supabase
         .from('course_enrollments')
-        .select(`
-          id, enrolled_at,
-          employees!inner(first_name, last_name),
-          courses!inner(title)
-        `)
+        .select('id, enrolled_at, employee_id, course_id')
         .order('enrolled_at', { ascending: false })
         .limit(5);
 
-      enrollments?.forEach(enrollment => {
-        activities.push({
-          id: enrollment.id,
-          type: 'training',
-          description: `${enrollment.employees.first_name} ${enrollment.employees.last_name} enrolled in ${enrollment.courses.title}`,
-          timestamp: enrollment.enrolled_at,
-          employee_name: `${enrollment.employees.first_name} ${enrollment.employees.last_name}`
+      if (enrollments) {
+        // Get employee and course data separately
+        const employeeIds = enrollments.map(enrollment => enrollment.employee_id);
+        const courseIds = enrollments.map(enrollment => enrollment.course_id);
+        
+        const [employeesResult, coursesResult] = await Promise.all([
+          supabase.from('employees').select('id, first_name, last_name').in('id', employeeIds),
+          supabase.from('courses').select('id, title').in('id', courseIds)
+        ]);
+
+        const employeeMap = new Map(employeesResult.data?.map(emp => [emp.id, emp]) || []);
+        const courseMap = new Map(coursesResult.data?.map(course => [course.id, course]) || []);
+
+        enrollments.forEach(enrollment => {
+          const employee = employeeMap.get(enrollment.employee_id);
+          const course = courseMap.get(enrollment.course_id);
+          
+          if (employee && course) {
+            activities.push({
+              id: enrollment.id,
+              type: 'training',
+              description: `${employee.first_name} ${employee.last_name} enrolled in ${course.title}`,
+              timestamp: enrollment.enrolled_at,
+              employee_name: `${employee.first_name} ${employee.last_name}`
+            });
+          }
         });
-      });
+      }
 
       // Sort all activities by timestamp
       activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
