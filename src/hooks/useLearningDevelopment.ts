@@ -51,12 +51,7 @@ export const useLearningDevelopment = () => {
         .from('course_enrollments')
         .select(`
           *,
-          courses (
-            title,
-            description,
-            category,
-            duration_hours
-          )
+          courses (*)
         `)
         .eq('employee_id', employeeData.id)
         .order('enrolled_at', { ascending: false });

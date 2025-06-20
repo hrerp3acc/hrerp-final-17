@@ -50,11 +50,7 @@ export const usePayrollManagement = () => {
         .from('payroll_records')
         .select(`
           *,
-          pay_periods (
-            start_date,
-            end_date,
-            pay_date
-          )
+          pay_periods (*)
         `)
         .eq('employee_id', employeeData.id)
         .order('created_at', { ascending: false });
