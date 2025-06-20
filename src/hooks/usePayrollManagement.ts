@@ -5,7 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type PayPeriod = Tables<'pay_periods'>;
-type PayrollRecord = Tables<'payroll_records'>;
+type PayrollRecord = Tables<'payroll_records'> & {
+  pay_periods?: PayPeriod;
+};
 type EmployeeBenefit = Tables<'employee_benefits'>;
 
 export const usePayrollManagement = () => {

@@ -5,7 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Course = Tables<'courses'>;
-type CourseEnrollment = Tables<'course_enrollments'>;
+type CourseEnrollment = Tables<'course_enrollments'> & {
+  courses?: Course;
+};
 type Certification = Tables<'certifications'>;
 
 export const useLearningDevelopment = () => {
