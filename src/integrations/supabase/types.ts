@@ -56,6 +56,143 @@ export type Database = {
           },
         ]
       }
+      certifications: {
+        Row: {
+          certificate_url: string | null
+          created_at: string | null
+          employee_id: string
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          issuer: string | null
+          name: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          certificate_url?: string | null
+          created_at?: string | null
+          employee_id: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          name: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          certificate_url?: string | null
+          created_at?: string | null
+          employee_id?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          name?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certifications_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_enrollments: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          employee_id: string
+          enrolled_at: string | null
+          id: string
+          progress: number | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          employee_id: string
+          enrolled_at?: string | null
+          id?: string
+          progress?: number | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          employee_id?: string
+          enrolled_at?: string | null
+          id?: string
+          progress?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_enrollments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          difficulty_level: string | null
+          duration_hours: number | null
+          id: string
+          instructor_email: string | null
+          instructor_name: string | null
+          status: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_hours?: number | null
+          id?: string
+          instructor_email?: string | null
+          instructor_name?: string | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_hours?: number | null
+          id?: string
+          instructor_email?: string | null
+          instructor_name?: string | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           created_at: string | null
@@ -85,6 +222,53 @@ export type Database = {
           {
             foreignKeyName: "fk_department_head"
             columns: ["head_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_benefits: {
+        Row: {
+          amount: number | null
+          benefit_name: string
+          benefit_type: string
+          coverage_end: string | null
+          coverage_start: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          benefit_name: string
+          benefit_type: string
+          coverage_end?: string | null
+          coverage_start?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          benefit_name?: string
+          benefit_type?: string
+          coverage_end?: string | null
+          coverage_start?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_benefits_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
@@ -335,6 +519,105 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pay_periods: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          pay_date: string
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          pay_date: string
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          pay_date?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payroll_records: {
+        Row: {
+          allowances: number | null
+          basic_salary: number
+          created_at: string | null
+          deductions: number | null
+          employee_id: string
+          gross_salary: number
+          id: string
+          net_salary: number
+          overtime_amount: number | null
+          paid_at: string | null
+          pay_period_id: string
+          processed_at: string | null
+          status: string | null
+          tax_deductions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowances?: number | null
+          basic_salary?: number
+          created_at?: string | null
+          deductions?: number | null
+          employee_id: string
+          gross_salary?: number
+          id?: string
+          net_salary?: number
+          overtime_amount?: number | null
+          paid_at?: string | null
+          pay_period_id: string
+          processed_at?: string | null
+          status?: string | null
+          tax_deductions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowances?: number | null
+          basic_salary?: number
+          created_at?: string | null
+          deductions?: number | null
+          employee_id?: string
+          gross_salary?: number
+          id?: string
+          net_salary?: number
+          overtime_amount?: number | null
+          paid_at?: string | null
+          pay_period_id?: string
+          processed_at?: string | null
+          status?: string | null
+          tax_deductions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_records_pay_period_id_fkey"
+            columns: ["pay_period_id"]
+            isOneToOne: false
+            referencedRelation: "pay_periods"
             referencedColumns: ["id"]
           },
         ]
