@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +17,7 @@ export const useTimeTracking = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { employees } = useSupabaseEmployees();
+  const { employees, loading: employeesLoading } = useSupabaseEmployees();
 
   const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
 
@@ -256,6 +255,8 @@ export const useTimeTracking = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      if (employeesLoading) return;
+      
       setLoading(true);
       await Promise.all([fetchTimeEntries(), fetchProjects(), fetchTasks()]);
       setLoading(false);
@@ -263,8 +264,10 @@ export const useTimeTracking = () => {
 
     if (currentEmployee) {
       loadData();
+    } else if (!employeesLoading) {
+      setLoading(false);
     }
-  }, [currentEmployee]);
+  }, [currentEmployee, employeesLoading]);
 
   return {
     timeEntries,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,18 +20,7 @@ export const useAttendance = () => {
     try {
       let query = supabase
         .from('attendance_records')
-        .select(`
-          *,
-          employees (
-            id,
-            first_name,
-            last_name,
-            employee_id,
-            departments (
-              name
-            )
-          )
-        `)
+        .select('*')
         .order('date', { ascending: false });
 
       if (date) {
