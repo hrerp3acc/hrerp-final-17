@@ -16,6 +16,7 @@ const AddEmployee = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { addEmployee, departments, loading } = useSupabaseEmployees();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -37,46 +38,115 @@ const AddEmployee = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const validateForm = () => {
+    if (!formData.firstName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "First name is required.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!formData.lastName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Last name is required.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!formData.email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!formData.departmentId) {
+      toast({
+        title: "Validation Error",
+        description: "Department is required.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.departmentId) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
+    if (!validateForm()) {
       return;
     }
 
-    // Generate employee ID if not provided
-    const employeeId = formData.employeeId || `EMP${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-    
-    const employeeData = {
-      employee_id: employeeId,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      email: formData.email,
-      phone: formData.phone || null,
-      department_id: formData.departmentId,
-      position: formData.position || null,
-      location: formData.location || null,
-      start_date: formData.startDate || null,
-      salary: formData.salary ? parseFloat(formData.salary) : null,
-      emergency_contact_name: formData.emergencyContactName || null,
-      emergency_contact_phone: formData.emergencyContactPhone || null,
-      address: formData.address || null,
-      notes: formData.notes || null,
-      status: 'active' as const,
-      manager_id: null, // Can be added later
-      user_id: null // Will be linked when the employee creates an account
-    };
+    setIsSubmitting(true);
 
-    const { error } = await addEmployee(employeeData);
-    
-    if (!error) {
+    try {
+      // Generate employee ID if not provided
+      const employeeId = formData.employeeId || `EMP${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      
+      const employeeData = {
+        employee_id: employeeId,
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim() || null,
+        department_id: formData.departmentId,
+        position: formData.position.trim() || null,
+        location: formData.location.trim() || null,
+        start_date: formData.startDate || null,
+        salary: formData.salary ? parseFloat(formData.salary) : null,
+        emergency_contact_name: formData.emergencyContactName.trim() || null,
+        emergency_contact_phone: formData.emergencyContactPhone.trim() || null,
+        address: formData.address.trim() || null,
+        notes: formData.notes.trim() || null,
+        status: 'active' as const,
+        manager_id: null,
+        user_id: null
+      };
+
+      console.log('Submitting employee data:', employeeData);
+      
+      const { data, error } = await addEmployee(employeeData);
+      
+      if (error) {
+        console.error('Error adding employee:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add employee. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Employee added successfully:', data);
       navigate('/employees');
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -104,6 +174,14 @@ const AddEmployee = () => {
           </div>
         </div>
       </div>
+
+      {departments.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800">
+            No departments found. You may need to create departments first before adding employees.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Personal Information */}
@@ -238,6 +316,8 @@ const AddEmployee = () => {
                 value={formData.salary}
                 onChange={(e) => handleInputChange('salary', e.target.value)}
                 placeholder="65000"
+                min="0"
+                step="0.01"
               />
             </div>
           </CardContent>
@@ -286,11 +366,15 @@ const AddEmployee = () => {
         {/* Submit Button */}
         <div className="lg:col-span-3 flex justify-end space-x-4">
           <Link to="/employees">
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" disabled={isSubmitting}>Cancel</Button>
           </Link>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            type="submit" 
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={isSubmitting || departments.length === 0}
+          >
             <Save className="w-4 h-4 mr-2" />
-            Add Employee
+            {isSubmitting ? 'Adding Employee...' : 'Add Employee'}
           </Button>
         </div>
       </form>

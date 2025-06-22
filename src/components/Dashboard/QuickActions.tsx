@@ -1,66 +1,104 @@
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Clock, FileText, Users, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Users, 
+  Clock, 
+  Calendar, 
+  FileText, 
+  UserPlus, 
+  CheckSquare,
+  BarChart3,
+  Settings
+} from 'lucide-react';
 
 const QuickActions = () => {
+  const navigate = useNavigate();
+
   const actions = [
     {
       title: 'Add Employee',
-      description: 'Register a new employee',
-      icon: Plus,
-      path: '/employees/add',
+      description: 'Create new employee profile',
+      icon: UserPlus,
+      onClick: () => navigate('/employees/add'),
       color: 'bg-blue-500 hover:bg-blue-600'
     },
     {
-      title: 'Clock In/Out',
-      description: 'Track work hours',
+      title: 'Time Tracking',
+      description: 'Start or stop time tracking',
       icon: Clock,
-      path: '/time/tracking',
+      onClick: () => navigate('/time/tracking'),
       color: 'bg-green-500 hover:bg-green-600'
     },
     {
-      title: 'Apply Leave',
-      description: 'Request time off',
+      title: 'Apply for Leave',
+      description: 'Submit leave application',
       icon: Calendar,
-      path: '/leave/apply',
+      onClick: () => navigate('/leave/apply'),
       color: 'bg-purple-500 hover:bg-purple-600'
     },
     {
-      title: 'Generate Report',
-      description: 'Create HR reports',
-      icon: FileText,
-      path: '/reports/custom',
+      title: 'Check Attendance',
+      description: 'Mark your attendance',
+      icon: CheckSquare,
+      onClick: () => navigate('/time/attendance'),
       color: 'bg-orange-500 hover:bg-orange-600'
+    },
+    {
+      title: 'View Employees',
+      description: 'Browse employee directory',
+      icon: Users,
+      onClick: () => navigate('/employees'),
+      color: 'bg-indigo-500 hover:bg-indigo-600'
+    },
+    {
+      title: 'Reports',
+      description: 'Generate reports',
+      icon: BarChart3,
+      onClick: () => navigate('/reports'),
+      color: 'bg-red-500 hover:bg-red-600'
+    },
+    {
+      title: 'Timesheets',
+      description: 'Manage timesheets',
+      icon: FileText,
+      onClick: () => navigate('/time/timesheets'),
+      color: 'bg-teal-500 hover:bg-teal-600'
+    },
+    {
+      title: 'Admin Panel',
+      description: 'System administration',
+      icon: Settings,
+      onClick: () => navigate('/admin'),
+      color: 'bg-gray-500 hover:bg-gray-600'
     }
   ];
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-        <p className="text-sm text-gray-600">Frequently used functions</p>
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {actions.map((action) => (
-          <Link key={action.title} to={action.path}>
+    <Card>
+      <CardHeader>
+        <CardTitle>Quick Actions</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {actions.map((action, index) => (
             <Button
+              key={index}
               variant="outline"
-              className="h-auto p-4 flex flex-col items-start space-y-2 text-left hover:shadow-md transition-shadow"
+              className={`h-20 flex flex-col items-center justify-center space-y-2 text-white border-0 ${action.color}`}
+              onClick={action.onClick}
             >
-              <div className={`w-8 h-8 rounded-lg ${action.color} flex items-center justify-center mb-2`}>
-                <action.icon className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">{action.title}</p>
-                <p className="text-sm text-gray-600">{action.description}</p>
+              <action.icon className="w-6 h-6" />
+              <div className="text-center">
+                <div className="text-xs font-medium">{action.title}</div>
+                <div className="text-xs opacity-80">{action.description}</div>
               </div>
             </Button>
-          </Link>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
