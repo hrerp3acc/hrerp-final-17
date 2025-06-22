@@ -10,6 +10,7 @@ import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { useTimesheets } from '@/hooks/useTimesheets';
+import { useDashboard } from '@/hooks/useDashboard';
 import { 
   Users, 
   Clock, 
@@ -26,6 +27,7 @@ const Dashboard = () => {
   const { attendanceRecords, getTodaysAttendance } = useAttendance();
   const { activeEntry, getTimeStats } = useTimeTracking();
   const { timesheets } = useTimesheets();
+  const { recentActivities } = useDashboard();
 
   const employeeStats = getEmployeeStats();
   const timeStats = getTimeStats();
@@ -183,7 +185,7 @@ const Dashboard = () => {
         </div>
         <div className="space-y-6">
           <QuickActions />
-          <RecentActivities />
+          <RecentActivities activities={recentActivities} />
         </div>
       </div>
     </div>
