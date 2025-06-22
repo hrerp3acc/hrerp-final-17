@@ -37,7 +37,10 @@ const Dashboard = () => {
     {
       title: "Total Employees",
       value: employeeStats.total.toString(),
-      change: "+2 this month",
+      change: {
+        value: 5,
+        type: "increase" as const
+      },
       trend: "up" as const,
       icon: Users,
       color: "blue"
@@ -45,7 +48,10 @@ const Dashboard = () => {
     {
       title: "Today's Hours",
       value: timeStats.today.toFixed(1),
-      change: "vs 8h target",
+      change: {
+        value: timeStats.today >= 8 ? 10 : -15,
+        type: timeStats.today >= 8 ? "increase" as const : "decrease" as const
+      },
       trend: timeStats.today >= 8 ? "up" as const : "down" as const,
       icon: Clock,
       color: "green"
@@ -53,7 +59,10 @@ const Dashboard = () => {
     {
       title: "Pending Timesheets",
       value: timesheets.filter(t => t.status === 'draft').length.toString(),
-      change: "needs approval",
+      change: {
+        value: 0,
+        type: "neutral" as const
+      },
       trend: "neutral" as const,
       icon: FileText,
       color: "orange"
@@ -61,7 +70,10 @@ const Dashboard = () => {
     {
       title: "Active Employees",
       value: employeeStats.active.toString(),
-      change: `${((employeeStats.active / employeeStats.total) * 100).toFixed(1)}% active`,
+      change: {
+        value: Math.round(((employeeStats.active / employeeStats.total) * 100) - 85),
+        type: employeeStats.active / employeeStats.total > 0.85 ? "increase" as const : "decrease" as const
+      },
       trend: "up" as const,
       icon: Target,
       color: "purple"
