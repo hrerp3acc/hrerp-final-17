@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { useLeaveManagement } from '@/hooks/useLeaveManagement';
 
 const LeaveManagement = () => {
-  const { leaveApplications, loading, getLeaveBalance, getLeaveStats } = useLeaveManagement();
+  const { leaveApplications, loading, getLeaveBalance, getLeaveStats, approveLeaveApplication, rejectLeaveApplication } = useLeaveManagement();
   const [selectedTab, setSelectedTab] = useState('my-leaves');
 
   const leaveBalances = getLeaveBalance();
@@ -43,15 +43,18 @@ const LeaveManagement = () => {
     return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   };
 
+  const handleApprove = async (id: string) => {
+    await approveLeaveApplication(id);
+  };
+
+  const handleReject = async (id: string) => {
+    await rejectLeaveApplication(id);
+  };
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -147,15 +150,39 @@ const LeaveManagement = () => {
                       {leave.reason && (
                         <p className="text-sm text-gray-600">{leave.reason}</p>
                       )}
+                      {leave.approved_at && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {leave.status === 'approved' ? 'Approved' : 'Processed'} on {new Date(leave.approved_at).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">
-                      {calculateDays(leave.start_date, leave.end_date)} day{calculateDays(leave.start_date, leave.end_date) > 1 ? 's' : ''}
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      View Details
-                    </Button>
+                  <div className="flex items-center space-x-2">
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">
+                        {calculateDays(leave.start_date, leave.end_date)} day{calculateDays(leave.start_date, leave.end_date) > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    {leave.status === 'pending' && (
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-600 hover:bg-green-50"
+                          onClick={() => handleApprove(leave.id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                          onClick={() => handleReject(leave.id)}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

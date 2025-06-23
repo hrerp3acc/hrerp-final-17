@@ -27,10 +27,21 @@ export const useLeaveManagement = () => {
   const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
 
   const fetchLeaveApplications = async () => {
-    if (!currentEmployee) return;
+    if (!currentEmployee) {
+      setLoading(false);
+      return;
+    }
     
     try {
-      const { data, error } = await supabase
+      // Check if user is admin/manager to see all applications or just their own
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user?.id);
+      
+      const isManager = userRoles?.some(role => ['admin', 'manager'].includes(role.role));
+      
+      let query = supabase
         .from('leave_applications')
         .select(`
           *,
@@ -44,8 +55,14 @@ export const useLeaveManagement = () => {
             last_name
           )
         `)
-        .eq('employee_id', currentEmployee.id)
         .order('created_at', { ascending: false });
+
+      // If not a manager, only show their own applications
+      if (!isManager) {
+        query = query.eq('employee_id', currentEmployee.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setLeaveApplications(data || []);
@@ -56,6 +73,8 @@ export const useLeaveManagement = () => {
         description: "Failed to fetch leave applications",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -222,6 +241,7 @@ export const useLeaveManagement = () => {
       { type: 'Annual Leave', key: 'annual', total: 25 },
       { type: 'Sick Leave', key: 'sick', total: 10 },
       { type: 'Personal Leave', key: 'personal', total: 5 },
+      { type: 'Emergency Leave', key: 'emergency', total: 3 },
       { type: 'Maternity/Paternity', key: 'maternity', total: 90 }
     ];
 
@@ -239,7 +259,7 @@ export const useLeaveManagement = () => {
         type: leaveType.type,
         used,
         total: leaveType.total,
-        remaining: leaveType.total - used
+        remaining: Math.max(0, leaveType.total - used)
       };
     });
   };
@@ -258,9 +278,20 @@ export const useLeaveManagement = () => {
     };
   };
 
+  const getUpcomingLeaves = () => {
+    const today = new Date();
+    return leaveApplications
+      .filter(app => 
+        app.status === 'approved' && 
+        new Date(app.start_date) >= today
+      )
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+      .slice(0, 5);
+  };
+
   useEffect(() => {
     if (currentEmployee) {
-      fetchLeaveApplications().finally(() => setLoading(false));
+      fetchLeaveApplications();
     } else {
       setLoading(false);
     }
@@ -275,6 +306,7 @@ export const useLeaveManagement = () => {
     rejectLeaveApplication,
     getLeaveBalance,
     getLeaveStats,
+    getUpcomingLeaves,
     refetch: fetchLeaveApplications
   };
 };
