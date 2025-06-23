@@ -8,7 +8,6 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type JobPosting = Tables<'job_postings'>;
 type JobApplication = Tables<'job_applications'>;
-type ApplicationStatus = 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
 
 export const useRecruitment = () => {
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
@@ -28,6 +27,10 @@ export const useRecruitment = () => {
           *,
           departments (
             name
+          ),
+          posted_by_employee:employees!job_postings_posted_by_fkey (
+            first_name,
+            last_name
           )
         `)
         .order('created_at', { ascending: false });
@@ -71,7 +74,15 @@ export const useRecruitment = () => {
     }
   };
 
-  const createJobPosting = async (jobData: Omit<JobPosting, 'id' | 'created_at' | 'updated_at'>) => {
+  const createJobPosting = async (jobData: {
+    title: string;
+    description?: string;
+    requirements?: string;
+    department_id?: string;
+    salary_min?: number;
+    salary_max?: number;
+    location?: string;
+  }) => {
     if (!currentEmployee) {
       toast({
         title: "Error",
@@ -85,8 +96,8 @@ export const useRecruitment = () => {
       const { data, error } = await supabase
         .from('job_postings')
         .insert([{
-          ...jobData,
-          posted_by: currentEmployee.id
+          posted_by: currentEmployee.id,
+          ...jobData
         }])
         .select()
         .single();
@@ -97,7 +108,7 @@ export const useRecruitment = () => {
       
       toast({
         title: "Job Posted",
-        description: "Job posting created successfully"
+        description: "Job posting has been created successfully"
       });
       
       return data;
@@ -127,7 +138,7 @@ export const useRecruitment = () => {
       
       toast({
         title: "Job Updated",
-        description: "Job posting updated successfully"
+        description: "Job posting has been updated successfully"
       });
       
       return data;
@@ -142,40 +153,48 @@ export const useRecruitment = () => {
     }
   };
 
-  const deleteJobPosting = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('job_postings')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await fetchJobPostings();
-      
-      toast({
-        title: "Job Deleted",
-        description: "Job posting deleted successfully"
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting job posting:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete job posting",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
-  const updateApplicationStatus = async (applicationId: string, status: ApplicationStatus) => {
+  const createJobApplication = async (applicationData: {
+    job_posting_id: string;
+    candidate_name: string;
+    candidate_email: string;
+    candidate_phone?: string;
+    resume_url?: string;
+    cover_letter?: string;
+  }) => {
     try {
       const { data, error } = await supabase
         .from('job_applications')
-        .update({ status })
-        .eq('id', applicationId)
+        .insert([applicationData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchJobApplications();
+      
+      toast({
+        title: "Application Submitted",
+        description: "Job application has been submitted successfully"
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error creating job application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit job application",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const updateJobApplication = async (id: string, updates: Partial<JobApplication>) => {
+    try {
+      const { data, error } = await supabase
+        .from('job_applications')
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
 
@@ -185,44 +204,57 @@ export const useRecruitment = () => {
       
       toast({
         title: "Application Updated",
-        description: `Application status updated to ${status}`
+        description: "Job application has been updated successfully"
       });
       
       return data;
     } catch (error) {
-      console.error('Error updating application status:', error);
+      console.error('Error updating job application:', error);
       toast({
         title: "Error",
-        description: "Failed to update application status",
+        description: "Failed to update job application",
         variant: "destructive"
       });
       return null;
     }
   };
 
-  const getApplicationStats = () => {
-    const stats = {
-      total: jobApplications.length,
-      applied: jobApplications.filter(app => app.status === 'applied').length,
-      screening: jobApplications.filter(app => app.status === 'screening').length,
-      interview: jobApplications.filter(app => app.status === 'interview').length,
-      offer: jobApplications.filter(app => app.status === 'offer').length,
-      hired: jobApplications.filter(app => app.status === 'hired').length,
-      rejected: jobApplications.filter(app => app.status === 'rejected').length
-    };
+  const getRecruitmentStats = () => {
+    const totalJobs = jobPostings.length;
+    const activeJobs = jobPostings.filter(job => job.status === 'open').length;
+    const closedJobs = jobPostings.filter(job => job.status === 'closed').length;
+    
+    const totalApplications = jobApplications.length;
+    const pendingApplications = jobApplications.filter(app => app.status === 'applied').length;
+    const interviewApplications = jobApplications.filter(app => app.status === 'interview').length;
+    const hiredApplications = jobApplications.filter(app => app.status === 'hired').length;
+    const rejectedApplications = jobApplications.filter(app => app.status === 'rejected').length;
 
-    return stats;
+    // Calculate applications per job
+    const avgApplicationsPerJob = totalJobs > 0 ? Math.round(totalApplications / totalJobs) : 0;
+    
+    // Calculate hire rate
+    const hireRate = totalApplications > 0 ? Math.round((hiredApplications / totalApplications) * 100) : 0;
+
+    return {
+      totalJobs,
+      activeJobs,
+      closedJobs,
+      totalApplications,
+      pendingApplications,
+      interviewApplications,
+      hiredApplications,
+      rejectedApplications,
+      avgApplicationsPerJob,
+      hireRate
+    };
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([fetchJobPostings(), fetchJobApplications()]);
-      setLoading(false);
-    };
-
     if (currentEmployee) {
-      loadData();
+      Promise.all([fetchJobPostings(), fetchJobApplications()]).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [currentEmployee]);
 
@@ -232,9 +264,9 @@ export const useRecruitment = () => {
     loading,
     createJobPosting,
     updateJobPosting,
-    deleteJobPosting,
-    updateApplicationStatus,
-    getApplicationStats,
+    createJobApplication,
+    updateJobApplication,
+    getRecruitmentStats,
     refetch: () => Promise.all([fetchJobPostings(), fetchJobApplications()])
   };
 };

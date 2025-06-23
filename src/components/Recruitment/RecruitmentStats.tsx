@@ -1,26 +1,33 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  UserPlus, Briefcase, Calendar, Clock, FileText, 
-  Users, TrendingUp, CheckCircle 
-} from 'lucide-react';
+import { Briefcase, Users, Calendar, TrendingUp } from 'lucide-react';
 
-const RecruitmentStats = () => {
+interface RecruitmentStatsProps {
+  stats: {
+    totalJobs: number;
+    activeJobs: number;
+    totalApplications: number;
+    hiredApplications: number;
+    avgApplicationsPerJob: number;
+    hireRate: number;
+  };
+}
+
+const RecruitmentStats = ({ stats }: RecruitmentStatsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Briefcase className="w-4 h-4 text-blue-500" />
-            <span>Open Positions</span>
+            <span>Active Jobs</span>
           </CardTitle>
-          <CardDescription>Currently hiring</CardDescription>
+          <CardDescription>Currently open</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">0</div>
-          <div className="text-sm text-gray-500 flex items-center space-x-1">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span>No positions yet</span>
+          <div className="text-3xl font-bold">{stats.activeJobs}</div>
+          <div className="text-sm text-gray-500">
+            of {stats.totalJobs} total jobs
           </div>
         </CardContent>
       </Card>
@@ -28,16 +35,15 @@ const RecruitmentStats = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <UserPlus className="w-4 h-4 text-green-500" />
+            <Users className="w-4 h-4 text-green-500" />
             <span>Applications</span>
           </CardTitle>
-          <CardDescription>This month</CardDescription>
+          <CardDescription>Total received</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">0</div>
-          <div className="text-sm text-gray-500 flex items-center space-x-1">
-            <FileText className="w-4 h-4 text-blue-500" />
-            <span>No applications yet</span>
+          <div className="text-3xl font-bold">{stats.totalApplications}</div>
+          <div className="text-sm text-gray-500">
+            {stats.avgApplicationsPerJob} avg per job
           </div>
         </CardContent>
       </Card>
@@ -46,15 +52,14 @@ const RecruitmentStats = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 text-orange-500" />
-            <span>Interviews</span>
+            <span>Hired</span>
           </CardTitle>
-          <CardDescription>Scheduled</CardDescription>
+          <CardDescription>Successful hires</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">0</div>
-          <div className="text-sm text-gray-500 flex items-center space-x-1">
-            <Clock className="w-4 h-4 text-red-500" />
-            <span>No interviews scheduled</span>
+          <div className="text-3xl font-bold">{stats.hiredApplications}</div>
+          <div className="text-sm text-gray-500">
+            {stats.hireRate}% hire rate
           </div>
         </CardContent>
       </Card>
@@ -62,16 +67,15 @@ const RecruitmentStats = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span>Hires</span>
+            <TrendingUp className="w-4 h-4 text-purple-500" />
+            <span>Success Rate</span>
           </CardTitle>
-          <CardDescription>This quarter</CardDescription>
+          <CardDescription>Hiring efficiency</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">0</div>
-          <div className="text-sm text-gray-500 flex items-center space-x-1">
-            <Users className="w-4 h-4 text-purple-500" />
-            <span>No hires yet</span>
+          <div className="text-3xl font-bold">{stats.hireRate}%</div>
+          <div className="text-sm text-gray-500">
+            from applications
           </div>
         </CardContent>
       </Card>
