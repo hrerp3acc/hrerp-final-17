@@ -8,8 +8,6 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type PerformanceGoal = Tables<'performance_goals'>;
 type PerformanceReview = Tables<'performance_reviews'>;
-type GoalStatus = 'not_started' | 'in_progress' | 'completed' | 'overdue';
-type ReviewStatus = 'draft' | 'in_progress' | 'completed';
 
 export const usePerformanceManagement = () => {
   const [goals, setGoals] = useState<PerformanceGoal[]>([]);
@@ -22,10 +20,21 @@ export const usePerformanceManagement = () => {
   const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
 
   const fetchGoals = async () => {
-    if (!currentEmployee) return;
+    if (!currentEmployee) {
+      setLoading(false);
+      return;
+    }
     
     try {
-      const { data, error } = await supabase
+      // Check if user is admin/manager to see all goals or just their own
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user?.id);
+      
+      const isManager = userRoles?.some(role => ['admin', 'manager'].includes(role.role));
+
+      let query = supabase
         .from('performance_goals')
         .select(`
           *,
@@ -35,8 +44,14 @@ export const usePerformanceManagement = () => {
             employee_id
           )
         `)
-        .eq('employee_id', currentEmployee.id)
         .order('created_at', { ascending: false });
+
+      // If not a manager, only show their own goals
+      if (!isManager) {
+        query = query.eq('employee_id', currentEmployee.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setGoals(data || []);
@@ -51,10 +66,21 @@ export const usePerformanceManagement = () => {
   };
 
   const fetchReviews = async () => {
-    if (!currentEmployee) return;
+    if (!currentEmployee) {
+      setLoading(false);
+      return;
+    }
     
     try {
-      const { data, error } = await supabase
+      // Check if user is admin/manager to see all reviews or just their own
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user?.id);
+      
+      const isManager = userRoles?.some(role => ['admin', 'manager'].includes(role.role));
+
+      let query = supabase
         .from('performance_reviews')
         .select(`
           *,
@@ -68,8 +94,14 @@ export const usePerformanceManagement = () => {
             last_name
           )
         `)
-        .eq('employee_id', currentEmployee.id)
         .order('created_at', { ascending: false });
+
+      // If not a manager, only show reviews where they are the employee
+      if (!isManager) {
+        query = query.eq('employee_id', currentEmployee.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setReviews(data || []);
@@ -245,7 +277,11 @@ export const usePerformanceManagement = () => {
     const totalGoals = goals.length;
     const completedGoals = goals.filter(goal => goal.status === 'completed').length;
     const inProgressGoals = goals.filter(goal => goal.status === 'in_progress').length;
-    const overdueGoals = goals.filter(goal => goal.status === 'overdue').length;
+    const overdueGoals = goals.filter(goal => {
+      const targetDate = new Date(goal.target_date);
+      const today = new Date();
+      return goal.status !== 'completed' && targetDate < today;
+    }).length;
     
     const totalReviews = reviews.length;
     const completedReviews = reviews.filter(review => review.status === 'completed').length;
