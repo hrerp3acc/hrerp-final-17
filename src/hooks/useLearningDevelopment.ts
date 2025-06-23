@@ -199,6 +199,30 @@ export const useLearningDevelopment = () => {
     }
   };
 
+  const createCourse = async (courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .insert([courseData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Course created successfully",
+      });
+
+      await fetchCourses();
+    } catch (error) {
+      console.error('Error creating course:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create course",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getLearningStats = () => {
     const totalCourses = courses.length;
     const enrolledCourses = enrollments.length;
@@ -236,6 +260,7 @@ export const useLearningDevelopment = () => {
     enrollInCourse,
     updateProgress,
     addCertification,
+    createCourse,
     getLearningStats,
     refetchCourses: fetchCourses,
     refetchEnrollments: fetchEnrollments,
