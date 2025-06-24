@@ -14,11 +14,15 @@ interface DashboardStats {
   activeProjects: number;
   upcomingReviews: number;
   completedTrainings: number;
+  activeGoals: number;
+  completedGoals: number;
+  pendingTimesheets: number;
+  activeEnrollments: number;
 }
 
 interface RecentActivity {
   id: string;
-  type: 'leave' | 'hire' | 'training' | 'performance' | 'time';
+  type: 'leave' | 'hire' | 'training' | 'performance' | 'time' | 'goal' | 'enrollment';
   description: string;
   timestamp: string;
   employee_name?: string;
@@ -39,7 +43,10 @@ export const useDashboard = () => {
         attendanceResult,
         projectsResult,
         reviewsResult,
-        trainingsResult
+        trainingsResult,
+        goalsResult,
+        timesheetsResult,
+        enrollmentsResult
       ] = await Promise.all([
         supabase.from('employees').select('id, status, start_date'),
         supabase.from('leave_applications').select('id, status').eq('status', 'pending'),
@@ -47,7 +54,10 @@ export const useDashboard = () => {
         supabase.from('attendance_records').select('date, total_hours').gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
         supabase.from('projects').select('id, status'),
         supabase.from('performance_reviews').select('id, status').eq('status', 'draft'),
-        supabase.from('course_enrollments').select('id, status').eq('status', 'completed')
+        supabase.from('course_enrollments').select('id, status').eq('status', 'completed'),
+        supabase.from('performance_goals').select('id, status'),
+        supabase.from('timesheets').select('id, status').eq('status', 'draft'),
+        supabase.from('course_enrollments').select('id, status').eq('status', 'enrolled')
       ]);
 
       const employees = employeesResult.data || [];
@@ -70,6 +80,11 @@ export const useDashboard = () => {
       const totalProjects = projects.length;
       const activeProjects = projects.filter(p => p.status === 'active').length;
 
+      // Performance goals metrics
+      const goals = goalsResult.data || [];
+      const activeGoals = goals.filter(g => g.status !== 'completed').length;
+      const completedGoals = goals.filter(g => g.status === 'completed').length;
+
       setStats({
         totalEmployees,
         activeEmployees,
@@ -80,7 +95,11 @@ export const useDashboard = () => {
         totalProjects,
         activeProjects,
         upcomingReviews: reviewsResult.data?.length || 0,
-        completedTrainings: trainingsResult.data?.length || 0
+        completedTrainings: trainingsResult.data?.length || 0,
+        activeGoals,
+        completedGoals,
+        pendingTimesheets: timesheetsResult.data?.length || 0,
+        activeEnrollments: enrollmentsResult.data?.length || 0
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -96,7 +115,7 @@ export const useDashboard = () => {
     try {
       const activities: RecentActivity[] = [];
 
-      // Recent leave applications - use separate queries to avoid join issues
+      // Recent leave applications
       const { data: leaves } = await supabase
         .from('leave_applications')
         .select('id, created_at, leave_type, status, employee_id')
@@ -104,7 +123,6 @@ export const useDashboard = () => {
         .limit(5);
 
       if (leaves) {
-        // Get employee names separately
         const employeeIds = leaves.map(leave => leave.employee_id);
         const { data: employees } = await supabase
           .from('employees')
@@ -127,7 +145,7 @@ export const useDashboard = () => {
         });
       }
 
-      // Recent enrollments - use separate queries
+      // Recent course enrollments
       const { data: enrollments } = await supabase
         .from('course_enrollments')
         .select('id, enrolled_at, employee_id, course_id')
@@ -135,7 +153,6 @@ export const useDashboard = () => {
         .limit(5);
 
       if (enrollments) {
-        // Get employee and course data separately
         const employeeIds = enrollments.map(enrollment => enrollment.employee_id);
         const courseIds = enrollments.map(enrollment => enrollment.course_id);
         
@@ -154,9 +171,39 @@ export const useDashboard = () => {
           if (employee && course) {
             activities.push({
               id: enrollment.id,
-              type: 'training',
+              type: 'enrollment',
               description: `${employee.first_name} ${employee.last_name} enrolled in ${course.title}`,
               timestamp: enrollment.enrolled_at,
+              employee_name: `${employee.first_name} ${employee.last_name}`
+            });
+          }
+        });
+      }
+
+      // Recent goals
+      const { data: goals } = await supabase
+        .from('performance_goals')
+        .select('id, created_at, title, employee_id, status')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (goals) {
+        const employeeIds = goals.map(goal => goal.employee_id);
+        const { data: employees } = await supabase
+          .from('employees')
+          .select('id, first_name, last_name')
+          .in('id', employeeIds);
+
+        const employeeMap = new Map(employees?.map(emp => [emp.id, emp]) || []);
+
+        goals.forEach(goal => {
+          const employee = employeeMap.get(goal.employee_id);
+          if (employee) {
+            activities.push({
+              id: goal.id,
+              type: 'goal',
+              description: `${employee.first_name} ${employee.last_name} ${goal.status === 'completed' ? 'completed' : 'created'} goal: ${goal.title}`,
+              timestamp: goal.created_at,
               employee_name: `${employee.first_name} ${employee.last_name}`
             });
           }

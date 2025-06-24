@@ -1,60 +1,78 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, UserCheck, UserX, Calendar, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
-import { useEmployees } from '@/hooks/useEmployees';
+import { Users, UserCheck, UserX, Calendar, Clock, TrendingUp, AlertTriangle, Target, BookOpen } from 'lucide-react';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import { usePerformanceManagement } from '@/hooks/usePerformanceManagement';
+import { useLearningDevelopment } from '@/hooks/useLearningDevelopment';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { useDashboard } from '@/hooks/useDashboard';
 
 const QuickStats = () => {
-  const { getEmployeeStats } = useEmployees();
-  const employeeStats = getEmployeeStats();
+  const { getEmployeeStats } = useSupabaseEmployees();
+  const { goals } = usePerformanceManagement();
+  const { enrollments, courses } = useLearningDevelopment();
+  const { getTimeStats } = useTimeTracking();
+  const { stats } = useDashboard();
 
-  const stats = [
+  const employeeStats = getEmployeeStats();
+  const timeStats = getTimeStats();
+
+  // Calculate performance metrics
+  const activeGoals = goals.filter(g => g.status !== 'completed').length;
+  const completedGoals = goals.filter(g => g.status === 'completed').length;
+  
+  // Calculate learning metrics
+  const activeEnrollments = enrollments.filter(e => e.status === 'enrolled').length;
+  const completedCourses = enrollments.filter(e => e.status === 'completed').length;
+
+  const quickStats = [
     {
       title: 'Active Employees',
       value: employeeStats.active.toString(),
-      change: employeeStats.total > 0 ? `${employeeStats.total} total` : 'No employees yet',
+      change: `${employeeStats.total} total`,
       changeType: 'neutral' as const,
       icon: Users,
       color: 'blue'
     },
     {
-      title: 'Present Today',
-      value: '0',
-      change: '0%',
-      changeType: 'neutral' as const,
-      icon: UserCheck,
+      title: 'Today\'s Hours',
+      value: timeStats.today.toFixed(1) + 'h',
+      change: `${timeStats.week.toFixed(1)}h this week`,
+      changeType: timeStats.today >= 8 ? 'positive' as const : 'negative' as const,
+      icon: Clock,
       color: 'green'
     },
     {
-      title: 'On Leave',
-      value: '0',
-      change: 'No leave requests',
+      title: 'Active Goals',
+      value: activeGoals.toString(),
+      change: `${completedGoals} completed`,
+      changeType: completedGoals > activeGoals ? 'positive' as const : 'neutral' as const,
+      icon: Target,
+      color: 'purple'
+    },
+    {
+      title: 'Learning Progress',
+      value: activeEnrollments.toString(),
+      change: `${completedCourses} completed`,
+      changeType: completedCourses > 0 ? 'positive' as const : 'neutral' as const,
+      icon: BookOpen,
+      color: 'orange'
+    },
+    {
+      title: 'Pending Leaves',
+      value: (stats?.pendingLeaves || 0).toString(),
+      change: 'Awaiting approval',
       changeType: 'neutral' as const,
       icon: Calendar,
       color: 'yellow'
     },
     {
-      title: 'Late Arrivals',
-      value: '0',
-      change: 'No late arrivals',
-      changeType: 'neutral' as const,
-      icon: Clock,
-      color: 'red'
-    },
-    {
-      title: 'Pending Reviews',
-      value: '0',
-      change: 'No pending reviews',
-      changeType: 'neutral' as const,
-      icon: TrendingUp,
-      color: 'purple'
-    },
-    {
       title: 'Open Positions',
-      value: '0',
-      change: 'No open positions',
+      value: (stats?.openPositions || 0).toString(),
+      change: 'Active recruiting',
       changeType: 'neutral' as const,
       icon: AlertTriangle,
-      color: 'orange'
+      color: 'red'
     }
   ];
 
@@ -82,30 +100,35 @@ const QuickStats = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {stats.map((stat) => (
-        <Card key={stat.title} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  {stat.title}
-                </p>
-                <p className="text-2xl font-bold text-gray-900 mb-1">
-                  {stat.value}
-                </p>
-                <p className={`text-xs ${getChangeColor(stat.changeType)}`}>
-                  {stat.change}
-                </p>
-              </div>
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getColorClasses(stat.color)}`}>
-                <stat.icon className="w-5 h-5" />
+    <Card>
+      <CardHeader>
+        <CardTitle>Quick Stats</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {quickStats.map((stat) => (
+            <div key={stat.title} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    {stat.title}
+                  </p>
+                  <p className="text-xl font-bold text-gray-900 mb-1">
+                    {stat.value}
+                  </p>
+                  <p className={`text-xs ${getChangeColor(stat.changeType)}`}>
+                    {stat.change}
+                  </p>
+                </div>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getColorClasses(stat.color)}`}>
+                  <stat.icon className="w-5 h-5" />
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
