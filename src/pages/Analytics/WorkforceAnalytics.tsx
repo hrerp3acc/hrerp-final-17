@@ -24,7 +24,7 @@ const WorkforceAnalytics = () => {
       
       // Calculate employees hired up to this month
       const employeesUpToMonth = employees.filter(emp => {
-        const startDate = emp.start_date ? new Date(emp.start_date) : new Date(emp.created_at);
+        const startDate = emp.startDate ? new Date(emp.startDate) : new Date(emp.createdAt || new Date());
         return startDate <= date;
       }).length;
       
@@ -40,13 +40,13 @@ const WorkforceAnalytics = () => {
 
   const departmentData = useMemo(() => {
     const deptCounts = employees.reduce((acc, emp) => {
-      const dept = emp.department_id || 'Unassigned';
+      const dept = emp.department || 'Unassigned';
       acc[dept] = (acc[dept] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return Object.entries(deptCounts).map(([dept, count]) => ({
-      department: dept === 'Unassigned' ? 'Unassigned' : `Dept ${dept.substring(0, 8)}`,
+      department: dept === 'Unassigned' ? 'Unassigned' : dept,
       count
     }));
   }, [employees]);
@@ -60,7 +60,7 @@ const WorkforceAnalytics = () => {
     const colors = {
       active: '#10b981',
       inactive: '#ef4444', 
-      pending: '#f59e0b'
+      terminated: '#f59e0b'
     };
 
     return Object.entries(statusCounts).map(([status, count]) => ({
@@ -74,7 +74,7 @@ const WorkforceAnalytics = () => {
     if (employees.length === 0) return 0;
     
     const totalMonths = employees.reduce((sum, emp) => {
-      const startDate = emp.start_date ? new Date(emp.start_date) : new Date(emp.created_at);
+      const startDate = emp.startDate ? new Date(emp.startDate) : new Date(emp.createdAt || new Date());
       const now = new Date();
       const months = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
       return sum + Math.max(0, months);
