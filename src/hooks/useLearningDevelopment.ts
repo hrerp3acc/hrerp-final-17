@@ -19,19 +19,25 @@ export const useLearningDevelopment = () => {
 
   const fetchCourses = async () => {
     try {
+      console.log('Fetching courses...');
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching courses:', error);
+        throw error;
+      }
+      
+      console.log('Courses fetched:', data);
       setCourses(data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch courses",
+        description: "Failed to fetch courses. Please check your connection.",
         variant: "destructive"
       });
     }
@@ -39,13 +45,24 @@ export const useLearningDevelopment = () => {
 
   const fetchEnrollments = async () => {
     try {
+      console.log('Fetching enrollments...');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('No authenticated user found');
+        return;
+      }
+
       const { data: employeeData } = await supabase
         .from('employees')
         .select('id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (!employeeData) return;
+      if (!employeeData) {
+        console.log('No employee found for user');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('course_enrollments')
@@ -56,7 +73,12 @@ export const useLearningDevelopment = () => {
         .eq('employee_id', employeeData.id)
         .order('enrolled_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching enrollments:', error);
+        throw error;
+      }
+      
+      console.log('Enrollments fetched:', data);
       setEnrollments(data || []);
     } catch (error) {
       console.error('Error fetching enrollments:', error);
@@ -70,13 +92,24 @@ export const useLearningDevelopment = () => {
 
   const fetchCertifications = async () => {
     try {
+      console.log('Fetching certifications...');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('No authenticated user found');
+        return;
+      }
+
       const { data: employeeData } = await supabase
         .from('employees')
         .select('id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (!employeeData) return;
+      if (!employeeData) {
+        console.log('No employee found for user');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('certifications')
@@ -84,7 +117,12 @@ export const useLearningDevelopment = () => {
         .eq('employee_id', employeeData.id)
         .order('issue_date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching certifications:', error);
+        throw error;
+      }
+      
+      console.log('Certifications fetched:', data);
       setCertifications(data || []);
     } catch (error) {
       console.error('Error fetching certifications:', error);
@@ -98,13 +136,37 @@ export const useLearningDevelopment = () => {
 
   const enrollInCourse = async (courseId: string) => {
     try {
+      console.log('Enrolling in course:', courseId);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data: employeeData } = await supabase
         .from('employees')
         .select('id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
       if (!employeeData) throw new Error('Employee not found');
+
+      // Check if already enrolled
+      const { data: existingEnrollment } = await supabase
+        .from('course_enrollments')
+        .select('id')
+        .eq('course_id', courseId)
+        .eq('employee_id', employeeData.id)
+        .single();
+
+      if (existingEnrollment) {
+        toast({
+          title: "Already Enrolled",
+          description: "You are already enrolled in this course",
+          variant: "destructive"
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('course_enrollments')
@@ -114,7 +176,10 @@ export const useLearningDevelopment = () => {
           status: 'enrolled'
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Enrollment error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -166,10 +231,14 @@ export const useLearningDevelopment = () => {
 
   const addCertification = async (certData: Omit<Certification, 'id' | 'employee_id' | 'created_at' | 'updated_at'>) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('User not authenticated');
+
       const { data: employeeData } = await supabase
         .from('employees')
         .select('id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
       if (!employeeData) throw new Error('Employee not found');
@@ -199,30 +268,6 @@ export const useLearningDevelopment = () => {
     }
   };
 
-  const createCourse = async (courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { error } = await supabase
-        .from('courses')
-        .insert([courseData]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Course created successfully",
-      });
-
-      await fetchCourses();
-    } catch (error) {
-      console.error('Error creating course:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create course",
-        variant: "destructive"
-      });
-    }
-  };
-
   const getLearningStats = () => {
     const totalCourses = courses.length;
     const enrolledCourses = enrollments.length;
@@ -245,8 +290,10 @@ export const useLearningDevelopment = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      console.log('Loading learning data...');
       await Promise.all([fetchCourses(), fetchEnrollments(), fetchCertifications()]);
       setLoading(false);
+      console.log('Learning data loaded');
     };
 
     loadData();
@@ -260,7 +307,6 @@ export const useLearningDevelopment = () => {
     enrollInCourse,
     updateProgress,
     addCertification,
-    createCourse,
     getLearningStats,
     refetchCourses: fetchCourses,
     refetchEnrollments: fetchEnrollments,

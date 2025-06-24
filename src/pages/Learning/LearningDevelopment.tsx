@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { 
   BookOpen, Award, Clock, Users, TrendingUp, 
-  Star, Calendar, CheckCircle, Play, Download
+  Star, Calendar, CheckCircle, Play
 } from 'lucide-react';
 import DetailsPanel from '@/components/Common/DetailsPanel';
 import { useLearningDevelopment } from '@/hooks/useLearningDevelopment';
@@ -29,8 +29,7 @@ const LearningDevelopment = () => {
     certifications, 
     loading, 
     getLearningStats,
-    enrollInCourse,
-    createCourse
+    enrollInCourse
   } = useLearningDevelopment();
 
   if (loading) {
@@ -126,21 +125,7 @@ const LearningDevelopment = () => {
           <TabsContent value="courses">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Course Catalog</span>
-                  <Button onClick={() => createCourse({
-                    title: 'Sample Course',
-                    description: 'A sample course for demonstration',
-                    category: 'Technology',
-                    duration_hours: 10,
-                    difficulty_level: 'beginner',
-                    instructor_name: 'John Doe',
-                    instructor_email: 'john@example.com',
-                    status: 'active'
-                  })}>
-                    Create Sample Course
-                  </Button>
-                </CardTitle>
+                <CardTitle>Course Catalog</CardTitle>
                 <CardDescription>Browse and enroll in available courses</CardDescription>
               </CardHeader>
               <CardContent>
@@ -150,13 +135,26 @@ const LearningDevelopment = () => {
                       <Card key={course.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedCourse(course)}>
                         <CardContent className="pt-6">
                           <div className="flex justify-between items-start">
-                            <div>
+                            <div className="flex-1">
                               <h3 className="font-semibold">{course.title}</h3>
-                              <p className="text-sm text-gray-600">{course.description}</p>
-                              {course.category && (
-                                <Badge variant="outline" className="mt-2">
-                                  {course.category}
-                                </Badge>
+                              <p className="text-sm text-gray-600 mt-1">{course.description}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                {course.category && (
+                                  <Badge variant="outline">
+                                    {course.category}
+                                  </Badge>
+                                )}
+                                {course.difficulty_level && (
+                                  <Badge variant="secondary">
+                                    {course.difficulty_level}
+                                  </Badge>
+                                )}
+                              </div>
+                              {course.duration_hours && (
+                                <p className="text-sm text-gray-500 mt-2 flex items-center">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  Duration: {course.duration_hours} hours
+                                </p>
                               )}
                             </div>
                             <Button size="sm" onClick={(e) => {
@@ -166,11 +164,6 @@ const LearningDevelopment = () => {
                               Enroll
                             </Button>
                           </div>
-                          {course.duration_hours && (
-                            <p className="text-sm text-gray-500 mt-2">
-                              Duration: {course.duration_hours} hours
-                            </p>
-                          )}
                         </CardContent>
                       </Card>
                     ))}
