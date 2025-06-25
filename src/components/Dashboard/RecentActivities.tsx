@@ -1,11 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, BookOpen, Target, Clock } from 'lucide-react';
+import { Calendar, User, BookOpen, Target, Clock, UserPlus, Award } from 'lucide-react';
 
 interface Activity {
   id: string;
-  type: 'leave' | 'hire' | 'training' | 'performance' | 'time';
+  type: 'leave' | 'hire' | 'training' | 'performance' | 'time' | 'goal' | 'enrollment';
   description: string;
   timestamp: string;
   employee_name?: string;
@@ -23,6 +23,8 @@ const RecentActivities = ({ activities }: RecentActivitiesProps) => {
       case 'training': return BookOpen;
       case 'performance': return Target;
       case 'time': return Clock;
+      case 'goal': return Target;
+      case 'enrollment': return Award;
       default: return User;
     }
   };
@@ -34,6 +36,8 @@ const RecentActivities = ({ activities }: RecentActivitiesProps) => {
       case 'training': return 'bg-purple-100 text-purple-800';
       case 'performance': return 'bg-orange-100 text-orange-800';
       case 'time': return 'bg-indigo-100 text-indigo-800';
+      case 'goal': return 'bg-yellow-100 text-yellow-800';
+      case 'enrollment': return 'bg-teal-100 text-teal-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
