@@ -40,6 +40,14 @@ const rolePermissions: Record<string, Permission[]> = {
     'manage_performance',
     'manage_learning'
   ],
+  hr: [
+    'view_employees',
+    'add_employees',
+    'edit_employees',
+    'delete_employees',
+    'manage_recruitment',
+    'view_analytics'
+  ],
   employee: [
     'view_employees'
   ]
