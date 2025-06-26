@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +12,7 @@ export const useRecruitment = () => {
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [jobApplications, setJobApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const { employees } = useSupabaseEmployees();
@@ -21,6 +21,7 @@ export const useRecruitment = () => {
 
   const fetchJobPostings = async () => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from('job_postings')
         .select(`
@@ -39,9 +40,11 @@ export const useRecruitment = () => {
       setJobPostings(data || []);
     } catch (error) {
       console.error('Error fetching job postings:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch job postings';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to fetch job postings",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -49,6 +52,7 @@ export const useRecruitment = () => {
 
   const fetchJobApplications = async () => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from('job_applications')
         .select(`
@@ -66,9 +70,11 @@ export const useRecruitment = () => {
       setJobApplications(data || []);
     } catch (error) {
       console.error('Error fetching job applications:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch job applications';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to fetch job applications",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -262,6 +268,7 @@ export const useRecruitment = () => {
     jobPostings,
     jobApplications,
     loading,
+    error,
     createJobPosting,
     updateJobPosting,
     createJobApplication,
