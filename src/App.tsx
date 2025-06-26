@@ -21,6 +21,7 @@ import LeaveAttendance from "./pages/Leave/LeaveAttendance";
 import LeaveApplication from "./pages/Leave/LeaveApplication";
 import LeaveCalendar from "./pages/Leave/LeaveCalendar";
 import WorkforceAnalytics from "./pages/Analytics/WorkforceAnalytics";
+import AnalyticsOverview from "./pages/Analytics/AnalyticsOverview";
 import WorkforcePlanning from "./pages/Planning/WorkforcePlanning";
 import ComplianceManagement from "./pages/Compliance/ComplianceManagement";
 import PerformanceManagement from "./pages/Performance/PerformanceManagement";
@@ -29,6 +30,7 @@ import LearningDevelopment from "./pages/Learning/LearningDevelopment";
 import PayrollManagement from "./pages/Payroll/PayrollManagement";
 import ReportsManagement from "./pages/Reports/ReportsManagement";
 import AdminManagement from "./pages/Admin/AdminManagement";
+import SettingsManagement from "./pages/Settings/SettingsManagement";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -61,7 +63,11 @@ const App = () => (
                 <Route path="leave/attendance" element={<LeaveAttendance />} />
                 <Route path="leave/apply" element={<LeaveApplication />} />
                 <Route path="leave/calendar" element={<LeaveCalendar />} />
+                
+                {/* Analytics Routes */}
                 <Route path="analytics/workforce" element={<WorkforceAnalytics />} />
+                <Route path="analytics/overview" element={<AnalyticsOverview />} />
+                
                 <Route path="planning/workforce" element={<WorkforcePlanning />} />
                 <Route path="compliance" element={<ComplianceManagement />} />
                 
@@ -80,6 +86,9 @@ const App = () => (
                 {/* Reports & Admin pages */}
                 <Route path="reports/*" element={<ReportsManagement />} />
                 <Route path="admin/*" element={<AdminManagement />} />
+                
+                {/* Settings Routes */}
+                <Route path="settings" element={<SettingsManagement />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          module: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          module?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          module?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           break_duration: unknown | null
@@ -359,6 +386,53 @@ export type Database = {
           },
         ]
       }
+      generated_reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_size: string | null
+          file_url: string | null
+          generated_by: string | null
+          id: string
+          name: string
+          report_data: Json
+          status: string | null
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          generated_by?: string | null
+          id?: string
+          name: string
+          report_data: Json
+          status?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          generated_by?: string | null
+          id?: string
+          name?: string
+          report_data?: Json
+          status?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_reports_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "report_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_applications: {
         Row: {
           applied_at: string | null
@@ -522,6 +596,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: number[] | null
+          current_step: number | null
+          id: string
+          is_completed: boolean | null
+          started_at: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: number[] | null
+          current_step?: number | null
+          id?: string
+          is_completed?: boolean | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: number[] | null
+          current_step?: number | null
+          id?: string
+          is_completed?: boolean | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       pay_periods: {
         Row: {
@@ -815,6 +922,75 @@ export type Database = {
         }
         Relationships: []
       }
+      report_templates: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          template_config: Json
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          template_config: Json
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          template_config?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      system_notifications: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          message: string
+          target_users: string[] | null
+          title: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message: string
+          target_users?: string[] | null
+          title: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          target_users?: string[] | null
+          title?: string
+          type?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           created_at: string
@@ -1004,6 +1180,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          dashboard_preferences: Json | null
+          id: string
+          language: string | null
+          notification_preferences: Json | null
+          theme: string | null
+          timezone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dashboard_preferences?: Json | null
+          id?: string
+          language?: string | null
+          notification_preferences?: Json | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dashboard_preferences?: Json | null
+          id?: string
+          language?: string | null
+          notification_preferences?: Json | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
