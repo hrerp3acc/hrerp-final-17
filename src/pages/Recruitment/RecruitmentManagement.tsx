@@ -16,12 +16,15 @@ const RecruitmentManagement = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const { 
     jobPostings, 
-    candidates, 
-    interviews, 
+    jobApplications,
     loading, 
     error,
     getRecruitmentStats 
   } = useRecruitment();
+
+  // Create mock candidates and interviews from job applications
+  const candidates = jobApplications || [];
+  const interviews = []; // Mock interviews array for now
 
   const stats = getRecruitmentStats();
 
@@ -93,7 +96,7 @@ const RecruitmentManagement = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <AnalyticsTab />
+          <AnalyticsTab recruitmentData={jobApplications} />
         </TabsContent>
       </Tabs>
     </div>

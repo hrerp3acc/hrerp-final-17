@@ -1,122 +1,101 @@
+
 import { useState, useEffect } from 'react';
+import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Timesheet = Tables<'timesheets'>;
-type TimeEntry = Tables<'time_entries'>;
 
 export const useTimesheets = () => {
+  const { user } = useUser();
+  const { toast } = useToast();
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { employees, loading: employeesLoading } = useSupabaseEmployees();
-
-  const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTimesheets = async () => {
-    if (!currentEmployee) return;
+    if (!user?.id) return;
 
     try {
+      setLoading(true);
+      
+      // First get the employee record for this user
+      const { data: employee, error: empError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (empError) throw empError;
+      if (!employee) {
+        throw new Error('Employee record not found');
+      }
+
       const { data, error } = await supabase
         .from('timesheets')
         .select('*')
-        .eq('employee_id', currentEmployee.id)
-        .order('week_start_date', { ascending: false });
+        .eq('employee_id', employee.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setTimesheets(data || []);
-    } catch (error) {
-      console.error('Error fetching timesheets:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch timesheets",
-        variant: "destructive"
-      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch timesheets';
+      setError(errorMessage);
+      console.error('Error fetching timesheets:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getWeekDates = (date: Date) => {
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - date.getDay()); // Start from Sunday
-    
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
-    return {
-      start: startOfWeek.toISOString().split('T')[0],
-      end: endOfWeek.toISOString().split('T')[0]
-    };
-  };
-
-  const createTimesheet = async (weekStartDate: string) => {
-    if (!currentEmployee) return null;
-
-    const weekStart = new Date(weekStartDate);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
+  const createTimesheet = async (timesheetData: {
+    week_start_date: string;
+    week_end_date: string;
+    notes?: string | null;
+  }) => {
+    if (!user?.id) return null;
 
     try {
-      // Check if timesheet already exists
-      const { data: existing } = await supabase
-        .from('timesheets')
-        .select('*')
-        .eq('employee_id', currentEmployee.id)
-        .eq('week_start_date', weekStartDate)
-        .single();
+      // First get the employee record for this user
+      const { data: employee, error: empError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (existing) {
-        toast({
-          title: "Timesheet Exists",
-          description: "Timesheet for this week already exists",
-          variant: "destructive"
-        });
-        return existing;
+      if (empError) throw empError;
+      if (!employee) {
+        throw new Error('Employee record not found. Please complete your profile setup.');
       }
-
-      // Get time entries for the week
-      const { data: timeEntries, error: entriesError } = await supabase
-        .from('time_entries')
-        .select('total_hours')
-        .eq('employee_id', currentEmployee.id)
-        .gte('start_time', `${weekStartDate}T00:00:00`)
-        .lt('start_time', `${weekEnd.toISOString().split('T')[0]}T23:59:59`)
-        .not('total_hours', 'is', null);
-
-      if (entriesError) throw entriesError;
-
-      const totalHours = timeEntries?.reduce((sum, entry) => sum + (entry.total_hours || 0), 0) || 0;
 
       const { data, error } = await supabase
         .from('timesheets')
-        .insert([{
-          employee_id: currentEmployee.id,
-          week_start_date: weekStartDate,
-          week_end_date: weekEnd.toISOString().split('T')[0],
-          total_hours: totalHours,
-          status: 'draft'
-        }])
+        .insert({
+          employee_id: employee.id,
+          week_start_date: timesheetData.week_start_date,
+          week_end_date: timesheetData.week_end_date,
+          notes: timesheetData.notes,
+          status: 'draft',
+          total_hours: 0
+        })
         .select()
         .single();
 
       if (error) throw error;
 
-      await fetchTimesheets();
-      
       toast({
-        title: "Timesheet Created",
-        description: "New timesheet created successfully"
+        title: "Timesheet Created", 
+        description: "Your timesheet has been created successfully.",
       });
-      
+
+      await fetchTimesheets();
       return data;
-    } catch (error) {
-      console.error('Error creating timesheet:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create timesheet';
       toast({
         title: "Error",
-        description: "Failed to create timesheet",
+        description: errorMessage,
         variant: "destructive"
       });
       return null;
@@ -137,110 +116,49 @@ export const useTimesheets = () => {
 
       if (error) throw error;
 
-      await fetchTimesheets();
-      
       toast({
         title: "Timesheet Submitted",
-        description: "Timesheet submitted for approval"
+        description: "Your timesheet has been submitted for approval.",
       });
-      
-      return data;
-    } catch (error) {
-      console.error('Error submitting timesheet:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit timesheet",
-        variant: "destructive"
-      });
-      return null;
-    }
-  };
-
-  const updateTimesheet = async (timesheetId: string, updates: Partial<Timesheet>) => {
-    try {
-      const { data, error } = await supabase
-        .from('timesheets')
-        .update(updates)
-        .eq('id', timesheetId)
-        .select()
-        .single();
-
-      if (error) throw error;
 
       await fetchTimesheets();
-      
-      toast({
-        title: "Timesheet Updated",
-        description: "Timesheet updated successfully"
-      });
-      
       return data;
-    } catch (error) {
-      console.error('Error updating timesheet:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit timesheet';
       toast({
         title: "Error",
-        description: "Failed to update timesheet",
+        description: errorMessage,
         variant: "destructive"
       });
       return null;
     }
   };
 
-  const getTimesheetEntries = async (weekStartDate: string) => {
-    if (!currentEmployee) return [];
+  const getTimesheetStats = () => {
+    const total = timesheets.length;
+    const pending = timesheets.filter(t => t.status === 'draft' || t.status === 'submitted').length;
+    const approved = timesheets.filter(t => t.status === 'approved').length;
+    const totalHours = timesheets.reduce((sum, t) => sum + (t.total_hours || 0), 0);
 
-    const weekEnd = new Date(weekStartDate);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-
-    try {
-      const { data, error } = await supabase
-        .from('time_entries')
-        .select(`
-          *,
-          projects (
-            name
-          ),
-          tasks (
-            name
-          )
-        `)
-        .eq('employee_id', currentEmployee.id)
-        .gte('start_time', `${weekStartDate}T00:00:00`)
-        .lt('start_time', `${weekEnd.toISOString().split('T')[0]}T23:59:59`)
-        .order('start_time', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching timesheet entries:', error);
-      return [];
-    }
+    return {
+      total,
+      pending,
+      approved,
+      totalHours
+    };
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      if (employeesLoading) return;
-      
-      setLoading(true);
-      await fetchTimesheets();
-      setLoading(false);
-    };
-
-    if (currentEmployee) {
-      loadData();
-    } else if (!employeesLoading) {
-      setLoading(false);
-    }
-  }, [currentEmployee, employeesLoading]);
+    fetchTimesheets();
+  }, [user?.id]);
 
   return {
     timesheets,
     loading,
+    error,
     createTimesheet,
     submitTimesheet,
-    updateTimesheet,
-    getTimesheetEntries,
-    getWeekDates,
+    getTimesheetStats,
     refetch: fetchTimesheets
   };
 };

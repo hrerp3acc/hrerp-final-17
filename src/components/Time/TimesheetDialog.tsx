@@ -39,11 +39,13 @@ const TimesheetDialog = () => {
       const endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
 
-      await createTimesheet({
+      const timesheetData = {
         week_start_date: formData.weekStartDate,
         week_end_date: endDate.toISOString().split('T')[0],
         notes: formData.notes || null,
-      });
+      };
+
+      await createTimesheet(timesheetData);
 
       setFormData({
         weekStartDate: '',

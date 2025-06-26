@@ -50,7 +50,6 @@ const JobPostingDialog = () => {
         department_id: formData.departmentId || null,
         salary_min: formData.salaryMin ? parseFloat(formData.salaryMin) : null,
         salary_max: formData.salaryMax ? parseFloat(formData.salaryMax) : null,
-        status: 'open'
       });
 
       setFormData({

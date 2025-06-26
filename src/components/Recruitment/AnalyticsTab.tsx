@@ -8,10 +8,10 @@ import { useRecruitment } from '@/hooks/useRecruitment';
 import { useMemo } from 'react';
 
 interface AnalyticsTabProps {
-  recruitmentData: any[];
+  recruitmentData?: any[];
 }
 
-const AnalyticsTab = ({ recruitmentData }: AnalyticsTabProps) => {
+const AnalyticsTab = ({ recruitmentData = [] }: AnalyticsTabProps) => {
   const { jobPostings, jobApplications } = useRecruitment();
 
   const monthlyData = useMemo(() => {

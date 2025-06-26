@@ -15,6 +15,14 @@ import {
   Monitor, Moon, Sun, Save, RefreshCw 
 } from 'lucide-react';
 
+interface NotificationPreferences {
+  email?: boolean;
+  push?: boolean;
+  leave_requests?: boolean;
+  performance_reviews?: boolean;
+  payroll_updates?: boolean;
+}
+
 const SettingsManagement = () => {
   const { settings, loading, updateSettings } = useSettings();
   const { toast } = useToast();
@@ -38,6 +46,22 @@ const SettingsManagement = () => {
       setSaving(false);
     }
   };
+
+  const getNotificationPreferences = (): NotificationPreferences => {
+    if (!settings?.notification_preferences) return {};
+    
+    if (typeof settings.notification_preferences === 'string') {
+      try {
+        return JSON.parse(settings.notification_preferences);
+      } catch {
+        return {};
+      }
+    }
+    
+    return settings.notification_preferences as NotificationPreferences;
+  };
+
+  const notificationPrefs = getNotificationPreferences();
 
   if (loading) {
     return (
@@ -133,11 +157,11 @@ const SettingsManagement = () => {
                   <p className="text-sm text-gray-500">Receive notifications via email</p>
                 </div>
                 <Switch 
-                  checked={settings?.notification_preferences?.email}
+                  checked={notificationPrefs.email || false}
                   onCheckedChange={(checked) => 
                     handleSaveSettings({
                       notification_preferences: {
-                        ...settings?.notification_preferences,
+                        ...notificationPrefs,
                         email: checked
                       }
                     })
@@ -151,11 +175,11 @@ const SettingsManagement = () => {
                   <p className="text-sm text-gray-500">Receive push notifications in your browser</p>
                 </div>
                 <Switch 
-                  checked={settings?.notification_preferences?.push}
+                  checked={notificationPrefs.push || false}
                   onCheckedChange={(checked) => 
                     handleSaveSettings({
                       notification_preferences: {
-                        ...settings?.notification_preferences,
+                        ...notificationPrefs,
                         push: checked
                       }
                     })
@@ -169,11 +193,11 @@ const SettingsManagement = () => {
                   <p className="text-sm text-gray-500">Get notified about leave request changes</p>
                 </div>
                 <Switch 
-                  checked={settings?.notification_preferences?.leave_requests}
+                  checked={notificationPrefs.leave_requests || false}
                   onCheckedChange={(checked) => 
                     handleSaveSettings({
                       notification_preferences: {
-                        ...settings?.notification_preferences,
+                        ...notificationPrefs,
                         leave_requests: checked
                       }
                     })
@@ -187,11 +211,11 @@ const SettingsManagement = () => {
                   <p className="text-sm text-gray-500">Notifications about performance evaluations</p>
                 </div>
                 <Switch 
-                  checked={settings?.notification_preferences?.performance_reviews}
+                  checked={notificationPrefs.performance_reviews || false}
                   onCheckedChange={(checked) => 
                     handleSaveSettings({
                       notification_preferences: {
-                        ...settings?.notification_preferences,
+                        ...notificationPrefs,
                         performance_reviews: checked
                       }
                     })
@@ -205,11 +229,11 @@ const SettingsManagement = () => {
                   <p className="text-sm text-gray-500">Get notified about payroll processing</p>
                 </div>
                 <Switch 
-                  checked={settings?.notification_preferences?.payroll_updates}
+                  checked={notificationPrefs.payroll_updates || false}
                   onCheckedChange={(checked) => 
                     handleSaveSettings({
                       notification_preferences: {
-                        ...settings?.notification_preferences,
+                        ...notificationPrefs,
                         payroll_updates: checked
                       }
                     })
@@ -270,7 +294,7 @@ const SettingsManagement = () => {
               <div className="space-y-2">
                 <Label htmlFor="language">Language</Label>
                 <Select 
-                  value={settings?.language} 
+                  value={settings?.language || 'en'} 
                   onValueChange={(value) => handleSaveSettings({ language: value })}
                 >
                   <SelectTrigger>
@@ -289,7 +313,7 @@ const SettingsManagement = () => {
               <div className="space-y-2">
                 <Label htmlFor="timezone">Timezone</Label>
                 <Select 
-                  value={settings?.timezone} 
+                  value={settings?.timezone || 'UTC'} 
                   onValueChange={(value) => handleSaveSettings({ timezone: value })}
                 >
                   <SelectTrigger>
