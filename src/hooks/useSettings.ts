@@ -2,27 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface UserSettings {
-  id: string;
-  user_id: string;
-  theme: 'light' | 'dark' | 'system';
-  language: string;
-  timezone: string;
-  notification_preferences: {
-    email: boolean;
-    push: boolean;
-    leave_requests: boolean;
-    performance_reviews: boolean;
-    payroll_updates: boolean;
-  };
-  dashboard_preferences: {
-    layout: string;
-    widgets: string[];
-  };
-  created_at: string;
-  updated_at: string;
-}
+type UserSettings = Tables<'user_settings'>;
 
 export const useSettings = () => {
   const { user } = useUser();
@@ -48,7 +30,7 @@ export const useSettings = () => {
       if (!data) {
         const defaultSettings = {
           user_id: user.id,
-          theme: 'light' as const,
+          theme: 'light',
           language: 'en',
           timezone: 'UTC',
           notification_preferences: {

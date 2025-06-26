@@ -4,10 +4,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { useUser } from '@/contexts/UserContext';
+import { useEmployeeSync } from '@/hooks/useEmployeeSync';
+import EmployeeProfileSetup from '@/components/Employee/EmployeeProfileSetup';
 
 const MainLayout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start with sidebar closed
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useUser();
+  const { employee, loading, needsEmployeeProfile, createEmployeeProfile } = useEmployeeSync();
   const location = useLocation();
 
   // Close sidebar when route changes
@@ -19,8 +22,26 @@ const MainLayout = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleEmployeeProfileComplete = async (employeeData: any) => {
+    await createEmployeeProfile(employeeData);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Employee Profile Setup Modal */}
+      <EmployeeProfileSetup 
+        isOpen={needsEmployeeProfile} 
+        onComplete={handleEmployeeProfileComplete}
+      />
+
       {/* Sidebar */}
       <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out`}>

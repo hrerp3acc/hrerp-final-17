@@ -1,7 +1,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Plus } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Briefcase, MapPin, DollarSign, Calendar } from 'lucide-react';
+import JobPostingDialog from './JobPostingDialog';
+import { formatDistanceToNow } from 'date-fns';
 
 interface JobPostingsTabProps {
   jobs: any[];
@@ -9,12 +12,20 @@ interface JobPostingsTabProps {
 }
 
 const JobPostingsTab = ({ jobs, setSelectedJob }: JobPostingsTabProps) => {
+  const formatSalary = (min: number | null, max: number | null) => {
+    if (!min && !max) return 'Salary not specified';
+    if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+    if (min) return `From $${min.toLocaleString()}`;
+    if (max) return `Up to $${max.toLocaleString()}`;
+    return 'Salary not specified';
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Active Job Postings</span>
-          <Button>Post New Job</Button>
+          <JobPostingDialog />
         </CardTitle>
         <CardDescription>Manage open positions and requirements</CardDescription>
       </CardHeader>
@@ -26,20 +37,54 @@ const JobPostingsTab = ({ jobs, setSelectedJob }: JobPostingsTabProps) => {
             <p className="text-gray-600 mb-6">
               Create your first job posting to start recruiting candidates.
             </p>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Post Your First Job
-            </Button>
+            <JobPostingDialog />
           </div>
         ) : (
           <div className="space-y-4">
             {jobs.map((job) => (
               <div 
                 key={job.id} 
-                className="border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => setSelectedJob(job)}
               >
-                {/* Job content */}
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{job.title}</h3>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                      {job.location && (
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{job.location}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-1">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{formatSalary(job.salary_min, job.salary_max)}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>Posted {formatDistanceToNow(new Date(job.created_at))} ago</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant={job.status === 'open' ? 'default' : 'secondary'}>
+                    {job.status}
+                  </Badge>
+                </div>
+                <p className="text-gray-700 text-sm line-clamp-2 mb-3">
+                  {job.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Applications: {job.applications_count || 0}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedJob(job);
+                  }}>
+                    View Details
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

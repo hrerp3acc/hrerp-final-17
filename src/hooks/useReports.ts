@@ -2,31 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface ReportTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  template_config: any;
-  is_public: boolean;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface GeneratedReport {
-  id: string;
-  template_id: string;
-  name: string;
-  description: string;
-  report_data: any;
-  status: 'generating' | 'generated' | 'failed';
-  file_url: string;
-  file_size: string;
-  generated_by: string;
-  created_at: string;
-}
+type ReportTemplate = Tables<'report_templates'>;
+type GeneratedReport = Tables<'generated_reports'>;
 
 export const useReports = () => {
   const { user } = useUser();
