@@ -76,32 +76,29 @@ const QuickActions = () => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gray-50 z-50 overflow-auto">
-      <Card className="h-full rounded-none border-0 shadow-none">
-        <CardHeader className="text-center py-8">
-          <CardTitle className="text-4xl font-bold text-gray-900">Quick Actions</CardTitle>
-          <p className="text-lg text-gray-600 mt-2">Choose an action to get started</p>
-        </CardHeader>
-        <CardContent className="px-8 pb-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {actions.map((action, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                className={`h-32 flex flex-col items-center justify-center space-y-4 text-white border-0 ${action.color} transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl`}
-                onClick={action.onClick}
-              >
-                <action.icon className="w-10 h-10" />
-                <div className="text-center">
-                  <div className="text-base font-semibold">{action.title}</div>
-                  <div className="text-sm opacity-90 mt-1">{action.description}</div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Quick Actions</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {actions.map((action, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              className={`h-20 flex flex-col items-center justify-center space-y-2 text-white border-0 ${action.color}`}
+              onClick={action.onClick}
+            >
+              <action.icon className="w-6 h-6" />
+              <div className="text-center">
+                <div className="text-xs font-medium">{action.title}</div>
+                <div className="text-xs opacity-80">{action.description}</div>
+              </div>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
