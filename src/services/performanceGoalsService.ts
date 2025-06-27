@@ -1,13 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type PerformanceGoal = Tables<'performance_goals'>;
 
 export const usePerformanceGoalsService = () => {
-  const { toast } = useToast();
-
   const fetchGoals = async (userId: string, isManager: boolean, employeeId: string) => {
     try {
       let query = supabase
@@ -31,11 +28,6 @@ export const usePerformanceGoalsService = () => {
       return data || [];
     } catch (error) {
       console.error('Error fetching goals:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch performance goals",
-        variant: "destructive"
-      });
       return [];
     }
   };
@@ -58,20 +50,9 @@ export const usePerformanceGoalsService = () => {
         .single();
 
       if (error) throw error;
-      
-      toast({
-        title: "Goal Created",
-        description: "Your performance goal has been created successfully"
-      });
-      
       return data;
     } catch (error) {
       console.error('Error creating goal:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create performance goal",
-        variant: "destructive"
-      });
       return null;
     }
   };
@@ -86,20 +67,9 @@ export const usePerformanceGoalsService = () => {
         .single();
 
       if (error) throw error;
-      
-      toast({
-        title: "Goal Updated",
-        description: "Your performance goal has been updated successfully"
-      });
-      
       return data;
     } catch (error) {
       console.error('Error updating goal:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update performance goal",
-        variant: "destructive"
-      });
       return null;
     }
   };

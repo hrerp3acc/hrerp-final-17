@@ -1,13 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type PerformanceReview = Tables<'performance_reviews'>;
 
 export const usePerformanceReviewsService = () => {
-  const { toast } = useToast();
-
   const fetchReviews = async (userId: string, isManager: boolean, employeeId: string) => {
     try {
       let query = supabase
@@ -35,11 +32,6 @@ export const usePerformanceReviewsService = () => {
       return data || [];
     } catch (error) {
       console.error('Error fetching reviews:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch performance reviews",
-        variant: "destructive"
-      });
       return [];
     }
   };
@@ -66,20 +58,9 @@ export const usePerformanceReviewsService = () => {
         .single();
 
       if (error) throw error;
-      
-      toast({
-        title: "Review Created",
-        description: "Performance review has been created successfully"
-      });
-      
       return data;
     } catch (error) {
       console.error('Error creating review:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create performance review",
-        variant: "destructive"
-      });
       return null;
     }
   };
@@ -94,20 +75,9 @@ export const usePerformanceReviewsService = () => {
         .single();
 
       if (error) throw error;
-      
-      toast({
-        title: "Review Updated",
-        description: "Performance review has been updated successfully"
-      });
-      
       return data;
     } catch (error) {
       console.error('Error updating review:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update performance review",
-        variant: "destructive"
-      });
       return null;
     }
   };

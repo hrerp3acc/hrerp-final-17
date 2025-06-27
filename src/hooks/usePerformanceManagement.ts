@@ -15,6 +15,7 @@ export const usePerformanceManagement = () => {
   const [goals, setGoals] = useState<PerformanceGoal[]>([]);
   const [reviews, setReviews] = useState<PerformanceReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { employees } = useSupabaseEmployees();
 
@@ -26,28 +27,53 @@ export const usePerformanceManagement = () => {
   const checkIfManager = async () => {
     if (!user?.id) return false;
     
-    const { data: userRoles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
-    
-    return userRoles?.some(role => ['admin', 'manager'].includes(role.role)) || false;
+    try {
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      
+      return userRoles?.some(role => ['admin', 'manager'].includes(role.role)) || false;
+    } catch (error) {
+      console.error('Error checking manager status:', error);
+      return false;
+    }
   };
 
   const fetchGoals = async () => {
-    if (!currentEmployee || !user) return;
+    if (!currentEmployee || !user) {
+      setGoals([]);
+      return;
+    }
     
-    const isManager = await checkIfManager();
-    const data = await goalsService.fetchGoals(user.id, isManager, currentEmployee.id);
-    setGoals(data);
+    try {
+      setError(null);
+      const isManager = await checkIfManager();
+      const data = await goalsService.fetchGoals(user.id, isManager, currentEmployee.id);
+      setGoals(data);
+    } catch (error) {
+      console.error('Error fetching goals:', error);
+      setError('Failed to fetch performance goals');
+      setGoals([]);
+    }
   };
 
   const fetchReviews = async () => {
-    if (!currentEmployee || !user) return;
+    if (!currentEmployee || !user) {
+      setReviews([]);
+      return;
+    }
     
-    const isManager = await checkIfManager();
-    const data = await reviewsService.fetchReviews(user.id, isManager, currentEmployee.id);
-    setReviews(data);
+    try {
+      setError(null);
+      const isManager = await checkIfManager();
+      const data = await reviewsService.fetchReviews(user.id, isManager, currentEmployee.id);
+      setReviews(data);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      setError('Failed to fetch performance reviews');
+      setReviews([]);
+    }
   };
 
   const createGoal = async (goalData: {
@@ -107,17 +133,26 @@ export const usePerformanceManagement = () => {
   };
 
   useEffect(() => {
-    if (currentEmployee) {
-      Promise.all([fetchGoals(), fetchReviews()]).finally(() => setLoading(false));
+    if (currentEmployee && user) {
+      Promise.all([fetchGoals(), fetchReviews()])
+        .catch((error) => {
+          console.error('Error loading performance data:', error);
+          setError('Failed to load performance data');
+        })
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
+      setGoals([]);
+      setReviews([]);
+      setError(null);
     }
-  }, [currentEmployee]);
+  }, [currentEmployee, user]);
 
   return {
     goals,
     reviews,
     loading,
+    error,
     createGoal,
     updateGoal,
     createReview,
