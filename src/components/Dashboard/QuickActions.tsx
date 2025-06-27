@@ -76,23 +76,23 @@ const QuickActions = () => {
   ];
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
+        <CardTitle className="text-xl">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
           {actions.map((action, index) => (
             <Button
               key={index}
               variant="outline"
-              className={`h-20 flex flex-col items-center justify-center space-y-2 text-white border-0 ${action.color}`}
+              className={`h-24 flex flex-col items-center justify-center space-y-2 text-white border-0 ${action.color} transition-all duration-200 hover:scale-105`}
               onClick={action.onClick}
             >
               <action.icon className="w-6 h-6" />
               <div className="text-center">
                 <div className="text-xs font-medium">{action.title}</div>
-                <div className="text-xs opacity-80">{action.description}</div>
+                <div className="text-xs opacity-80 hidden md:block">{action.description}</div>
               </div>
             </Button>
           ))}
