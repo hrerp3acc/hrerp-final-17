@@ -112,12 +112,14 @@ const App = () => (
                 {/* Reports Routes */}
                 <Route path="reports" element={<ReportsManagement />} />
                 <Route path="reports/hr-analytics" element={<HRAnalytics />} />
+                <Route path="reports/custom" element={<CustomReports />} />
                 <Route path="reports/compliance" element={<ComplianceReports />} />
                 
                 {/* Admin Routes */}
                 <Route path="admin" element={<AdminManagement />} />
                 <Route path="admin/users" element={<UserManagement />} />
                 <Route path="admin/system" element={<SystemConfig />} />
+                <Route path="admin/config" element={<SystemConfig />} />
                 <Route path="admin/security" element={<SecuritySettings />} />
                 
                 {/* Settings Routes */}
