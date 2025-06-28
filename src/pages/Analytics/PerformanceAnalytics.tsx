@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePerformanceManagement } from "@/hooks/usePerformanceManagement";
 import { BarChart3, TrendingUp, Users, Target } from "lucide-react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 const PerformanceAnalytics = () => {
   const { goals, reviews } = usePerformanceManagement();
@@ -11,7 +11,7 @@ const PerformanceAnalytics = () => {
     { status: 'Not Started', count: goals.filter(g => g.status === 'not_started').length },
     { status: 'In Progress', count: goals.filter(g => g.status === 'in_progress').length },
     { status: 'Completed', count: goals.filter(g => g.status === 'completed').length },
-    { status: 'On Hold', count: goals.filter(g => g.status === 'on_hold').length }
+    { status: 'Overdue', count: goals.filter(g => g.status === 'overdue').length }
   ];
 
   const reviewStatusData = [

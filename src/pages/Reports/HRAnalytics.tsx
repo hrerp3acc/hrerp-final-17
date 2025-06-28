@@ -31,7 +31,7 @@ const HRAnalytics = () => {
     { category: 'Completed', value: goals.filter(g => g.status === 'completed').length, color: '#10b981' },
     { category: 'In Progress', value: goals.filter(g => g.status === 'in_progress').length, color: '#3b82f6' },
     { category: 'Not Started', value: goals.filter(g => g.status === 'not_started').length, color: '#f59e0b' },
-    { category: 'On Hold', value: goals.filter(g => g.status === 'on_hold').length, color: '#ef4444' }
+    { category: 'Overdue', value: goals.filter(g => g.status === 'overdue').length, color: '#ef4444' }
   ];
 
   const hireTrendData = [

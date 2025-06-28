@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -65,7 +64,22 @@ export const useAttendance = () => {
         .order('date', { ascending: false });
 
       if (error) throw error;
-      setAttendanceRecords(data || []);
+      
+      // Transform the data to match our interface, handling break_duration properly
+      const transformedData: AttendanceRecord[] = (data || []).map(record => ({
+        id: record.id,
+        employee_id: record.employee_id,
+        date: record.date,
+        check_in_time: record.check_in_time,
+        check_out_time: record.check_out_time,
+        total_hours: record.total_hours,
+        status: record.status || 'present',
+        break_duration: record.break_duration ? record.break_duration.toString() : null,
+        notes: record.notes,
+        created_at: record.created_at
+      }));
+      
+      setAttendanceRecords(transformedData);
     } catch (error) {
       console.error('Error fetching attendance records:', error);
       toast({
@@ -236,17 +250,16 @@ export const useAttendance = () => {
   };
 
   const getAttendanceStats = () => {
-    const thisMonth = new Date().toISOString().slice(0, 7);
-    const monthlyRecords = attendanceRecords.filter(record => 
-      record.date.startsWith(thisMonth)
-    );
+    const present = attendanceRecords.filter(r => r.status === 'present').length;
+    const absent = attendanceRecords.filter(r => r.status === 'absent').length;
+    const late = attendanceRecords.filter(r => r.status === 'late').length;
+    const total = attendanceRecords.length;
     
     return {
-      totalDays: monthlyRecords.length,
-      presentDays: monthlyRecords.filter(r => r.status === 'present').length,
-      absentDays: monthlyRecords.filter(r => r.status === 'absent').length,
-      averageHours: monthlyRecords.length > 0 ? 
-        monthlyRecords.reduce((sum, r) => sum + (r.total_hours || 0), 0) / monthlyRecords.length : 0
+      present,
+      absent,
+      late,
+      total
     };
   };
 

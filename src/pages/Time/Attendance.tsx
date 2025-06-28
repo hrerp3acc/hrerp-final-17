@@ -21,7 +21,7 @@ const Attendance = () => {
     checkOut, 
     getTodaysAttendance,
     getAttendanceStats,
-    refetch 
+    refetchAttendance 
   } = useAttendance();
   
   const { employees } = useSupabaseEmployees();
@@ -29,14 +29,14 @@ const Attendance = () => {
 
   useEffect(() => {
     const fetchTodaysRecord = async () => {
-      const record = await getTodaysAttendance();
+      const record = getTodaysAttendance();
       setTodaysRecord(record);
     };
     fetchTodaysRecord();
   }, []);
 
   useEffect(() => {
-    refetch(selectedDate);
+    refetchAttendance();
   }, [selectedDate]);
 
   // Transform attendance records to include employee info
@@ -59,7 +59,7 @@ const Attendance = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const attendanceStats = getAttendanceStats(attendanceRecords);
+  const attendanceStats = getAttendanceStats();
 
   const handleAttendanceSelect = (record: any) => {
     setSelectedAttendance(record);
@@ -67,13 +67,13 @@ const Attendance = () => {
 
   const handleCheckIn = async () => {
     await checkIn();
-    const record = await getTodaysAttendance();
+    const record = getTodaysAttendance();
     setTodaysRecord(record);
   };
 
   const handleCheckOut = async () => {
     await checkOut();
-    const record = await getTodaysAttendance();
+    const record = getTodaysAttendance();
     setTodaysRecord(record);
   };
 
