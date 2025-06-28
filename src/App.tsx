@@ -111,6 +111,7 @@ const App = () => (
                 
                 {/* Reports Routes */}
                 <Route path="reports" element={<ReportsManagement />} />
+                <Route path="reports/analytics" element={<HRAnalytics />} />
                 <Route path="reports/hr-analytics" element={<HRAnalytics />} />
                 <Route path="reports/custom" element={<CustomReports />} />
                 <Route path="reports/compliance" element={<ComplianceReports />} />
