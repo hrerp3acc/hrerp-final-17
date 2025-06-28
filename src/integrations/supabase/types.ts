@@ -130,6 +130,56 @@ export type Database = {
           },
         ]
       }
+      compliance_items: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_items_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_enrollments: {
         Row: {
           completed_at: string | null
@@ -298,6 +348,54 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_skills: {
+        Row: {
+          certified: boolean | null
+          created_at: string
+          employee_id: string
+          id: string
+          proficiency_level: string | null
+          skill_id: string
+          updated_at: string
+          years_experience: number | null
+        }
+        Insert: {
+          certified?: boolean | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          proficiency_level?: string | null
+          skill_id: string
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Update: {
+          certified?: boolean | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          proficiency_level?: string | null
+          skill_id?: string
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_skills_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
             referencedColumns: ["id"]
           },
         ]
@@ -979,6 +1077,69 @@ export type Database = {
         }
         Relationships: []
       }
+      skills: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          level_required: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          level_required?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          level_required?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      system_configs: {
+        Row: {
+          category: string | null
+          config_key: string
+          config_value: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          config_key: string
+          config_value: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_notifications: {
         Row: {
           created_at: string
@@ -1239,6 +1400,65 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      workforce_plans: {
+        Row: {
+          budget: number | null
+          created_at: string
+          created_by: string | null
+          current_headcount: number | null
+          department_id: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          plan_type: string
+          start_date: string | null
+          status: string
+          target_headcount: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          created_by?: string | null
+          current_headcount?: number | null
+          department_id?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          plan_type: string
+          start_date?: string | null
+          status?: string
+          target_headcount?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          created_by?: string | null
+          current_headcount?: number | null
+          department_id?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          plan_type?: string
+          start_date?: string | null
+          status?: string
+          target_headcount?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workforce_plans_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

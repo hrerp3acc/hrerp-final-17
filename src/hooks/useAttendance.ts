@@ -2,48 +2,67 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
-import type { Tables } from '@/integrations/supabase/types';
 
-type AttendanceRecord = Tables<'attendance_records'>;
+interface AttendanceRecord {
+  id: string;
+  employee_id: string;
+  date: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  total_hours: number | null;
+  status: string;
+  break_duration: string | null;
+  notes: string | null;
+  created_at: string;
+}
 
 export const useAttendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentEmployee, setCurrentEmployee] = useState<any>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { employees } = useSupabaseEmployees();
 
-  const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
-
-  const fetchAttendanceRecords = async (date?: string, employeeId?: string) => {
+  const fetchCurrentEmployee = async () => {
     try {
-      let query = supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (employee) {
+        setCurrentEmployee(employee);
+        return employee;
+      }
+
+      // If no employee record with user_id, try to find by email
+      const { data: employeeByEmail } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('email', user.email)
+        .single();
+
+      if (employeeByEmail) {
+        setCurrentEmployee(employeeByEmail);
+        return employeeByEmail;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching current employee:', error);
+      return null;
+    }
+  };
+
+  const fetchAttendanceRecords = async () => {
+    try {
+      const { data, error } = await supabase
         .from('attendance_records')
         .select('*')
         .order('date', { ascending: false });
-
-      if (date) {
-        query = query.eq('date', date);
-      }
-
-      if (employeeId) {
-        query = query.eq('employee_id', employeeId);
-      } else if (currentEmployee) {
-        // If no specific employee ID and user is not admin/manager, show only their records
-        const { data: userRoles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user?.id);
-        
-        const isManager = userRoles?.some(role => ['admin', 'manager'].includes(role.role));
-        if (!isManager) {
-          query = query.eq('employee_id', currentEmployee.id);
-        }
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
       setAttendanceRecords(data || []);
@@ -57,207 +76,184 @@ export const useAttendance = () => {
     }
   };
 
-  const checkIn = async (employeeId?: string) => {
-    const targetEmployeeId = employeeId || currentEmployee?.id;
-    if (!targetEmployeeId) {
-      toast({
-        title: "Error",
-        description: "Employee not found",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const currentTime = new Date().toTimeString().split(' ')[0];
-
+  const checkIn = async () => {
     try {
+      const employee = currentEmployee || await fetchCurrentEmployee();
+      
+      if (!employee) {
+        toast({
+          title: "Error",
+          description: "Employee profile not found. Please contact administrator.",
+          variant: "destructive"
+        });
+        return { success: false };
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const currentTime = new Date().toTimeString().split(' ')[0];
+
       // Check if already checked in today
-      const { data: existing } = await supabase
+      const { data: existingRecord } = await supabase
         .from('attendance_records')
         .select('*')
-        .eq('employee_id', targetEmployeeId)
+        .eq('employee_id', employee.id)
         .eq('date', today)
         .single();
 
-      if (existing) {
+      if (existingRecord && existingRecord.check_in_time) {
         toast({
           title: "Already Checked In",
           description: "You have already checked in today",
           variant: "destructive"
         });
-        return null;
+        return { success: false };
       }
 
-      const { data, error } = await supabase
-        .from('attendance_records')
-        .insert([{
-          employee_id: targetEmployeeId,
-          date: today,
-          check_in_time: currentTime,
-          status: 'present'
-        }])
-        .select()
-        .single();
+      const attendanceData = {
+        employee_id: employee.id,
+        date: today,
+        check_in_time: currentTime,
+        status: 'present'
+      };
 
-      if (error) throw error;
+      let result;
+      if (existingRecord) {
+        // Update existing record
+        result = await supabase
+          .from('attendance_records')
+          .update(attendanceData)
+          .eq('id', existingRecord.id)
+          .select();
+      } else {
+        // Create new record
+        result = await supabase
+          .from('attendance_records')
+          .insert([attendanceData])
+          .select();
+      }
+
+      if (result.error) throw result.error;
+
+      toast({
+        title: "Success",
+        description: "Checked in successfully",
+      });
 
       await fetchAttendanceRecords();
-      
-      toast({
-        title: "Checked In",
-        description: "Successfully checked in for today"
-      });
-      
-      return data;
+      return { success: true };
     } catch (error) {
       console.error('Error checking in:', error);
       toast({
         title: "Error",
-        description: "Failed to check in",
+        description: "Failed to check in. Please try again.",
         variant: "destructive"
       });
-      return null;
+      return { success: false };
     }
   };
 
-  const checkOut = async (employeeId?: string) => {
-    const targetEmployeeId = employeeId || currentEmployee?.id;
-    if (!targetEmployeeId) return null;
-
-    const today = new Date().toISOString().split('T')[0];
-    const currentTime = new Date().toTimeString().split(' ')[0];
-
+  const checkOut = async () => {
     try {
-      const { data: existing } = await supabase
+      const employee = currentEmployee || await fetchCurrentEmployee();
+      
+      if (!employee) {
+        toast({
+          title: "Error",
+          description: "Employee profile not found. Please contact administrator.",
+          variant: "destructive"
+        });
+        return { success: false };
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const currentTime = new Date().toTimeString().split(' ')[0];
+
+      const { data: todayRecord, error } = await supabase
         .from('attendance_records')
         .select('*')
-        .eq('employee_id', targetEmployeeId)
+        .eq('employee_id', employee.id)
         .eq('date', today)
         .single();
 
-      if (!existing) {
+      if (error || !todayRecord || !todayRecord.check_in_time) {
         toast({
-          title: "No Check-in Record",
-          description: "Please check in first",
+          title: "Error",
+          description: "No check-in record found for today",
           variant: "destructive"
         });
-        return null;
+        return { success: false };
       }
 
-      if (existing.check_out_time) {
+      if (todayRecord.check_out_time) {
         toast({
           title: "Already Checked Out",
           description: "You have already checked out today",
           variant: "destructive"
         });
-        return null;
+        return { success: false };
       }
 
       // Calculate total hours
-      const checkInTime = new Date(`${today}T${existing.check_in_time}`);
+      const checkInTime = new Date(`${today}T${todayRecord.check_in_time}`);
       const checkOutTime = new Date(`${today}T${currentTime}`);
       const totalHours = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
 
-      const { data, error } = await supabase
+      const { error: updateError } = await supabase
         .from('attendance_records')
         .update({
           check_out_time: currentTime,
           total_hours: Math.round(totalHours * 100) / 100
         })
-        .eq('id', existing.id)
-        .select()
-        .single();
+        .eq('id', todayRecord.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: "Checked out successfully",
+      });
 
       await fetchAttendanceRecords();
-      
-      toast({
-        title: "Checked Out",
-        description: `Successfully checked out. Total hours: ${Math.round(totalHours * 100) / 100}h`
-      });
-      
-      return data;
+      return { success: true };
     } catch (error) {
       console.error('Error checking out:', error);
       toast({
         title: "Error",
-        description: "Failed to check out",
+        description: "Failed to check out. Please try again.",
         variant: "destructive"
       });
-      return null;
+      return { success: false };
     }
   };
 
-  const markAttendance = async (employeeId: string, date: string, status: string, notes?: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('attendance_records')
-        .upsert([{
-          employee_id: employeeId,
-          date,
-          status,
-          notes: notes || null
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await fetchAttendanceRecords();
-      
-      toast({
-        title: "Attendance Marked",
-        description: "Attendance record updated successfully"
-      });
-      
-      return data;
-    } catch (error) {
-      console.error('Error marking attendance:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark attendance",
-        variant: "destructive"
-      });
-      return null;
-    }
-  };
-
-  const getTodaysAttendance = async () => {
+  const getTodaysAttendance = () => {
     if (!currentEmployee) return null;
-
-    const today = new Date().toISOString().split('T')[0];
     
-    try {
-      const { data, error } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .eq('employee_id', currentEmployee.id)
-        .eq('date', today)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data || null;
-    } catch (error) {
-      console.error('Error fetching today\'s attendance:', error);
-      return null;
-    }
+    const today = new Date().toISOString().split('T')[0];
+    return attendanceRecords.find(record => 
+      record.employee_id === currentEmployee.id && record.date === today
+    );
   };
 
-  const getAttendanceStats = (records: AttendanceRecord[]) => {
+  const getAttendanceStats = () => {
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const monthlyRecords = attendanceRecords.filter(record => 
+      record.date.startsWith(thisMonth)
+    );
+    
     return {
-      present: records.filter(r => r.status === 'present').length,
-      absent: records.filter(r => r.status === 'absent').length,
-      late: records.filter(r => r.status === 'late').length,
-      total: records.length
+      totalDays: monthlyRecords.length,
+      presentDays: monthlyRecords.filter(r => r.status === 'present').length,
+      absentDays: monthlyRecords.filter(r => r.status === 'absent').length,
+      averageHours: monthlyRecords.length > 0 ? 
+        monthlyRecords.reduce((sum, r) => sum + (r.total_hours || 0), 0) / monthlyRecords.length : 0
     };
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await fetchAttendanceRecords();
+      await Promise.all([fetchCurrentEmployee(), fetchAttendanceRecords()]);
       setLoading(false);
     };
 
@@ -267,11 +263,11 @@ export const useAttendance = () => {
   return {
     attendanceRecords,
     loading,
+    currentEmployee,
     checkIn,
     checkOut,
-    markAttendance,
     getTodaysAttendance,
     getAttendanceStats,
-    refetch: fetchAttendanceRecords
+    refetchAttendance: fetchAttendanceRecords
   };
 };

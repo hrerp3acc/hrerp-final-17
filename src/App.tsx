@@ -22,14 +22,29 @@ import LeaveApplication from "./pages/Leave/LeaveApplication";
 import LeaveCalendar from "./pages/Leave/LeaveCalendar";
 import WorkforceAnalytics from "./pages/Analytics/WorkforceAnalytics";
 import AnalyticsOverview from "./pages/Analytics/AnalyticsOverview";
+import PerformanceAnalytics from "./pages/Analytics/PerformanceAnalytics";
+import CustomReports from "./pages/Analytics/CustomReports";
 import WorkforcePlanning from "./pages/Planning/WorkforcePlanning";
 import ComplianceManagement from "./pages/Compliance/ComplianceManagement";
 import PerformanceManagement from "./pages/Performance/PerformanceManagement";
 import RecruitmentManagement from "./pages/Recruitment/RecruitmentManagement";
+import CandidatePipeline from "./pages/Recruitment/CandidatePipeline";
+import InterviewSchedule from "./pages/Recruitment/InterviewSchedule";
 import LearningDevelopment from "./pages/Learning/LearningDevelopment";
+import CourseCatalog from "./pages/Learning/CourseCatalog";
+import MyLearning from "./pages/Learning/MyLearning";
+import Certifications from "./pages/Learning/Certifications";
 import PayrollManagement from "./pages/Payroll/PayrollManagement";
+import PayrollProcessing from "./pages/Payroll/PayrollProcessing";
+import CompensationPlans from "./pages/Payroll/CompensationPlans";
+import BenefitsManagement from "./pages/Payroll/BenefitsManagement";
 import ReportsManagement from "./pages/Reports/ReportsManagement";
+import HRAnalytics from "./pages/Reports/HRAnalytics";
+import ComplianceReports from "./pages/Reports/ComplianceReports";
 import AdminManagement from "./pages/Admin/AdminManagement";
+import UserManagement from "./pages/Admin/UserManagement";
+import SystemConfig from "./pages/Admin/SystemConfig";
+import SecuritySettings from "./pages/Admin/SecuritySettings";
 import SettingsManagement from "./pages/Settings/SettingsManagement";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -67,6 +82,8 @@ const App = () => (
                 {/* Analytics Routes */}
                 <Route path="analytics/workforce" element={<WorkforceAnalytics />} />
                 <Route path="analytics/overview" element={<AnalyticsOverview />} />
+                <Route path="analytics/performance" element={<PerformanceAnalytics />} />
+                <Route path="analytics/reports" element={<CustomReports />} />
                 
                 <Route path="planning/workforce" element={<WorkforcePlanning />} />
                 <Route path="compliance" element={<ComplianceManagement />} />
@@ -74,18 +91,34 @@ const App = () => (
                 {/* Performance Management */}
                 <Route path="performance/*" element={<PerformanceManagement />} />
                 
-                {/* Recruitment & Talent */}
-                <Route path="recruitment/*" element={<RecruitmentManagement />} />
+                {/* Recruitment & Talent Routes */}
+                <Route path="recruitment" element={<RecruitmentManagement />} />
+                <Route path="recruitment/jobs" element={<RecruitmentManagement />} />
+                <Route path="recruitment/candidates" element={<CandidatePipeline />} />
+                <Route path="recruitment/interviews" element={<InterviewSchedule />} />
                 
-                {/* Learning & Development */}
-                <Route path="learning/*" element={<LearningDevelopment />} />
+                {/* Learning & Development Routes */}
+                <Route path="learning" element={<LearningDevelopment />} />
+                <Route path="learning/catalog" element={<CourseCatalog />} />
+                <Route path="learning/my-learning" element={<MyLearning />} />
+                <Route path="learning/certifications" element={<Certifications />} />
                 
-                {/* Payroll Management */}
-                <Route path="payroll/*" element={<PayrollManagement />} />
+                {/* Payroll Management Routes */}
+                <Route path="payroll" element={<PayrollManagement />} />
+                <Route path="payroll/processing" element={<PayrollProcessing />} />
+                <Route path="payroll/compensation" element={<CompensationPlans />} />
+                <Route path="payroll/benefits" element={<BenefitsManagement />} />
                 
-                {/* Reports & Admin pages */}
-                <Route path="reports/*" element={<ReportsManagement />} />
-                <Route path="admin/*" element={<AdminManagement />} />
+                {/* Reports Routes */}
+                <Route path="reports" element={<ReportsManagement />} />
+                <Route path="reports/hr-analytics" element={<HRAnalytics />} />
+                <Route path="reports/compliance" element={<ComplianceReports />} />
+                
+                {/* Admin Routes */}
+                <Route path="admin" element={<AdminManagement />} />
+                <Route path="admin/users" element={<UserManagement />} />
+                <Route path="admin/system" element={<SystemConfig />} />
+                <Route path="admin/security" element={<SecuritySettings />} />
                 
                 {/* Settings Routes */}
                 <Route path="settings" element={<SettingsManagement />} />
