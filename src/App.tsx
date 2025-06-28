@@ -25,6 +25,8 @@ import AnalyticsOverview from "./pages/Analytics/AnalyticsOverview";
 import PerformanceAnalytics from "./pages/Analytics/PerformanceAnalytics";
 import CustomReports from "./pages/Analytics/CustomReports";
 import WorkforcePlanning from "./pages/Planning/WorkforcePlanning";
+import SkillManagement from "./pages/Planning/SkillManagement";
+import SuccessionPlanning from "./pages/Planning/SuccessionPlanning";
 import ComplianceManagement from "./pages/Compliance/ComplianceManagement";
 import PerformanceManagement from "./pages/Performance/PerformanceManagement";
 import RecruitmentManagement from "./pages/Recruitment/RecruitmentManagement";
@@ -85,7 +87,11 @@ const App = () => (
                 <Route path="analytics/performance" element={<PerformanceAnalytics />} />
                 <Route path="analytics/custom-reports" element={<CustomReports />} />
                 
+                {/* Planning Routes */}
                 <Route path="planning/workforce" element={<WorkforcePlanning />} />
+                <Route path="planning/skills" element={<SkillManagement />} />
+                <Route path="planning/succession" element={<SuccessionPlanning />} />
+                
                 <Route path="compliance" element={<ComplianceManagement />} />
                 
                 {/* Performance Management */}
