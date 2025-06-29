@@ -1,58 +1,21 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface SkillCategory {
-  id: string;
-  name: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface OrganizationalSkill {
-  id: string;
-  name: string;
-  category_id?: string;
-  description?: string;
-  required_level: string;
-  created_at: string;
-  updated_at: string;
-  category?: SkillCategory;
-}
-
-export interface SkillAssessment {
-  id: string;
-  employee_id: string;
-  skill_id: string;
-  current_level: number;
-  target_level: number;
-  assessed_by?: string;
-  assessment_date: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  skill?: OrganizationalSkill;
-  employee?: any;
-}
-
-export interface TrainingProgram {
-  id: string;
-  title: string;
-  description?: string;
-  skill_id?: string;
-  duration_hours?: number;
-  status: string;
-  max_participants?: number;
-  current_participants: number;
-  completion_rate: number;
-  start_date?: string;
-  end_date?: string;
-  created_at: string;
-  updated_at: string;
-  skill?: OrganizationalSkill;
-}
+import { 
+  SkillCategory, 
+  OrganizationalSkill, 
+  SkillAssessment, 
+  TrainingProgram 
+} from '@/types/skillsManagement';
+import {
+  fetchSkillCategories,
+  fetchOrganizationalSkills,
+  fetchSkillAssessments,
+  fetchTrainingPrograms,
+  createSkill,
+  createTrainingProgram
+} from '@/services/skillsManagementService';
+import { calculateSkillStats } from '@/utils/skillsStatsUtils';
 
 export const useSkillsManagement = () => {
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
@@ -62,15 +25,10 @@ export const useSkillsManagement = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchSkillCategories = async () => {
+  const loadSkillCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from('skills_categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setSkillCategories(data || []);
+      const data = await fetchSkillCategories();
+      setSkillCategories(data);
     } catch (error) {
       console.error('Error fetching skill categories:', error);
       toast({
@@ -81,18 +39,10 @@ export const useSkillsManagement = () => {
     }
   };
 
-  const fetchOrganizationalSkills = async () => {
+  const loadOrganizationalSkills = async () => {
     try {
-      const { data, error } = await supabase
-        .from('organizational_skills')
-        .select(`
-          *,
-          category:skills_categories(*)
-        `)
-        .order('name');
-
-      if (error) throw error;
-      setOrganizationalSkills(data || []);
+      const data = await fetchOrganizationalSkills();
+      setOrganizationalSkills(data);
     } catch (error) {
       console.error('Error fetching organizational skills:', error);
       toast({
@@ -103,19 +53,10 @@ export const useSkillsManagement = () => {
     }
   };
 
-  const fetchSkillAssessments = async () => {
+  const loadSkillAssessments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('skill_assessments')
-        .select(`
-          *,
-          skill:organizational_skills(*),
-          employee:employees(*)
-        `)
-        .order('assessment_date', { ascending: false });
-
-      if (error) throw error;
-      setSkillAssessments(data || []);
+      const data = await fetchSkillAssessments();
+      setSkillAssessments(data);
     } catch (error) {
       console.error('Error fetching skill assessments:', error);
       toast({
@@ -126,18 +67,10 @@ export const useSkillsManagement = () => {
     }
   };
 
-  const fetchTrainingPrograms = async () => {
+  const loadTrainingPrograms = async () => {
     try {
-      const { data, error } = await supabase
-        .from('training_programs')
-        .select(`
-          *,
-          skill:organizational_skills(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTrainingPrograms(data || []);
+      const data = await fetchTrainingPrograms();
+      setTrainingPrograms(data);
     } catch (error) {
       console.error('Error fetching training programs:', error);
       toast({
@@ -150,21 +83,15 @@ export const useSkillsManagement = () => {
 
   const addSkill = async (skillData: Omit<OrganizationalSkill, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabase
-        .from('organizational_skills')
-        .insert([skillData])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const result = await createSkill(skillData);
       
       toast({
         title: "Success",
         description: "Skill added successfully",
       });
       
-      await fetchOrganizationalSkills();
-      return { data, error: null };
+      await loadOrganizationalSkills();
+      return result;
     } catch (error) {
       console.error('Error adding skill:', error);
       toast({
@@ -178,21 +105,15 @@ export const useSkillsManagement = () => {
 
   const addTrainingProgram = async (programData: Omit<TrainingProgram, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabase
-        .from('training_programs')
-        .insert([programData])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const result = await createTrainingProgram(programData);
       
       toast({
         title: "Success",
         description: "Training program added successfully",
       });
       
-      await fetchTrainingPrograms();
-      return { data, error: null };
+      await loadTrainingPrograms();
+      return result;
     } catch (error) {
       console.error('Error adding training program:', error);
       toast({
@@ -205,35 +126,22 @@ export const useSkillsManagement = () => {
   };
 
   const getSkillStats = () => {
-    const totalSkills = organizationalSkills.length;
-    const criticalGaps = skillAssessments.filter(assessment => 
-      (assessment.target_level - assessment.current_level) >= 30
-    ).length;
-    const inTraining = trainingPrograms.filter(program => program.status === 'active')
-      .reduce((sum, program) => sum + program.current_participants, 0);
-    const avgProgress = skillAssessments.length > 0 
-      ? Math.round(skillAssessments.reduce((sum, assessment) => 
-          sum + (assessment.current_level / assessment.target_level * 100), 0
-        ) / skillAssessments.length)
-      : 0;
+    return calculateSkillStats(organizationalSkills, skillAssessments, trainingPrograms);
+  };
 
-    return {
-      totalSkills,
-      criticalGaps,
-      inTraining,
-      avgProgress
-    };
+  const refetch = async () => {
+    await Promise.all([
+      loadSkillCategories(),
+      loadOrganizationalSkills(),
+      loadSkillAssessments(),
+      loadTrainingPrograms()
+    ]);
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchSkillCategories(),
-        fetchOrganizationalSkills(),
-        fetchSkillAssessments(),
-        fetchTrainingPrograms()
-      ]);
+      await refetch();
       setLoading(false);
     };
 
@@ -249,13 +157,6 @@ export const useSkillsManagement = () => {
     addSkill,
     addTrainingProgram,
     getSkillStats,
-    refetch: async () => {
-      await Promise.all([
-        fetchSkillCategories(),
-        fetchOrganizationalSkills(),
-        fetchSkillAssessments(),
-        fetchTrainingPrograms()
-      ]);
-    }
+    refetch
   };
 };
