@@ -112,10 +112,16 @@ export const useSuccessionPlanning = () => {
 
       if (error) throw error;
       
-      // Transform the data to ensure activities is a string array
+      // Transform the data to ensure activities is a string array and handle nullable fields
       const transformedData = data?.map(plan => ({
         ...plan,
-        activities: Array.isArray(plan.activities) ? plan.activities : []
+        activities: Array.isArray(plan.activities) 
+          ? plan.activities.map(activity => String(activity)) 
+          : [],
+        candidate_id: plan.candidate_id || '',
+        progress: plan.progress || 0,
+        timeline: plan.timeline || undefined,
+        next_review_date: plan.next_review_date || undefined
       })) || [];
       
       setDevelopmentPlans(transformedData);
