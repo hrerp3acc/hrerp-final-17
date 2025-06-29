@@ -89,7 +89,7 @@ export const useWorkforcePlanning = () => {
         currentLevel: assessment.current_level,
         requiredLevel: assessment.target_level,
         gap: assessment.current_level - assessment.target_level,
-        department: assessment.employee?.department || 'Unknown'
+        department: assessment.employee?.department_id || 'Unknown'
       })).filter(gap => gap.gap < 0) || [];
       
       setSkillGaps(gaps);

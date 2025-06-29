@@ -111,7 +111,14 @@ export const useSuccessionPlanning = () => {
         .order('progress', { ascending: false });
 
       if (error) throw error;
-      setDevelopmentPlans(data || []);
+      
+      // Transform the data to ensure activities is a string array
+      const transformedData = data?.map(plan => ({
+        ...plan,
+        activities: Array.isArray(plan.activities) ? plan.activities : []
+      })) || [];
+      
+      setDevelopmentPlans(transformedData);
     } catch (error) {
       console.error('Error fetching development plans:', error);
       toast({
