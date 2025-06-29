@@ -83,6 +83,59 @@ export type Database = {
           },
         ]
       }
+      capacity_planning: {
+        Row: {
+          capacity_headcount: number | null
+          created_at: string
+          current_headcount: number | null
+          department_id: string | null
+          gap: number | null
+          id: string
+          open_positions: number | null
+          planned_headcount: number | null
+          planning_period_end: string | null
+          planning_period_start: string | null
+          priority: string | null
+          updated_at: string
+        }
+        Insert: {
+          capacity_headcount?: number | null
+          created_at?: string
+          current_headcount?: number | null
+          department_id?: string | null
+          gap?: number | null
+          id?: string
+          open_positions?: number | null
+          planned_headcount?: number | null
+          planning_period_end?: string | null
+          planning_period_start?: string | null
+          priority?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capacity_headcount?: number | null
+          created_at?: string
+          current_headcount?: number | null
+          department_id?: string | null
+          gap?: number | null
+          id?: string
+          open_positions?: number | null
+          planned_headcount?: number | null
+          planning_period_end?: string | null
+          planning_period_start?: string | null
+          priority?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capacity_planning_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certifications: {
         Row: {
           certificate_url: string | null
@@ -301,6 +354,50 @@ export type Database = {
             columns: ["head_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_plans: {
+        Row: {
+          activities: Json | null
+          candidate_id: string | null
+          created_at: string
+          id: string
+          next_review_date: string | null
+          progress: number | null
+          target_position: string
+          timeline: string | null
+          updated_at: string
+        }
+        Insert: {
+          activities?: Json | null
+          candidate_id?: string | null
+          created_at?: string
+          id?: string
+          next_review_date?: string | null
+          progress?: number | null
+          target_position: string
+          timeline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activities?: Json | null
+          candidate_id?: string | null
+          created_at?: string
+          id?: string
+          next_review_date?: string | null
+          progress?: number | null
+          target_position?: string
+          timeline?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_plans_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "succession_candidates"
             referencedColumns: ["id"]
           },
         ]
@@ -638,6 +735,57 @@ export type Database = {
           },
         ]
       }
+      key_positions: {
+        Row: {
+          created_at: string
+          criticality: string | null
+          current_holder_id: string | null
+          department_id: string | null
+          id: string
+          retirement_date: string | null
+          risk_level: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criticality?: string | null
+          current_holder_id?: string | null
+          department_id?: string | null
+          id?: string
+          retirement_date?: string | null
+          risk_level?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criticality?: string | null
+          current_holder_id?: string | null
+          department_id?: string | null
+          id?: string
+          retirement_date?: string | null
+          risk_level?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_positions_current_holder_id_fkey"
+            columns: ["current_holder_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_positions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_applications: {
         Row: {
           approved_at: string | null
@@ -727,6 +875,44 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      organizational_skills: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          required_level: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          required_level?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          required_level?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizational_skills_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "skills_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pay_periods: {
         Row: {
@@ -1077,6 +1263,60 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_assessments: {
+        Row: {
+          assessed_by: string | null
+          assessment_date: string | null
+          created_at: string
+          current_level: number | null
+          employee_id: string | null
+          id: string
+          notes: string | null
+          skill_id: string | null
+          target_level: number | null
+          updated_at: string
+        }
+        Insert: {
+          assessed_by?: string | null
+          assessment_date?: string | null
+          created_at?: string
+          current_level?: number | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          skill_id?: string | null
+          target_level?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assessed_by?: string | null
+          assessment_date?: string | null
+          created_at?: string
+          current_level?: number | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          skill_id?: string | null
+          target_level?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_assessments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_assessments_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "organizational_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills: {
         Row: {
           category: string | null
@@ -1106,6 +1346,81 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      skills_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      succession_candidates: {
+        Row: {
+          created_at: string
+          development_progress: number | null
+          employee_id: string | null
+          id: string
+          key_position_id: string | null
+          last_assessment_date: string | null
+          notes: string | null
+          readiness_level: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          development_progress?: number | null
+          employee_id?: string | null
+          id?: string
+          key_position_id?: string | null
+          last_assessment_date?: string | null
+          notes?: string | null
+          readiness_level?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          development_progress?: number | null
+          employee_id?: string | null
+          id?: string
+          key_position_id?: string | null
+          last_assessment_date?: string | null
+          notes?: string | null
+          readiness_level?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "succession_candidates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "succession_candidates_key_position_id_fkey"
+            columns: ["key_position_id"]
+            isOneToOne: false
+            referencedRelation: "key_positions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_configs: {
         Row: {
@@ -1340,6 +1655,62 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_programs: {
+        Row: {
+          completion_rate: number | null
+          created_at: string
+          current_participants: number | null
+          description: string | null
+          duration_hours: number | null
+          end_date: string | null
+          id: string
+          max_participants: number | null
+          skill_id: string | null
+          start_date: string | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completion_rate?: number | null
+          created_at?: string
+          current_participants?: number | null
+          description?: string | null
+          duration_hours?: number | null
+          end_date?: string | null
+          id?: string
+          max_participants?: number | null
+          skill_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completion_rate?: number | null
+          created_at?: string
+          current_participants?: number | null
+          description?: string | null
+          duration_hours?: number | null
+          end_date?: string | null
+          id?: string
+          max_participants?: number | null
+          skill_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_programs_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "organizational_skills"
             referencedColumns: ["id"]
           },
         ]

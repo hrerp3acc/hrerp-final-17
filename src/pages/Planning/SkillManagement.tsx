@@ -10,91 +10,22 @@ import {
   BookOpen, Users, TrendingUp, AlertCircle, Plus,
   Search, Filter, Target, Award
 } from 'lucide-react';
+import { useSkillsManagement } from '@/hooks/useSkillsManagement';
 
 const SkillManagement = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const {
+    skillCategories,
+    organizationalSkills,
+    skillAssessments,
+    trainingPrograms,
+    loading,
+    getSkillStats
+  } = useSkillsManagement();
 
-  // Mock data - this would come from your backend
-  const skillCategories = [
-    { id: 'technical', name: 'Technical Skills', count: 45 },
-    { id: 'soft', name: 'Soft Skills', count: 28 },
-    { id: 'leadership', name: 'Leadership', count: 15 },
-    { id: 'compliance', name: 'Compliance', count: 12 }
-  ];
-
-  const skills = [
-    {
-      id: 1,
-      name: 'React Development',
-      category: 'Technical',
-      currentLevel: 65,
-      targetLevel: 85,
-      gap: -20,
-      employees: 12,
-      priority: 'High'
-    },
-    {
-      id: 2,
-      name: 'Project Management',
-      category: 'Leadership',
-      currentLevel: 78,
-      targetLevel: 90,
-      gap: -12,
-      employees: 8,
-      priority: 'Medium'
-    },
-    {
-      id: 3,
-      name: 'Data Analytics',
-      category: 'Technical',
-      currentLevel: 45,
-      targetLevel: 75,
-      gap: -30,
-      employees: 15,
-      priority: 'High'
-    },
-    {
-      id: 4,
-      name: 'Communication',
-      category: 'Soft Skills',
-      currentLevel: 82,
-      targetLevel: 85,
-      gap: -3,
-      employees: 25,
-      priority: 'Low'
-    }
-  ];
-
-  const trainingPrograms = [
-    {
-      id: 1,
-      title: 'Advanced React Masterclass',
-      skill: 'React Development',
-      duration: '40 hours',
-      participants: 8,
-      status: 'Active',
-      completion: 65
-    },
-    {
-      id: 2,
-      title: 'Leadership Fundamentals',
-      skill: 'Project Management',
-      duration: '24 hours',
-      participants: 12,
-      status: 'Planned',
-      completion: 0
-    },
-    {
-      id: 3,
-      title: 'Data Science Bootcamp',
-      skill: 'Data Analytics',
-      duration: '60 hours',
-      participants: 6,
-      status: 'Active',
-      completion: 35
-    }
-  ];
+  const stats = getSkillStats();
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -107,12 +38,58 @@ const SkillManagement = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      case 'Planned': return 'bg-blue-100 text-blue-800';
-      case 'Completed': return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'planned': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Filter skills based on search and category
+  const filteredSkills = organizationalSkills.filter(skill => {
+    const matchesSearch = skill.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || skill.category?.name.toLowerCase() === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Convert assessments to skill data format
+  const skillsWithAssessments = filteredSkills.map(skill => {
+    const assessments = skillAssessments.filter(assessment => assessment.skill_id === skill.id);
+    const avgCurrent = assessments.length > 0 
+      ? Math.round(assessments.reduce((sum, a) => sum + a.current_level, 0) / assessments.length)
+      : 0;
+    const avgTarget = assessments.length > 0 
+      ? Math.round(assessments.reduce((sum, a) => sum + a.target_level, 0) / assessments.length)
+      : 0;
+    
+    return {
+      id: skill.id,
+      name: skill.name,
+      category: skill.category?.name || 'Uncategorized',
+      currentLevel: avgCurrent,
+      targetLevel: avgTarget,
+      gap: avgCurrent - avgTarget,
+      employees: assessments.length,
+      priority: Math.abs(avgCurrent - avgTarget) >= 30 ? 'High' : 
+                Math.abs(avgCurrent - avgTarget) >= 15 ? 'Medium' : 'Low'
+    };
+  });
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -135,7 +112,7 @@ const SkillManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Skills</p>
-                <p className="text-2xl font-bold">100</p>
+                <p className="text-2xl font-bold">{stats.totalSkills}</p>
                 <p className="text-sm text-gray-500">across all categories</p>
               </div>
               <BookOpen className="w-8 h-8 text-blue-600" />
@@ -148,7 +125,7 @@ const SkillManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Critical Gaps</p>
-                <p className="text-2xl font-bold text-red-600">12</p>
+                <p className="text-2xl font-bold text-red-600">{stats.criticalGaps}</p>
                 <p className="text-sm text-gray-500">high priority skills</p>
               </div>
               <AlertCircle className="w-8 h-8 text-red-600" />
@@ -161,7 +138,7 @@ const SkillManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">In Training</p>
-                <p className="text-2xl font-bold text-orange-600">45</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.inTraining}</p>
                 <p className="text-sm text-gray-500">employees learning</p>
               </div>
               <Users className="w-8 h-8 text-orange-600" />
@@ -174,7 +151,7 @@ const SkillManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Avg Progress</p>
-                <p className="text-2xl font-bold text-green-600">73%</p>
+                <p className="text-2xl font-bold text-green-600">{stats.avgProgress}%</p>
                 <p className="text-sm text-gray-500">toward targets</p>
               </div>
               <TrendingUp className="w-8 h-8 text-green-600" />
@@ -212,7 +189,7 @@ const SkillManagement = () => {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {skillCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.name.toLowerCase()}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -226,7 +203,7 @@ const SkillManagement = () => {
 
           {/* Skills List */}
           <div className="space-y-4">
-            {skills.map((skill) => (
+            {skillsWithAssessments.map((skill) => (
               <Card key={skill.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -283,7 +260,7 @@ const SkillManagement = () => {
         <TabsContent value="training" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Active Training Programs</CardTitle>
+              <CardTitle>Training Programs</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -292,7 +269,7 @@ const SkillManagement = () => {
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h4 className="font-semibold">{program.title}</h4>
-                        <p className="text-sm text-gray-600">Target skill: {program.skill}</p>
+                        <p className="text-sm text-gray-600">Target skill: {program.skill?.name || 'General'}</p>
                       </div>
                       <Badge className={getStatusColor(program.status)}>
                         {program.status}
@@ -302,15 +279,15 @@ const SkillManagement = () => {
                     <div className="grid grid-cols-4 gap-4 text-sm">
                       <div>
                         <div className="text-gray-600">Duration</div>
-                        <div className="font-medium">{program.duration}</div>
+                        <div className="font-medium">{program.duration_hours || 0} hours</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Participants</div>
-                        <div className="font-medium">{program.participants}</div>
+                        <div className="font-medium">{program.current_participants}</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Completion</div>
-                        <div className="font-medium">{program.completion}%</div>
+                        <div className="font-medium">{program.completion_rate}%</div>
                       </div>
                       <div className="flex items-end">
                         <Button size="sm" variant="outline">
@@ -319,12 +296,12 @@ const SkillManagement = () => {
                       </div>
                     </div>
 
-                    {program.status === 'Active' && (
+                    {program.status === 'active' && (
                       <div className="mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${program.completion}%` }}
+                            style={{ width: `${program.completion_rate}%` }}
                           ></div>
                         </div>
                       </div>

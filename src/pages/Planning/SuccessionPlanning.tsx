@@ -10,135 +10,36 @@ import {
   Users, AlertTriangle, Clock, TrendingUp, Plus,
   Search, User, Calendar, Target
 } from 'lucide-react';
+import { useSuccessionPlanning } from '@/hooks/useSuccessionPlanning';
 
 const SuccessionPlanning = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock data - this would come from your backend
-  const keyPositions = [
-    {
-      id: 1,
-      title: 'Chief Technology Officer',
-      department: 'Engineering',
-      currentHolder: 'Sarah Johnson',
-      riskLevel: 'High',
-      readySuccessors: 1,
-      developingSuccessors: 2,
-      retirementDate: '2025-06-15',
-      criticality: 'Critical'
-    },
-    {
-      id: 2,
-      title: 'Sales Director',
-      department: 'Sales',
-      currentHolder: 'Michael Chen',
-      riskLevel: 'Medium',
-      readySuccessors: 2,
-      developingSuccessors: 1,
-      retirementDate: '2026-12-20',
-      criticality: 'High'
-    },
-    {
-      id: 3,
-      title: 'Marketing Manager',
-      department: 'Marketing',
-      currentHolder: 'Emily Davis',
-      riskLevel: 'Low',
-      readySuccessors: 1,
-      developingSuccessors: 3,
-      retirementDate: '2027-08-10',
-      criticality: 'Medium'
-    },
-    {
-      id: 4,
-      title: 'HR Director',
-      department: 'Human Resources',
-      currentHolder: 'Robert Wilson',
-      riskLevel: 'High',
-      readySuccessors: 0,
-      developingSuccessors: 1,
-      retirementDate: '2024-11-30',
-      criticality: 'Critical'
-    }
-  ];
+  const {
+    keyPositions,
+    successors,
+    developmentPlans,
+    loading,
+    getSuccessionStats
+  } = useSuccessionPlanning();
 
-  const successors = [
-    {
-      id: 1,
-      name: 'David Thompson',
-      currentRole: 'Senior Engineering Manager',
-      targetRole: 'Chief Technology Officer',
-      readiness: 'Ready Now',
-      development: 85,
-      timeline: 'Immediate',
-      lastAssessment: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Lisa Rodriguez',
-      currentRole: 'Senior Sales Manager',
-      targetRole: 'Sales Director',
-      readiness: '1-2 Years',
-      development: 72,
-      timeline: '18 months',
-      lastAssessment: '2024-01-10'
-    },
-    {
-      id: 3,
-      name: 'James Park',
-      currentRole: 'Marketing Specialist',
-      targetRole: 'Marketing Manager',
-      readiness: 'Ready Now',
-      development: 90,
-      timeline: '6 months',
-      lastAssessment: '2024-01-20'
-    }
-  ];
-
-  const developmentPlans = [
-    {
-      id: 1,
-      successor: 'Lisa Rodriguez',
-      targetRole: 'Sales Director',
-      activities: [
-        'Executive Leadership Program',
-        'Strategic Planning Workshop',
-        'Mentoring with Current Director'
-      ],
-      progress: 65,
-      timeline: '12 months',
-      nextReview: '2024-03-15'
-    },
-    {
-      id: 2,
-      successor: 'Mark Johnson',
-      targetRole: 'HR Director',
-      activities: [
-        'HR Analytics Certification',
-        'Change Management Training',
-        'Cross-functional Project Lead'
-      ],
-      progress: 40,
-      timeline: '18 months',
-      nextReview: '2024-02-28'
-    }
-  ];
+  const stats = getSuccessionStats();
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getCriticalityColor = (criticality: string) => {
     switch (criticality) {
-      case 'Critical': return 'bg-red-100 text-red-800';
-      case 'High': return 'bg-orange-100 text-orange-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
+      case 'critical': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -151,6 +52,29 @@ const SuccessionPlanning = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Calculate months until retirement
+  const getMonthsUntilRetirement = (retirementDate: string | null) => {
+    if (!retirementDate) return 'N/A';
+    const months = Math.floor((new Date(retirementDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+    return months > 0 ? `${months} months` : 'Overdue';
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -173,7 +97,7 @@ const SuccessionPlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Key Positions</p>
-                <p className="text-2xl font-bold">24</p>
+                <p className="text-2xl font-bold">{stats.totalPositions}</p>
                 <p className="text-sm text-gray-500">tracked roles</p>
               </div>
               <Users className="w-8 h-8 text-blue-600" />
@@ -186,7 +110,7 @@ const SuccessionPlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">High Risk</p>
-                <p className="text-2xl font-bold text-red-600">7</p>
+                <p className="text-2xl font-bold text-red-600">{stats.highRisk}</p>
                 <p className="text-sm text-gray-500">positions at risk</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-600" />
@@ -199,7 +123,7 @@ const SuccessionPlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ready Successors</p>
-                <p className="text-2xl font-bold text-green-600">12</p>
+                <p className="text-2xl font-bold text-green-600">{stats.readySuccessors}</p>
                 <p className="text-sm text-gray-500">ready now</p>
               </div>
               <Target className="w-8 h-8 text-green-600" />
@@ -212,7 +136,7 @@ const SuccessionPlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">In Development</p>
-                <p className="text-2xl font-bold text-orange-600">18</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.inDevelopment}</p>
                 <p className="text-sm text-gray-500">being developed</p>
               </div>
               <TrendingUp className="w-8 h-8 text-orange-600" />
@@ -249,62 +173,74 @@ const SuccessionPlanning = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="engineering">Engineering</SelectItem>
-                <SelectItem value="sales">Sales</SelectItem>
-                <SelectItem value="marketing">Marketing</SelectItem>
-                <SelectItem value="hr">Human Resources</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Key Positions List */}
           <div className="space-y-4">
-            {keyPositions.map((position) => (
-              <Card key={position.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="font-semibold text-lg">{position.title}</h3>
-                      <Badge variant="outline">{position.department}</Badge>
-                      <Badge className={getCriticalityColor(position.criticality)}>
-                        {position.criticality}
-                      </Badge>
-                      <Badge className={getRiskColor(position.riskLevel)}>
-                        {position.riskLevel} Risk
-                      </Badge>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </div>
+            {keyPositions.map((position) => {
+              const readySuccessors = successors.filter(s => 
+                s.key_position_id === position.id && s.readiness_level === 'Ready Now'
+              ).length;
+              const developingSuccessors = successors.filter(s => 
+                s.key_position_id === position.id && s.readiness_level !== 'Ready Now'
+              ).length;
 
-                  <div className="grid grid-cols-5 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-600 mb-1">Current Holder</div>
-                      <div className="font-medium">{position.currentHolder}</div>
+              return (
+                <Card key={position.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-semibold text-lg">{position.title}</h3>
+                        <Badge variant="outline">{position.department?.name || 'No Department'}</Badge>
+                        <Badge className={getCriticalityColor(position.criticality)}>
+                          {position.criticality}
+                        </Badge>
+                        <Badge className={getRiskColor(position.risk_level)}>
+                          {position.risk_level} Risk
+                        </Badge>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
                     </div>
-                    <div>
-                      <div className="text-gray-600 mb-1">Ready Successors</div>
-                      <div className="font-medium text-green-600">{position.readySuccessors}</div>
+
+                    <div className="grid grid-cols-5 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-600 mb-1">Current Holder</div>
+                        <div className="font-medium">
+                          {position.current_holder ? 
+                            `${position.current_holder.first_name} ${position.current_holder.last_name}` : 
+                            'Vacant'
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600 mb-1">Ready Successors</div>
+                        <div className="font-medium text-green-600">{readySuccessors}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600 mb-1">In Development</div>
+                        <div className="font-medium text-blue-600">{developingSuccessors}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600 mb-1">Retirement Date</div>
+                        <div className="font-medium">
+                          {position.retirement_date || 'Not set'}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-600">
+                          {getMonthsUntilRetirement(position.retirement_date)}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-gray-600 mb-1">In Development</div>
-                      <div className="font-medium text-blue-600">{position.developingSuccessors}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600 mb-1">Retirement Date</div>
-                      <div className="font-medium">{position.retirementDate}</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">
-                        {Math.floor((new Date(position.retirementDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))} months
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </TabsContent>
 
@@ -321,37 +257,46 @@ const SuccessionPlanning = () => {
                       <div className="flex items-center space-x-3">
                         <User className="w-5 h-5 text-gray-400" />
                         <div>
-                          <h4 className="font-semibold">{successor.name}</h4>
-                          <p className="text-sm text-gray-600">{successor.currentRole}</p>
+                          <h4 className="font-semibold">
+                            {successor.employee ? 
+                              `${successor.employee.first_name} ${successor.employee.last_name}` : 
+                              'Unknown Employee'
+                            }
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {successor.employee?.position || 'Position not set'}
+                          </p>
                         </div>
                       </div>
-                      <Badge className={getReadinessColor(successor.readiness)}>
-                        {successor.readiness}
+                      <Badge className={getReadinessColor(successor.readiness_level)}>
+                        {successor.readiness_level}
                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-4 gap-4 text-sm">
                       <div>
                         <div className="text-gray-600">Target Role</div>
-                        <div className="font-medium">{successor.targetRole}</div>
+                        <div className="font-medium">{successor.key_position?.title || 'Not set'}</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Development Progress</div>
-                        <div className="font-medium">{successor.development}%</div>
+                        <div className="font-medium">{successor.development_progress}%</div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                           <div 
                             className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${successor.development}%` }}
+                            style={{ width: `${successor.development_progress}%` }}
                           ></div>
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-600">Timeline</div>
-                        <div className="font-medium">{successor.timeline}</div>
+                        <div className="text-gray-600">Readiness</div>
+                        <div className="font-medium">{successor.readiness_level}</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Last Assessment</div>
-                        <div className="font-medium">{successor.lastAssessment}</div>
+                        <div className="font-medium">
+                          {successor.last_assessment_date || 'Not assessed'}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -372,8 +317,13 @@ const SuccessionPlanning = () => {
                   <div key={plan.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h4 className="font-semibold">{plan.successor}</h4>
-                        <p className="text-sm text-gray-600">Target: {plan.targetRole}</p>
+                        <h4 className="font-semibold">
+                          {plan.candidate?.employee ? 
+                            `${plan.candidate.employee.first_name} ${plan.candidate.employee.last_name}` : 
+                            'Unknown Candidate'
+                          }
+                        </h4>
+                        <p className="text-sm text-gray-600">Target: {plan.target_position}</p>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-gray-600">Progress</div>
@@ -396,11 +346,11 @@ const SuccessionPlanning = () => {
                     <div className="flex items-center justify-between">
                       <div className="text-sm">
                         <span className="text-gray-600">Timeline: </span>
-                        <span className="font-medium">{plan.timeline}</span>
+                        <span className="font-medium">{plan.timeline || 'Not set'}</span>
                       </div>
                       <div className="text-sm">
                         <span className="text-gray-600">Next Review: </span>
-                        <span className="font-medium">{plan.nextReview}</span>
+                        <span className="font-medium">{plan.next_review_date || 'Not scheduled'}</span>
                       </div>
                     </div>
 

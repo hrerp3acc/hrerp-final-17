@@ -4,77 +4,51 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Users, Target, TrendingUp, AlertTriangle, Plus,
-  Calendar, BarChart3, Settings, Search
+  Calendar, BarChart3, Settings
 } from 'lucide-react';
+import { useWorkforcePlanning } from '@/hooks/useWorkforcePlanning';
 
 const WorkforcePlanning = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [planningHorizon, setPlanningHorizon] = useState('12months');
 
-  const capacityData = [
-    {
-      department: 'Engineering',
-      current: 85,
-      planned: 95,
-      capacity: 100,
-      gap: -10,
-      priority: 'High',
-      openings: 8
-    },
-    {
-      department: 'Sales',
-      current: 72,
-      planned: 80,
-      capacity: 85,
-      gap: -8,
-      priority: 'Medium',
-      openings: 5
-    },
-    {
-      department: 'Marketing',
-      current: 35,
-      planned: 40,
-      capacity: 45,
-      gap: -5,
-      priority: 'Low',
-      openings: 3
-    },
-    {
-      department: 'HR',
-      current: 28,
-      planned: 30,
-      capacity: 32,
-      gap: -2,
-      priority: 'Low',
-      openings: 2
-    }
-  ];
+  const {
+    capacityData,
+    workforcePlans,
+    skillGaps,
+    loading,
+    getWorkforceStats
+  } = useWorkforcePlanning();
 
-  const upcomingRetirements = [
-    { name: 'Robert Johnson', position: 'Senior Engineer', department: 'Engineering', retirementDate: '2024-12-15', criticality: 'High' },
-    { name: 'Mary Williams', position: 'Sales Director', department: 'Sales', retirementDate: '2025-03-20', criticality: 'High' },
-    { name: 'David Brown', position: 'Marketing Manager', department: 'Marketing', retirementDate: '2025-06-10', criticality: 'Medium' }
-  ];
-
-  const skillGaps = [
-    { skill: 'React Development', currentLevel: 65, requiredLevel: 85, gap: -20, department: 'Engineering' },
-    { skill: 'Data Analytics', currentLevel: 45, requiredLevel: 75, gap: -30, department: 'Marketing' },
-    { skill: 'Cloud Architecture', currentLevel: 55, requiredLevel: 80, gap: -25, department: 'Engineering' },
-    { skill: 'Digital Marketing', currentLevel: 70, requiredLevel: 85, gap: -15, department: 'Marketing' }
-  ];
+  const stats = getWorkforceStats();
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -110,7 +84,7 @@ const WorkforcePlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Capacity Gap</p>
-                <p className="text-2xl font-bold text-red-600">-25</p>
+                <p className="text-2xl font-bold text-red-600">-{stats.totalCapacityGap}</p>
                 <p className="text-sm text-gray-500">positions needed</p>
               </div>
               <Users className="w-8 h-8 text-red-600" />
@@ -123,7 +97,7 @@ const WorkforcePlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Open Positions</p>
-                <p className="text-2xl font-bold text-orange-600">18</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.openPositions}</p>
                 <p className="text-sm text-gray-500">actively recruiting</p>
               </div>
               <Target className="w-8 h-8 text-orange-600" />
@@ -136,7 +110,7 @@ const WorkforcePlanning = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Skill Gaps</p>
-                <p className="text-2xl font-bold text-blue-600">12</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.criticalSkillGaps}</p>
                 <p className="text-sm text-gray-500">critical skills</p>
               </div>
               <TrendingUp className="w-8 h-8 text-blue-600" />
@@ -148,9 +122,9 @@ const WorkforcePlanning = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Succession Risk</p>
-                <p className="text-2xl font-bold text-purple-600">7</p>
-                <p className="text-sm text-gray-500">high-risk roles</p>
+                <p className="text-sm text-gray-600">High Risk Roles</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.highRiskRoles}</p>
+                <p className="text-sm text-gray-500">priority positions</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-purple-600" />
             </div>
@@ -174,32 +148,32 @@ const WorkforcePlanning = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {capacityData.map((dept, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
+                {capacityData.map((dept) => (
+                  <div key={dept.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
-                        <h4 className="font-medium">{dept.department}</h4>
+                        <h4 className="font-medium">{dept.department?.name || 'Unknown Department'}</h4>
                         <Badge className={getPriorityColor(dept.priority)}>
                           {dept.priority} Priority
                         </Badge>
                       </div>
                       <div className="text-sm text-gray-600">
-                        {dept.openings} open positions
+                        {dept.open_positions} open positions
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-4 gap-4 text-sm">
                       <div>
                         <div className="text-gray-600">Current</div>
-                        <div className="font-medium">{dept.current} people</div>
+                        <div className="font-medium">{dept.current_headcount} people</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Planned</div>
-                        <div className="font-medium">{dept.planned} people</div>
+                        <div className="font-medium">{dept.planned_headcount} people</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Capacity</div>
-                        <div className="font-medium">{dept.capacity} people</div>
+                        <div className="font-medium">{dept.capacity_headcount} people</div>
                       </div>
                       <div>
                         <div className="text-gray-600">Gap</div>
@@ -212,12 +186,12 @@ const WorkforcePlanning = () => {
                     <div className="mt-3">
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
                         <span>Current Utilization</span>
-                        <span>{Math.round((dept.current / dept.capacity) * 100)}%</span>
+                        <span>{dept.capacity_headcount > 0 ? Math.round((dept.current_headcount / dept.capacity_headcount) * 100) : 0}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${(dept.current / dept.capacity) * 100}%` }}
+                          style={{ width: `${dept.capacity_headcount > 0 ? (dept.current_headcount / dept.capacity_headcount) * 100 : 0}%` }}
                         ></div>
                       </div>
                     </div>
@@ -235,7 +209,7 @@ const WorkforcePlanning = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {skillGaps.map((skill, index) => (
+                {skillGaps.slice(0, 10).map((skill, index) => (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <div>
@@ -267,71 +241,21 @@ const WorkforcePlanning = () => {
         </TabsContent>
 
         <TabsContent value="succession" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Retirements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {upcomingRetirements.map((retirement, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{retirement.name}</h4>
-                          <p className="text-sm text-gray-600">{retirement.position}</p>
-                          <p className="text-xs text-gray-500">{retirement.department}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getPriorityColor(retirement.criticality)}>
-                            {retirement.criticality}
-                          </Badge>
-                          <p className="text-xs text-gray-500 mt-1">{retirement.retirementDate}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Succession Readiness</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Ready Now</span>
-                      <Badge className="bg-green-100 text-green-800">23%</Badge>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: '23%' }}></div>
-                    </div>
-                  </div>
-                  <div className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">1-2 Years</span>
-                      <Badge className="bg-yellow-100 text-yellow-800">45%</Badge>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                      <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-                    </div>
-                  </div>
-                  <div className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">No Successor</span>
-                      <Badge className="bg-red-100 text-red-800">32%</Badge>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                      <div className="bg-red-600 h-2 rounded-full" style={{ width: '32%' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Succession Planning Integration</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Succession planning data will be displayed here...</p>
+                <Button className="mt-4">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  View Succession Plans
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="scenarios">
@@ -341,6 +265,7 @@ const WorkforcePlanning = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
+                <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">Scenario planning and modeling tools coming soon...</p>
                 <Button className="mt-4">
                   <Settings className="w-4 h-4 mr-2" />
