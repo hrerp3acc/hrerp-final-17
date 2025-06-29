@@ -1,48 +1,18 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface KeyPosition {
-  id: string;
-  title: string;
-  department_id?: string;
-  current_holder_id?: string;
-  risk_level: string;
-  criticality: string;
-  retirement_date?: string;
-  created_at: string;
-  updated_at: string;
-  department?: any;
-  current_holder?: any;
-}
-
-export interface SuccessionCandidate {
-  id: string;
-  employee_id: string;
-  key_position_id: string;
-  readiness_level: string;
-  development_progress: number;
-  last_assessment_date?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  employee?: any;
-  key_position?: KeyPosition;
-}
-
-export interface DevelopmentPlan {
-  id: string;
-  candidate_id: string;
-  target_position: string;
-  activities: string[];
-  progress: number;
-  timeline?: string;
-  next_review_date?: string;
-  created_at: string;
-  updated_at: string;
-  candidate?: SuccessionCandidate;
-}
+import { 
+  KeyPosition, 
+  SuccessionCandidate, 
+  DevelopmentPlan 
+} from '@/types/successionPlanning';
+import {
+  fetchKeyPositions,
+  fetchSuccessionCandidates,
+  fetchDevelopmentPlans,
+  createKeyPosition
+} from '@/services/successionPlanningService';
+import { calculateSuccessionStats } from '@/utils/successionStatsUtils';
 
 export const useSuccessionPlanning = () => {
   const [keyPositions, setKeyPositions] = useState<KeyPosition[]>([]);
@@ -51,19 +21,10 @@ export const useSuccessionPlanning = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchKeyPositions = async () => {
+  const loadKeyPositions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('key_positions')
-        .select(`
-          *,
-          department:departments(*),
-          current_holder:employees(*)
-        `)
-        .order('criticality');
-
-      if (error) throw error;
-      setKeyPositions(data || []);
+      const data = await fetchKeyPositions();
+      setKeyPositions(data);
     } catch (error) {
       console.error('Error fetching key positions:', error);
       toast({
@@ -74,19 +35,10 @@ export const useSuccessionPlanning = () => {
     }
   };
 
-  const fetchSuccessors = async () => {
+  const loadSuccessors = async () => {
     try {
-      const { data, error } = await supabase
-        .from('succession_candidates')
-        .select(`
-          *,
-          employee:employees(*),
-          key_position:key_positions(*)
-        `)
-        .order('development_progress', { ascending: false });
-
-      if (error) throw error;
-      setSuccessors(data || []);
+      const data = await fetchSuccessionCandidates();
+      setSuccessors(data);
     } catch (error) {
       console.error('Error fetching successors:', error);
       toast({
@@ -97,34 +49,10 @@ export const useSuccessionPlanning = () => {
     }
   };
 
-  const fetchDevelopmentPlans = async () => {
+  const loadDevelopmentPlans = async () => {
     try {
-      const { data, error } = await supabase
-        .from('development_plans')
-        .select(`
-          *,
-          candidate:succession_candidates(
-            *,
-            employee:employees(*)
-          )
-        `)
-        .order('progress', { ascending: false });
-
-      if (error) throw error;
-      
-      // Transform the data to ensure activities is a string array and handle nullable fields
-      const transformedData = data?.map(plan => ({
-        ...plan,
-        activities: Array.isArray(plan.activities) 
-          ? plan.activities.map(activity => String(activity)) 
-          : [],
-        candidate_id: plan.candidate_id || '',
-        progress: plan.progress || 0,
-        timeline: plan.timeline || undefined,
-        next_review_date: plan.next_review_date || undefined
-      })) || [];
-      
-      setDevelopmentPlans(transformedData);
+      const data = await fetchDevelopmentPlans();
+      setDevelopmentPlans(data);
     } catch (error) {
       console.error('Error fetching development plans:', error);
       toast({
@@ -137,21 +65,15 @@ export const useSuccessionPlanning = () => {
 
   const addKeyPosition = async (positionData: Omit<KeyPosition, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabase
-        .from('key_positions')
-        .insert([positionData])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const result = await createKeyPosition(positionData);
       
       toast({
         title: "Success",
         description: "Key position added successfully",
       });
       
-      await fetchKeyPositions();
-      return { data, error: null };
+      await loadKeyPositions();
+      return result;
     } catch (error) {
       console.error('Error adding key position:', error);
       toast({
@@ -164,29 +86,21 @@ export const useSuccessionPlanning = () => {
   };
 
   const getSuccessionStats = () => {
-    const totalPositions = keyPositions.length;
-    const highRisk = keyPositions.filter(pos => pos.risk_level === 'high').length;
-    const readySuccessors = successors.filter(successor => successor.readiness_level === 'Ready Now').length;
-    const inDevelopment = successors.filter(successor => 
-      successor.readiness_level === '1-2 Years' || successor.readiness_level === '2+ Years'
-    ).length;
+    return calculateSuccessionStats(keyPositions, successors);
+  };
 
-    return {
-      totalPositions,
-      highRisk,
-      readySuccessors,
-      inDevelopment
-    };
+  const refetch = async () => {
+    await Promise.all([
+      loadKeyPositions(),
+      loadSuccessors(),
+      loadDevelopmentPlans()
+    ]);
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchKeyPositions(),
-        fetchSuccessors(),
-        fetchDevelopmentPlans()
-      ]);
+      await refetch();
       setLoading(false);
     };
 
@@ -200,12 +114,6 @@ export const useSuccessionPlanning = () => {
     loading,
     addKeyPosition,
     getSuccessionStats,
-    refetch: async () => {
-      await Promise.all([
-        fetchKeyPositions(),
-        fetchSuccessors(),
-        fetchDevelopmentPlans()
-      ]);
-    }
+    refetch
   };
 };
