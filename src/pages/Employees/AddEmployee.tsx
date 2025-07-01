@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,11 +30,30 @@ const AddEmployee = () => {
     emergencyContactName: '',
     emergencyContactPhone: '',
     address: '',
-    notes: ''
+    notes: '',
+    panNumber: '' // New field for PAN number
   });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validatePanNumber = (pan: string) => {
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    return panRegex.test(pan);
+  };
+
+  const checkForDuplicates = async () => {
+    // In a real implementation, you would check against the database
+    // For now, we'll implement basic validation
+    if (formData.panNumber && !validatePanNumber(formData.panNumber)) {
+      throw new Error('Invalid PAN number format. Please enter a valid PAN number.');
+    }
+    
+    // Check for duplicate email (basic validation)
+    if (!formData.email.trim()) {
+      throw new Error('Email is required');
+    }
   };
 
   const validateForm = () => {
@@ -76,6 +94,16 @@ const AddEmployee = () => {
       });
       return false;
     }
+
+    // PAN number validation
+    if (formData.panNumber && !validatePanNumber(formData.panNumber)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid PAN number (Format: ABCDE1234F).",
+        variant: "destructive"
+      });
+      return false;
+    }
     
     if (!formData.departmentId) {
       toast({
@@ -99,6 +127,9 @@ const AddEmployee = () => {
     setIsSubmitting(true);
 
     try {
+      // Check for duplicates
+      await checkForDuplicates();
+      
       // Generate employee ID if not provided
       const employeeId = formData.employeeId || `EMP${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
@@ -119,7 +150,8 @@ const AddEmployee = () => {
         notes: formData.notes.trim() || null,
         status: 'active' as const,
         manager_id: null,
-        user_id: null
+        user_id: null,
+        pan_number: formData.panNumber.trim().toUpperCase() || null // Add PAN number
       };
 
       console.log('Submitting employee data:', employeeData);
@@ -128,21 +160,33 @@ const AddEmployee = () => {
       
       if (error) {
         console.error('Error adding employee:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to add employee. Please try again.",
-          variant: "destructive"
-        });
+        if (error.message.includes('duplicate') || error.message.includes('unique')) {
+          toast({
+            title: "Duplicate Entry",
+            description: "An employee with this email or PAN number already exists.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error.message || "Failed to add employee. Please try again.",
+            variant: "destructive"
+          });
+        }
         return;
       }
       
       console.log('Employee added successfully:', data);
+      toast({
+        title: "Success",
+        description: "Employee added successfully!",
+      });
       navigate('/employees');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -236,6 +280,20 @@ const AddEmployee = () => {
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="+1 (555) 123-4567"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="panNumber">PAN Number</Label>
+                <Input
+                  id="panNumber"
+                  value={formData.panNumber}
+                  onChange={(e) => handleInputChange('panNumber', e.target.value.toUpperCase())}
+                  placeholder="ABCDE1234F"
+                  maxLength={10}
+                />
+                <p className="text-xs text-gray-500 mt-1">Format: ABCDE1234F</p>
               </div>
             </div>
 

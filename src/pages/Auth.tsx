@@ -1,180 +1,261 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Mail, Lock, User, Phone } from 'lucide-react';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { user, signUp, signIn, loading } = useAuth();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Login form state
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  });
+
+  // Signup form state
+  const [signupData, setSignupData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    phone: ''
+  });
+
+  // Redirect if already authenticated
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    const { error } = await signIn(email, password);
+    setIsLoading(true);
+
+    const { error } = await signIn(loginData.email, loginData.password);
     
     if (!error) {
       navigate('/');
     }
     
-    setLoading(false);
+    setIsLoading(false);
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    const { error } = await signUp(email, password, {
-      first_name: firstName,
-      last_name: lastName
+    if (signupData.password !== signupData.confirmPassword) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { error } = await signUp(signupData.email, signupData.password, {
+      first_name: signupData.firstName,
+      last_name: signupData.lastName,
+      phone: signupData.phone
     });
     
-    setLoading(false);
+    setIsLoading(false);
   };
 
+  const handleLoginInputChange = (field: string, value: string) => {
+    setLoginData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSignupInputChange = (field: string, value: string) => {
+    setSignupData(prev => ({ ...prev, [field]: value }));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            HR/ERP System
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to access your account
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <Building2 className="w-12 h-12 text-blue-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">HRMS Portal</h1>
+          <p className="text-gray-600 mt-2">Human Resource Management System</p>
         </div>
 
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">Welcome</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="signin">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign In</CardTitle>
-                <CardDescription>
-                  Enter your credentials to access your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
                   <div>
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="john@company.com"
-                      required
-                    />
+                    <Label htmlFor="login-email">Email Address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={loginData.email}
+                        onChange={(e) => handleLoginInputChange('email', e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
+
                   <div>
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="login-password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loginData.password}
+                        onChange={(e) => handleLoginInputChange('password', e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
+
                   <Button 
                     type="submit" 
-                    className="w-full" 
-                    disabled={loading}
+                    className="w-full"
+                    disabled={isLoading}
                   >
-                    {loading ? 'Signing In...' : 'Sign In'}
+                    {isLoading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign Up</CardTitle>
-                <CardDescription>
-                  Create a new account to get started
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignUp} className="space-y-4">
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="John"
-                        required
-                      />
+                      <Label htmlFor="signup-firstName">First Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          id="signup-firstName"
+                          type="text"
+                          placeholder="First name"
+                          value={signupData.firstName}
+                          onChange={(e) => handleSignupInputChange('firstName', e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="signup-lastName">Last Name</Label>
                       <Input
-                        id="lastName"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Doe"
+                        id="signup-lastName"
+                        type="text"
+                        placeholder="Last name"
+                        value={signupData.lastName}
+                        onChange={(e) => handleSignupInputChange('lastName', e.target.value)}
                         required
                       />
                     </div>
                   </div>
+
                   <div>
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="john@company.com"
-                      required
-                    />
+                    <Label htmlFor="signup-email">Email Address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={signupData.email}
+                        onChange={(e) => handleSignupInputChange('email', e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
+
+                  <div>
+                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="signup-phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        value={signupData.phone}
+                        onChange={(e) => handleSignupInputChange('phone', e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="Create a password"
+                        value={signupData.password}
+                        onChange={(e) => handleSignupInputChange('password', e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
+
+                  <div>
+                    <Label htmlFor="signup-confirmPassword">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="signup-confirmPassword"
+                        type="password"
+                        placeholder="Confirm your password"
+                        value={signupData.confirmPassword}
+                        onChange={(e) => handleSignupInputChange('confirmPassword', e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <Button 
                     type="submit" 
-                    className="w-full" 
-                    disabled={loading}
+                    className="w-full"
+                    disabled={isLoading || signupData.password !== signupData.confirmPassword}
                   >
-                    {loading ? 'Creating Account...' : 'Sign Up'}
+                    {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
