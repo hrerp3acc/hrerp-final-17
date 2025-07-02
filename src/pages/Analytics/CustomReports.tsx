@@ -1,23 +1,15 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Plus, Filter, FileSpreadsheet } from "lucide-react";
-import { 
-  generatePayslipPDF, 
-  generateSalaryStatementExcel, 
-  generateMockPayslipData, 
-  generateMockSalaryStatementData 
-} from "@/utils/reportExports";
-import * as XLSX from 'xlsx';
-import { useToast } from "@/hooks/use-toast";
+import { FileText, Download, Plus, Filter } from "lucide-react";
 
 const CustomReports = () => {
   const [reportName, setReportName] = useState("");
   const [reportType, setReportType] = useState("");
-  const { toast } = useToast();
 
   const availableReports = [
     {
@@ -61,44 +53,6 @@ const CustomReports = () => {
     { value: "training", label: "Training Report" },
     { value: "custom", label: "Custom Report" }
   ];
-
-  const handleDownloadPDF = async (reportId: number) => {
-    try {
-      const mockData = generateMockPayslipData();
-      const pdf = generatePayslipPDF(mockData);
-      pdf.save(`payslip-report-${reportId}.pdf`);
-      
-      toast({
-        title: "Success",
-        description: "PDF report downloaded successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to download PDF report",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDownloadExcel = async (reportId: number) => {
-    try {
-      const mockData = generateMockSalaryStatementData();
-      const workbook = generateSalaryStatementExcel(mockData);
-      XLSX.writeFile(workbook, `salary-statement-${reportId}.xlsx`);
-      
-      toast({
-        title: "Success",
-        description: "Excel report downloaded successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to download Excel report",
-        variant: "destructive"
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -176,26 +130,10 @@ const CustomReports = () => {
                       {report.status}
                     </Badge>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDownloadPDF(report.id)}
-                      disabled={report.status !== "Ready"}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      PDF
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDownloadExcel(report.id)}
-                      disabled={report.status !== "Ready"}
-                    >
-                      <FileSpreadsheet className="w-4 h-4 mr-2" />
-                      Excel
-                    </Button>
-                  </div>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{report.description}</p>
                 <p className="text-xs text-gray-500">Last generated: {report.lastGenerated}</p>
