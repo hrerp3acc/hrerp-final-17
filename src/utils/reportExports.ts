@@ -302,10 +302,9 @@ export const generateMockSalaryStatementData = (): SalaryStatementData => ({
     totalGrossEarnings: 190389,
     totalPf: 12195,
     totalEsi: 104202,
-    totalFood: 415886,
+    totalFood: 4200,
     totalUniform: 36813,
     totalDeductions: 3119,
-    totalTakeHome: 14196,
-    totalFood: 4200
+    totalTakeHome: 14196
   }
 });
