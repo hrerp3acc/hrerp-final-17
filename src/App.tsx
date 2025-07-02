@@ -52,17 +52,6 @@ import './App.css';
 
 const queryClient = new QueryClient();
 
-// Protected Route Wrapper Component
-const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <ProtectedRoute>
-      <MainLayout>
-        {children}
-      </MainLayout>
-    </ProtectedRoute>
-  );
-};
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -74,73 +63,79 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Protected Routes */}
-                <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
-                
-                {/* Employee Management */}
-                <Route path="/employees" element={<ProtectedLayout><EmployeeDirectory /></ProtectedLayout>} />
-                <Route path="/employees/add" element={<ProtectedLayout><AddEmployee /></ProtectedLayout>} />
-                <Route path="/employees/:id" element={<ProtectedLayout><EmployeeProfile /></ProtectedLayout>} />
-                <Route path="/employees/org-chart" element={<ProtectedLayout><OrgChart /></ProtectedLayout>} />
+                {/* Protected Routes with Layout */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Dashboard />} />
+                  
+                  {/* Employee Management */}
+                  <Route path="employees" element={<EmployeeDirectory />} />
+                  <Route path="employees/add" element={<AddEmployee />} />
+                  <Route path="employees/:id" element={<EmployeeProfile />} />
+                  <Route path="employees/org-chart" element={<OrgChart />} />
 
-                {/* Time Management */}
-                <Route path="/time/tracking" element={<ProtectedLayout><TimeTracking /></ProtectedLayout>} />
-                <Route path="/time/timesheets" element={<ProtectedLayout><Timesheets /></ProtectedLayout>} />
-                <Route path="/time/attendance" element={<ProtectedLayout><Attendance /></ProtectedLayout>} />
+                  {/* Time Management */}
+                  <Route path="time/tracking" element={<TimeTracking />} />
+                  <Route path="time/timesheets" element={<Timesheets />} />
+                  <Route path="time/attendance" element={<Attendance />} />
 
-                {/* Leave Management */}
-                <Route path="/leave" element={<ProtectedLayout><LeaveManagement /></ProtectedLayout>} />
-                <Route path="/leave/apply" element={<ProtectedLayout><LeaveApplication /></ProtectedLayout>} />
-                <Route path="/leave/calendar" element={<ProtectedLayout><LeaveCalendar /></ProtectedLayout>} />
-                <Route path="/leave/attendance" element={<ProtectedLayout><LeaveAttendance /></ProtectedLayout>} />
+                  {/* Leave Management */}
+                  <Route path="leave" element={<LeaveManagement />} />
+                  <Route path="leave/apply" element={<LeaveApplication />} />
+                  <Route path="leave/calendar" element={<LeaveCalendar />} />
+                  <Route path="leave/attendance" element={<LeaveAttendance />} />
 
-                {/* Recruitment */}
-                <Route path="/recruitment" element={<ProtectedLayout><RecruitmentManagement /></ProtectedLayout>} />
-                <Route path="/recruitment/pipeline" element={<ProtectedLayout><CandidatePipeline /></ProtectedLayout>} />
-                <Route path="/recruitment/interviews" element={<ProtectedLayout><InterviewSchedule /></ProtectedLayout>} />
+                  {/* Recruitment */}
+                  <Route path="recruitment" element={<RecruitmentManagement />} />
+                  <Route path="recruitment/pipeline" element={<CandidatePipeline />} />
+                  <Route path="recruitment/interviews" element={<InterviewSchedule />} />
 
-                {/* Performance */}
-                <Route path="/performance" element={<ProtectedLayout><PerformanceManagement /></ProtectedLayout>} />
+                  {/* Performance */}
+                  <Route path="performance" element={<PerformanceManagement />} />
 
-                {/* Payroll */}
-                <Route path="/payroll" element={<ProtectedLayout><PayrollManagement /></ProtectedLayout>} />
-                <Route path="/payroll/processing" element={<ProtectedLayout><PayrollProcessing /></ProtectedLayout>} />
-                <Route path="/payroll/benefits" element={<ProtectedLayout><BenefitsManagement /></ProtectedLayout>} />
-                <Route path="/payroll/compensation" element={<ProtectedLayout><CompensationPlans /></ProtectedLayout>} />
+                  {/* Payroll */}
+                  <Route path="payroll" element={<PayrollManagement />} />
+                  <Route path="payroll/processing" element={<PayrollProcessing />} />
+                  <Route path="payroll/benefits" element={<BenefitsManagement />} />
+                  <Route path="payroll/compensation" element={<CompensationPlans />} />
 
-                {/* Learning & Development */}
-                <Route path="/learning" element={<ProtectedLayout><LearningDevelopment /></ProtectedLayout>} />
-                <Route path="/learning/catalog" element={<ProtectedLayout><CourseCatalog /></ProtectedLayout>} />
-                <Route path="/learning/my-learning" element={<ProtectedLayout><MyLearning /></ProtectedLayout>} />
-                <Route path="/learning/certifications" element={<ProtectedLayout><Certifications /></ProtectedLayout>} />
+                  {/* Learning & Development */}
+                  <Route path="learning" element={<LearningDevelopment />} />
+                  <Route path="learning/catalog" element={<CourseCatalog />} />
+                  <Route path="learning/my-learning" element={<MyLearning />} />
+                  <Route path="learning/certifications" element={<Certifications />} />
 
-                {/* Workforce Planning */}
-                <Route path="/planning/workforce" element={<ProtectedLayout><WorkforcePlanning /></ProtectedLayout>} />
-                <Route path="/planning/succession" element={<ProtectedLayout><SuccessionPlanning /></ProtectedLayout>} />
-                <Route path="/planning/skills" element={<ProtectedLayout><SkillManagement /></ProtectedLayout>} />
+                  {/* Workforce Planning */}
+                  <Route path="planning/workforce" element={<WorkforcePlanning />} />
+                  <Route path="planning/succession" element={<SuccessionPlanning />} />
+                  <Route path="planning/skills" element={<SkillManagement />} />
 
-                {/* Analytics */}
-                <Route path="/analytics" element={<ProtectedLayout><AnalyticsOverview /></ProtectedLayout>} />
-                <Route path="/analytics/workforce" element={<ProtectedLayout><WorkforceAnalytics /></ProtectedLayout>} />
-                <Route path="/analytics/performance" element={<ProtectedLayout><PerformanceAnalytics /></ProtectedLayout>} />
-                <Route path="/analytics/reports" element={<ProtectedLayout><CustomReports /></ProtectedLayout>} />
+                  {/* Analytics */}
+                  <Route path="analytics" element={<AnalyticsOverview />} />
+                  <Route path="analytics/workforce" element={<WorkforceAnalytics />} />
+                  <Route path="analytics/performance" element={<PerformanceAnalytics />} />
+                  <Route path="analytics/reports" element={<CustomReports />} />
 
-                {/* Reports */}
-                <Route path="/reports" element={<ProtectedLayout><ReportsManagement /></ProtectedLayout>} />
-                <Route path="/reports/hr-analytics" element={<ProtectedLayout><HRAnalytics /></ProtectedLayout>} />
-                <Route path="/reports/compliance" element={<ProtectedLayout><ComplianceReports /></ProtectedLayout>} />
+                  {/* Reports */}
+                  <Route path="reports" element={<ReportsManagement />} />
+                  <Route path="reports/hr-analytics" element={<HRAnalytics />} />
+                  <Route path="reports/compliance" element={<ComplianceReports />} />
 
-                {/* Compliance */}
-                <Route path="/compliance" element={<ProtectedLayout><ComplianceManagement /></ProtectedLayout>} />
+                  {/* Compliance */}
+                  <Route path="compliance" element={<ComplianceManagement />} />
 
-                {/* Admin */}
-                <Route path="/admin" element={<ProtectedLayout><AdminManagement /></ProtectedLayout>} />
-                <Route path="/admin/users" element={<ProtectedLayout><UserManagement /></ProtectedLayout>} />
-                <Route path="/admin/security" element={<ProtectedLayout><SecuritySettings /></ProtectedLayout>} />
-                <Route path="/admin/system" element={<ProtectedLayout><SystemConfig /></ProtectedLayout>} />
+                  {/* Admin */}
+                  <Route path="admin" element={<AdminManagement />} />
+                  <Route path="admin/users" element={<UserManagement />} />
+                  <Route path="admin/security" element={<SecuritySettings />} />
+                  <Route path="admin/system" element={<SystemConfig />} />
 
-                {/* Settings */}
-                <Route path="/settings" element={<ProtectedLayout><SettingsManagement /></ProtectedLayout>} />
+                  {/* Settings */}
+                  <Route path="settings" element={<SettingsManagement />} />
+                </Route>
 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
