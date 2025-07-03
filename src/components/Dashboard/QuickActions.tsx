@@ -1,101 +1,61 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, DollarSign, Megaphone, Users } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  Clock, 
-  Calendar, 
-  FileText, 
-  UserPlus, 
-  CheckSquare,
-  BarChart3,
-  Settings
-} from 'lucide-react';
+import { BroadcastForm } from './BroadcastForm';
 
 const QuickActions = () => {
   const navigate = useNavigate();
-
-  const actions = [
-    {
-      title: 'Add Employee',
-      description: 'Create new employee profile',
-      icon: UserPlus,
-      onClick: () => navigate('/employees/add'),
-      color: 'bg-blue-500 hover:bg-blue-600'
-    },
-    {
-      title: 'Time Tracking',
-      description: 'Start or stop time tracking',
-      icon: Clock,
-      onClick: () => navigate('/time/tracking'),
-      color: 'bg-green-500 hover:bg-green-600'
-    },
-    {
-      title: 'Apply for Leave',
-      description: 'Submit leave application',
-      icon: Calendar,
-      onClick: () => navigate('/leave/apply'),
-      color: 'bg-purple-500 hover:bg-purple-600'
-    },
-    {
-      title: 'Check Attendance',
-      description: 'Mark your attendance',
-      icon: CheckSquare,
-      onClick: () => navigate('/time/attendance'),
-      color: 'bg-orange-500 hover:bg-orange-600'
-    },
-    {
-      title: 'View Employees',
-      description: 'Browse employee directory',
-      icon: Users,
-      onClick: () => navigate('/employees'),
-      color: 'bg-indigo-500 hover:bg-indigo-600'
-    },
-    {
-      title: 'Reports',
-      description: 'Generate reports',
-      icon: BarChart3,
-      onClick: () => navigate('/reports'),
-      color: 'bg-red-500 hover:bg-red-600'
-    },
-    {
-      title: 'Timesheets',
-      description: 'Manage timesheets',
-      icon: FileText,
-      onClick: () => navigate('/time/timesheets'),
-      color: 'bg-teal-500 hover:bg-teal-600'
-    },
-    {
-      title: 'Admin Panel',
-      description: 'System administration',
-      icon: Settings,
-      onClick: () => navigate('/admin'),
-      color: 'bg-gray-500 hover:bg-gray-600'
-    }
-  ];
+  const [showBroadcast, setShowBroadcast] = useState(false);
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Quick Actions</CardTitle>
+        <CardTitle className="flex items-center space-x-2">
+          <Users className="w-5 h-5" />
+          <span>Quick Actions</span>
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-          {actions.map((action, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              className={`h-24 flex flex-col items-center justify-center space-y-2 text-white border-0 ${action.color} transition-all duration-200 hover:scale-105`}
-              onClick={action.onClick}
-            >
-              <action.icon className="w-6 h-6" />
-              <div className="text-center">
-                <div className="text-xs font-medium">{action.title}</div>
-                <div className="text-xs opacity-80 hidden md:block">{action.description}</div>
-              </div>
-            </Button>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Button
+            onClick={() => navigate('/employees/add')}
+            className="flex flex-col items-center space-y-2 h-20"
+            variant="outline"
+          >
+            <Plus className="w-6 h-6" />
+            <span className="text-sm">Add Employee</span>
+          </Button>
+
+          <Button
+            onClick={() => navigate('/payroll')}
+            className="flex flex-col items-center space-y-2 h-20"
+            variant="outline"
+          >
+            <DollarSign className="w-6 h-6" />
+            <span className="text-sm">Payroll Summary</span>
+          </Button>
+
+          <Dialog open={showBroadcast} onOpenChange={setShowBroadcast}>
+            <DialogTrigger asChild>
+              <Button
+                className="flex flex-col items-center space-y-2 h-20"
+                variant="outline"
+              >
+                <Megaphone className="w-6 h-6" />
+                <span className="text-sm">Broadcast</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Send Announcement</DialogTitle>
+              </DialogHeader>
+              <BroadcastForm onClose={() => setShowBroadcast(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>

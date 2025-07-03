@@ -1,281 +1,231 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Employee } from '@/types/employee';
-import { 
-  User, Mail, Phone, MapPin, Calendar, DollarSign, 
-  Edit, Trash2, Award, BookOpen, Clock, Target 
-} from 'lucide-react';
-import { usePermissions } from '@/hooks/usePermissions';
+import { Badge } from '@/components/ui/badge';
+import { User, Mail, Phone, MapPin, Calendar, Building } from 'lucide-react';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import DocumentsTab from '@/components/Employee/DocumentsTab';
+import EmployeeHistory from '@/components/Employee/EmployeeHistory';
+import EmployeeNotes from '@/components/Employee/EmployeeNotes';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface EmployeeProfileProps {
-  employee: Employee;
-  onEdit?: () => void;
-  onDelete?: () => void;
-}
+type Employee = Tables<'employees'>;
 
-const EmployeeProfile = ({ employee, onEdit, onDelete }: EmployeeProfileProps) => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const { hasPermission } = usePermissions();
+const EmployeeProfile = () => {
+  const { id } = useParams<{ id: string }>();
+  const { getEmployee, departments } = useSupabaseEmployees();
+  const [employee, setEmployee] = useState<Employee | null>(null);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'terminated':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  useEffect(() => {
+    if (id) {
+      const emp = getEmployee(id);
+      setEmployee(emp || null);
     }
-  };
+  }, [id, getEmployee]);
+
+  if (!employee) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Employee not found</p>
+      </div>
+    );
+  }
+
+  const department = departments.find(d => d.id === employee.department_id);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Employee Header */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="w-8 h-8 text-blue-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{employee.name}</h1>
-                <p className="text-lg text-gray-600">{employee.position}</p>
-                <p className="text-sm text-gray-500">{employee.department}</p>
-                <Badge className={`mt-2 ${getStatusColor(employee.status)}`}>
+          <div className="flex items-start space-x-6">
+            <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
+              <User className="w-12 h-12 text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold">
+                    {employee.first_name} {employee.last_name}
+                  </h1>
+                  <p className="text-gray-600">{employee.position || 'No position assigned'}</p>
+                </div>
+                <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
                   {employee.status}
                 </Badge>
               </div>
-            </div>
-            
-            {hasPermission('edit_employees') && (
-              <div className="flex space-x-2">
-                <Button variant="outline" onClick={onEdit}>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-                {hasPermission('delete_employees') && (
-                  <Button variant="outline" onClick={onDelete}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="personal">Personal</TabsTrigger>
-          <TabsTrigger value="employment">Employment</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Contact Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-3">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                <div className="flex items-center space-x-2">
                   <Mail className="w-4 h-4 text-gray-500" />
                   <span className="text-sm">{employee.email}</span>
                 </div>
                 {employee.phone && (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
                     <Phone className="w-4 h-4 text-gray-500" />
                     <span className="text-sm">{employee.phone}</span>
                   </div>
                 )}
                 {employee.location && (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
                     <MapPin className="w-4 h-4 text-gray-500" />
                     <span className="text-sm">{employee.location}</span>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Employment Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Employment</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {employee.startDate && (
-                  <div className="flex items-center space-x-3">
+                {department && (
+                  <div className="flex items-center space-x-2">
+                    <Building className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm">{department.name}</span>
+                  </div>
+                )}
+                {employee.start_date && (
+                  <div className="flex items-center space-x-2">
                     <Calendar className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Start Date</p>
-                      <p className="text-sm font-medium">{new Date(employee.startDate).toLocaleDateString()}</p>
-                    </div>
+                    <span className="text-sm">Started {new Date(employee.start_date).toLocaleDateString()}</span>
                   </div>
                 )}
-                {employee.salary && hasPermission('view_payroll') && (
-                  <div className="flex items-center space-x-3">
-                    <DollarSign className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Annual Salary</p>
-                      <p className="text-sm font-medium">${employee.salary.toLocaleString()}</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Skills */}
-            {employee.skills && employee.skills.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Skills</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {employee.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">ID:</span>
+                  <span className="text-sm">{employee.employee_id}</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="personal" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Address */}
-            {employee.address && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Address</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1 text-sm">
-                    <p>{employee.address.street}</p>
-                    <p>{employee.address.city}, {employee.address.state} {employee.address.zipCode}</p>
-                    <p>{employee.address.country}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+      {/* Tabs Section */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+        </TabsList>
 
-            {/* Emergency Contact */}
-            {employee.emergencyContact && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Emergency Contact</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <p className="font-medium">{employee.emergencyContact.name}</p>
-                    <p>{employee.emergencyContact.phone}</p>
-                    <p className="text-gray-600">{employee.emergencyContact.relationship}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="employment" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Job Details */}
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Job Information</CardTitle>
+                <CardTitle>Personal Information</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600">Position</p>
-                  <p className="font-medium">{employee.position}</p>
+                  <label className="text-sm font-medium text-gray-500">Full Name</label>
+                  <p>{employee.first_name} {employee.last_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Department</p>
-                  <p className="font-medium">{employee.department}</p>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <p>{employee.email}</p>
                 </div>
-                {employee.location && (
+                {employee.phone && (
                   <div>
-                    <p className="text-sm text-gray-600">Location</p>
-                    <p className="font-medium">{employee.location}</p>
+                    <label className="text-sm font-medium text-gray-500">Phone</label>
+                    <p>{employee.phone}</p>
+                  </div>
+                )}
+                {employee.address && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Address</label>
+                    <p>{employee.address}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Certifications */}
-            {employee.certifications && employee.certifications.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Certifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {employee.certifications.map((cert, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Award className="w-4 h-4 text-yellow-600" />
-                        <span className="text-sm">{cert}</span>
-                      </div>
-                    ))}
+            <Card>
+              <CardHeader>
+                <CardTitle>Work Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Employee ID</label>
+                  <p>{employee.employee_id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Position</label>
+                  <p>{employee.position || 'Not assigned'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Department</label>
+                  <p>{department?.name || 'Not assigned'}</p>
+                </div>
+                {employee.start_date && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Start Date</label>
+                    <p>{new Date(employee.start_date).toLocaleDateString()}</p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+                {employee.salary && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Salary</label>
+                    <p>${employee.salary.toLocaleString()}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
+
+          {/* Emergency Contact */}
+          {(employee.emergency_contact_name || employee.emergency_contact_phone) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Emergency Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {employee.emergency_contact_name && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Name</label>
+                    <p>{employee.emergency_contact_name}</p>
+                  </div>
+                )}
+                {employee.emergency_contact_phone && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Phone</label>
+                    <p>{employee.emergency_contact_phone}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Notes */}
+          {employee.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">{employee.notes}</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="performance" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Performance Metrics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Performance Score</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">4.2</div>
-                  <div className="text-sm text-gray-600">out of 5.0</div>
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="documents">
+          <DocumentsTab employeeId={employee.id} />
+        </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Goals Completed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">8/10</div>
-                  <div className="text-sm text-gray-600">this quarter</div>
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="notes">
+          <EmployeeNotes employeeId={employee.id} />
+        </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Training Hours</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600">24</div>
-                  <div className="text-sm text-gray-600">this year</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="history">
+          <EmployeeHistory employeeId={employee.id} />
+        </TabsContent>
+
+        <TabsContent value="performance">
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <p className="text-gray-500 mb-4">Performance management features coming soon</p>
+                <p className="text-sm text-gray-400">This will include goals, reviews, and development plans</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
