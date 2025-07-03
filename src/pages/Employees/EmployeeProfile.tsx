@@ -5,9 +5,6 @@ import { ArrowLeft } from 'lucide-react';
 import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 import { useToast } from '@/hooks/use-toast';
 import EmployeeProfile from '@/components/Employees/EmployeeProfile';
-import type { Tables } from '@/integrations/supabase/types';
-
-type Employee = Tables<'employees'>;
 
 const EmployeeProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,40 +13,6 @@ const EmployeeProfilePage = () => {
   const { toast } = useToast();
 
   const employee = id ? employees.find(emp => emp.id === id) : null;
-  const department = employee ? departments.find(dept => dept.id === employee.department_id) : null;
-
-  // Transform Supabase employee to match the component's expected format
-  const transformedEmployee = employee ? {
-    id: employee.id,
-    name: `${employee.first_name} ${employee.last_name}`,
-    email: employee.email,
-    phone: employee.phone || '',
-    department: department?.name || 'No Department',
-    position: employee.position || 'No Position',
-    location: employee.location || '',
-    status: employee.status as 'active' | 'inactive' | 'terminated',
-    avatar: undefined,
-    startDate: employee.start_date || '',
-    salary: employee.salary || undefined,
-    managerId: employee.manager_id || undefined,
-    emergencyContact: employee.emergency_contact_name ? {
-      name: employee.emergency_contact_name,
-      phone: employee.emergency_contact_phone || '',
-      relationship: 'Emergency Contact'
-    } : undefined,
-    address: employee.address ? {
-      street: employee.address,
-      city: '',
-      state: '',
-      zipCode: '',
-      country: ''
-    } : undefined,
-    skills: [],
-    certifications: [],
-    notes: employee.notes || '',
-    createdAt: employee.created_at || '',
-    updatedAt: employee.updated_at || ''
-  } : null;
 
   if (loading) {
     return (
@@ -59,7 +22,7 @@ const EmployeeProfilePage = () => {
     );
   }
 
-  if (!transformedEmployee) {
+  if (!employee) {
     return (
       <div className="text-center py-12">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Employee Not Found</h1>
@@ -86,7 +49,7 @@ const EmployeeProfilePage = () => {
         await deleteEmployee(employee.id);
         toast({
           title: "Employee Deleted",
-          description: `${transformedEmployee.name} has been removed from the system`,
+          description: `${employee.first_name} ${employee.last_name} has been removed from the system`,
         });
         navigate('/employees');
       } catch (error) {
@@ -110,11 +73,7 @@ const EmployeeProfilePage = () => {
       </div>
 
       {/* Employee Profile Component */}
-      <EmployeeProfile 
-        employee={transformedEmployee}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <EmployeeProfile />
     </div>
   );
 };
