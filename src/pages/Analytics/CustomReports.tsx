@@ -6,45 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Plus, Filter } from "lucide-react";
+import { useSupabaseReports } from "@/hooks/useSupabaseReports";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CustomReports = () => {
   const [reportName, setReportName] = useState("");
   const [reportType, setReportType] = useState("");
-
-  const availableReports = [
-    {
-      id: 1,
-      name: "Employee Performance Summary",
-      type: "Performance",
-      description: "Comprehensive performance analysis across departments",
-      lastGenerated: "2024-01-15",
-      status: "Ready"
-    },
-    {
-      id: 2,
-      name: "Attendance Trends Analysis",
-      type: "Attendance",
-      description: "Monthly attendance patterns and insights",
-      lastGenerated: "2024-01-10",
-      status: "Ready"
-    },
-    {
-      id: 3,
-      name: "Payroll Cost Analysis",
-      type: "Payroll",
-      description: "Detailed breakdown of payroll expenses",
-      lastGenerated: "2024-01-05",
-      status: "Processing"
-    },
-    {
-      id: 4,
-      name: "Training Completion Report",
-      type: "Training",
-      description: "Employee training progress and completion rates",
-      lastGenerated: "2024-01-12",
-      status: "Ready"
-    }
-  ];
+  const { templates, generatedReports, loading, generateReport } = useSupabaseReports();
+  const { user } = useAuth();
 
   const reportTemplates = [
     { value: "performance", label: "Performance Report" },
@@ -54,6 +23,37 @@ const CustomReports = () => {
     { value: "custom", label: "Custom Report" }
   ];
 
+  const handleGenerateReport = async () => {
+    if (!reportName || !reportType || !user) {
+      return;
+    }
+
+    const reportData = {
+      name: reportName,
+      description: `${reportType} report generated on ${new Date().toLocaleDateString()}`,
+      report_data: {
+        type: reportType,
+        generated_at: new Date().toISOString(),
+        summary: `Sample ${reportType} report data`
+      },
+      status: 'generated' as const,
+      generated_by: user.id,
+      template_id: null
+    };
+
+    await generateReport(reportData);
+    setReportName("");
+    setReportType("");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -61,7 +61,7 @@ const CustomReports = () => {
           <h1 className="text-2xl font-bold text-gray-900">Custom Reports</h1>
           <p className="text-gray-600">Create and manage custom analytical reports</p>
         </div>
-        <Button>
+        <Button onClick={handleGenerateReport} disabled={!reportName || !reportType}>
           <Plus className="w-4 h-4 mr-2" />
           Create Report
         </Button>
@@ -98,7 +98,7 @@ const CustomReports = () => {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button className="w-full">
+              <Button className="w-full" onClick={handleGenerateReport} disabled={!reportName || !reportType}>
                 <FileText className="w-4 h-4 mr-2" />
                 Generate Report
               </Button>
@@ -111,7 +111,7 @@ const CustomReports = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Available Reports</span>
+            <span>Available Reports ({generatedReports.length})</span>
             <Button variant="outline" size="sm">
               <Filter className="w-4 h-4 mr-2" />
               Filter
@@ -120,25 +120,29 @@ const CustomReports = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {availableReports.map((report) => (
-              <div key={report.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <h4 className="font-medium">{report.name}</h4>
-                    <Badge variant="outline">{report.type}</Badge>
-                    <Badge variant={report.status === "Ready" ? "secondary" : "default"}>
-                      {report.status}
-                    </Badge>
+            {generatedReports.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No reports generated yet. Create your first report above!</p>
+            ) : (
+              generatedReports.map((report) => (
+                <div key={report.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <h4 className="font-medium">{report.name}</h4>
+                      <Badge variant="outline">{report.report_data?.type || 'Custom'}</Badge>
+                      <Badge variant={report.status === "generated" ? "secondary" : "default"}>
+                        {report.status}
+                      </Badge>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
+                  <p className="text-sm text-gray-600 mb-2">{report.description}</p>
+                  <p className="text-xs text-gray-500">Generated: {new Date(report.created_at).toLocaleDateString()}</p>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{report.description}</p>
-                <p className="text-xs text-gray-500">Last generated: {report.lastGenerated}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -150,7 +154,7 @@ const CustomReports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Reports</p>
-                <p className="text-2xl font-bold">{availableReports.length}</p>
+                <p className="text-2xl font-bold">{generatedReports.length}</p>
               </div>
               <FileText className="w-8 h-8 text-blue-600" />
             </div>
@@ -163,7 +167,7 @@ const CustomReports = () => {
               <div>
                 <p className="text-sm text-gray-600">Ready Reports</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {availableReports.filter(r => r.status === "Ready").length}
+                  {generatedReports.filter(r => r.status === "generated").length}
                 </p>
               </div>
               <Download className="w-8 h-8 text-green-600" />
@@ -175,10 +179,8 @@ const CustomReports = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Processing</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {availableReports.filter(r => r.status === "Processing").length}
-                </p>
+                <p className="text-sm text-gray-600">Templates</p>
+                <p className="text-2xl font-bold text-orange-600">{templates.length}</p>
               </div>
               <Filter className="w-8 h-8 text-orange-600" />
             </div>

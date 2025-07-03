@@ -1,285 +1,162 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import QuickStats from '@/components/Dashboard/QuickStats';
-import QuickActions from '@/components/Dashboard/QuickActions';
-import RecentActivities from '@/components/Dashboard/RecentActivities';
-import MetricCard from '@/components/Dashboard/MetricCard';
-import NavigationBreadcrumb from '@/components/Common/NavigationBreadcrumb';
-import CrossModuleLinks from '@/components/Common/CrossModuleLinks';
-import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
-import { useAttendance } from '@/hooks/useAttendance';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { useTimesheets } from '@/hooks/useTimesheets';
-import { useDashboard } from '@/hooks/useDashboard';
-import { usePerformanceManagement } from '@/hooks/usePerformanceManagement';
-import { useLearningDevelopment } from '@/hooks/useLearningDevelopment';
-import { 
-  Users, 
-  Clock, 
-  Calendar, 
-  TrendingUp,
-  CheckCircle,
-  AlertCircle,
-  FileText,
-  Target,
-  BookOpen,
-  Award
-} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Calendar, Clock, TrendingUp, Building, UserCheck, AlertCircle } from "lucide-react";
+import { useSupabaseEmployees } from "@/hooks/useSupabaseEmployees";
+import { useSupabaseAnalytics } from "@/hooks/useSupabaseAnalytics";
+import { useEffect } from "react";
 
 const Dashboard = () => {
-  const { employees, getEmployeeStats, loading: employeesLoading } = useSupabaseEmployees();
-  const { attendanceRecords, getTodaysAttendance } = useAttendance();
-  const { activeEntry, getTimeStats } = useTimeTracking();
-  const { timesheets } = useTimesheets();
-  const { stats, recentActivities } = useDashboard();
-  const { goals } = usePerformanceManagement();
-  const { enrollments, courses } = useLearningDevelopment();
+  const { employees, departments, loading: employeesLoading, getEmployeeStats } = useSupabaseEmployees();
+  const { trackEvent, getModuleStats, loading: analyticsLoading } = useSupabaseAnalytics();
 
-  const employeeStats = getEmployeeStats();
-  const timeStats = getTimeStats();
-  const todaysAttendance = getTodaysAttendance();
+  useEffect(() => {
+    // Track dashboard visit
+    trackEvent('page_visit', { page: 'dashboard' }, 'dashboard');
+  }, []);
 
-  // Calculate performance metrics
-  const activeGoals = goals.filter(g => g.status !== 'completed').length;
-  const completedGoals = goals.filter(g => g.status === 'completed').length;
-  const goalCompletionRate = goals.length > 0 ? Math.round((completedGoals / goals.length) * 100) : 0;
+  const stats = getEmployeeStats();
+  const moduleStats = getModuleStats();
 
-  // Calculate learning metrics
-  const activeEnrollments = enrollments.filter(e => e.status === 'enrolled').length;
-  const completedCourses = enrollments.filter(e => e.status === 'completed').length;
-  const totalCourses = courses.length;
-
-  // Calculate pending items
-  const pendingTimesheets = timesheets.filter(t => t.status === 'draft').length;
-  const submittedTimesheets = timesheets.filter(t => t.status === 'submitted').length;
-
-  const dashboardMetrics = [
-    {
-      title: "Total Employees",
-      value: employeeStats.total.toString(),
-      change: {
-        value: employeeStats.active > 0 ? Math.round(((employeeStats.active / employeeStats.total) * 100) - 90) : 0,
-        type: employeeStats.active / employeeStats.total > 0.9 ? "increase" as const : "decrease" as const
-      },
-      trend: employeeStats.active / employeeStats.total > 0.9 ? "up" as const : "down" as const,
-      icon: Users,
-      color: "blue"
-    },
-    {
-      title: "Active Goals",
-      value: activeGoals.toString(),
-      change: {
-        value: goalCompletionRate,
-        type: goalCompletionRate > 70 ? "increase" as const : goalCompletionRate > 40 ? "neutral" as const : "decrease" as const
-      },
-      trend: goalCompletionRate > 70 ? "up" as const : "neutral" as const,
-      icon: Target,
-      color: "green"
-    },
-    {
-      title: "Pending Reviews",
-      value: pendingTimesheets.toString(),
-      change: {
-        value: submittedTimesheets,
-        type: submittedTimesheets > pendingTimesheets ? "increase" as const : "neutral" as const
-      },
-      trend: submittedTimesheets > pendingTimesheets ? "up" as const : "neutral" as const,
-      icon: FileText,
-      color: "orange"
-    },
-    {
-      title: "Learning Progress",
-      value: `${completedCourses}/${totalCourses}`,
-      change: {
-        value: totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0,
-        type: completedCourses > activeEnrollments ? "increase" as const : "neutral" as const
-      },
-      trend: "up" as const,
-      icon: BookOpen,
-      color: "purple"
-    }
-  ];
+  if (employeesLoading || analyticsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <NavigationBreadcrumb />
-      
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600">Welcome to your HR management system</p>
       </div>
 
-      {/* Key Metrics */}
+      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {dashboardMetrics.map((metric, index) => (
-          <MetricCard
-            key={index}
-            title={metric.title}
-            value={metric.value}
-            change={metric.change}
-            trend={metric.trend}
-            icon={metric.icon}
-            color={metric.color}
-          />
-        ))}
-      </div>
-
-      {/* Quick Actions - Full Width */}
-      <QuickActions />
-
-      {/* Current Status Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="w-5 h-5" />
-              <span>Time Tracking Status</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activeEntry ? (
-              <div className="flex items-center space-x-2 text-green-600">
-                <CheckCircle className="w-4 h-4" />
-                <span>Timer Running</span>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Employees</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-500">
-                <AlertCircle className="w-4 h-4" />
-                <span>No Active Timer</span>
-              </div>
-            )}
-            <p className="text-sm text-gray-600 mt-2">
-              Today: {timeStats.today.toFixed(1)} hours tracked
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Weekly: {timeStats.week.toFixed(1)}/40 hours
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Target className="w-5 h-5" />
-              <span>Performance Overview</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Active Goals</span>
-                <span className="text-sm font-medium">{activeGoals}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Completed</span>
-                <span className="text-sm font-medium text-green-600">{completedGoals}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Success Rate</span>
-                <span className="text-sm font-bold">{goalCompletionRate}%</span>
-              </div>
+              <Users className="w-8 h-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Award className="w-5 h-5" />
-              <span>Learning & Development</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Available Courses</span>
-                <span className="text-sm font-medium">{totalCourses}</span>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Active Employees</p>
+                <p className="text-2xl font-bold text-green-600">{stats.active}</p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Enrolled</span>
-                <span className="text-sm font-medium text-blue-600">{activeEnrollments}</span>
+              <UserCheck className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Departments</p>
+                <p className="text-2xl font-bold">{departments.length}</p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Completed</span>
-                <span className="text-sm font-bold text-green-600">{completedCourses}</span>
+              <Building className="w-8 h-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Inactive</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.inactive}</p>
               </div>
+              <AlertCircle className="w-8 h-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Summary Statistics */}
+      {/* Department Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Stats</CardTitle>
+            <CardTitle>Employees by Department</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{stats?.totalEmployees || employeeStats.total}</div>
-                <div className="text-sm text-gray-600">Total Employees</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{stats?.activeEmployees || employeeStats.active}</div>
-                <div className="text-sm text-gray-600">Active Employees</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{stats?.pendingLeaves || 0}</div>
-                <div className="text-sm text-gray-600">Pending Leaves</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{stats?.upcomingReviews || pendingTimesheets}</div>
-                <div className="text-sm text-gray-600">Pending Reviews</div>
-              </div>
+            <div className="space-y-4">
+              {stats.byDepartment.map((dept, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <span className="text-sm font-medium">{dept.department}</span>
+                  <span className="text-sm text-gray-600">{dept.count} employees</span>
+                </div>
+              ))}
+              {stats.byDepartment.length === 0 && (
+                <p className="text-gray-500 text-center">No department data available</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>System Overview</CardTitle>
+            <CardTitle>System Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Database Status</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Connected</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Data Sync</span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Real-time</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Last Updated</span>
-                <span className="text-xs text-gray-600">Just now</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Active Sessions</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                  {activeEntry ? '1 Active' : 'None'}
-                </span>
-              </div>
+            <div className="space-y-4">
+              {moduleStats.map((stat, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <span className="text-sm font-medium capitalize">{stat.module}</span>
+                  <span className="text-sm text-gray-600">{stat.count} events</span>
+                </div>
+              ))}
+              {moduleStats.length === 0 && (
+                <p className="text-gray-500 text-center">No activity data available</p>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Dashboard Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <QuickStats />
-          <CrossModuleLinks 
-            currentModule="dashboard"
-            relatedModules={['employees', 'time', 'reports']}
-          />
-        </div>
-        <div className="space-y-6">
-          <RecentActivities activities={recentActivities} />
-        </div>
-      </div>
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4 text-center">
+                <Users className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                <h3 className="font-medium">Add Employee</h3>
+                <p className="text-sm text-gray-600">Add a new team member</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4 text-center">
+                <Calendar className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                <h3 className="font-medium">Leave Requests</h3>
+                <p className="text-sm text-gray-600">Manage leave applications</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4 text-center">
+                <TrendingUp className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                <h3 className="font-medium">Analytics</h3>
+                <p className="text-sm text-gray-600">View performance metrics</p>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
