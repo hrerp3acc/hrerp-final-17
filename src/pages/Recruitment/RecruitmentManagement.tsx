@@ -18,7 +18,6 @@ const RecruitmentManagement = () => {
     jobPostings, 
     jobApplications,
     loading, 
-    error,
     getRecruitmentStats 
   } = useRecruitment();
 
@@ -32,15 +31,6 @@ const RecruitmentManagement = () => {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-red-600 mb-4">Error: {error}</p>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
       </div>
     );
   }
