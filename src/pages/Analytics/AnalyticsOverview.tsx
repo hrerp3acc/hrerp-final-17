@@ -19,7 +19,7 @@ const AnalyticsOverview = () => {
   const { analytics, loading, trackEvent, refetch } = useAnalytics();
 
   const handleTrackEvent = (eventType: string, module: string) => {
-    trackEvent(eventType, { source: 'analytics_page' }, module);
+    trackEvent(eventType, module, { source: 'analytics_page' });
   };
 
   if (loading) {
@@ -191,7 +191,7 @@ const AnalyticsOverview = () => {
                         <p className="text-sm text-gray-500">{count} events tracked</p>
                       </div>
                     </div>
-                    <Badge variant="outline">{((count / (analytics?.totalEvents || 1)) * 100).toFixed(1)}%</Badge>
+                    <Badge variant="outline">{(((count as number) / (analytics?.totalEvents || 1)) * 100).toFixed(1)}%</Badge>
                   </div>
                 ))}
               </div>

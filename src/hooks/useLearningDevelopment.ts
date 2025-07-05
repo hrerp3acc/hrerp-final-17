@@ -171,6 +171,24 @@ export const useLearningDevelopment = () => {
     }
   };
 
+  const getLearningStats = () => {
+    const totalCourses = courses.length;
+    const enrolledCourses = enrollments.length;
+    const completedCourses = enrollments.filter(e => e.status === 'completed').length;
+    const inProgressCourses = enrollments.filter(e => e.status === 'enrolled').length;
+    const activeCertifications = certifications.filter(c => c.status === 'active').length;
+    const totalHours = courses.reduce((acc, course) => acc + (course.duration_hours || 0), 0);
+
+    return {
+      totalCourses,
+      enrolledCourses,
+      completedCourses,
+      inProgressCourses,
+      activeCertifications,
+      totalHours
+    };
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -188,6 +206,7 @@ export const useLearningDevelopment = () => {
     loading,
     enrollInCourse,
     updateProgress,
+    getLearningStats,
     refetch: () => Promise.all([fetchCourses(), fetchEnrollments(), fetchCertifications()])
   };
 };

@@ -15,7 +15,7 @@ export const useReporting = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchTemplates = async () => {
+  const fetchReportTemplates = async () => {
     try {
       const { data, error } = await supabase
         .from('report_templates')
@@ -34,7 +34,7 @@ export const useReporting = () => {
     }
   };
 
-  const fetchReports = async () => {
+  const fetchGeneratedReports = async () => {
     try {
       const { data, error } = await supabase
         .from('generated_reports')
@@ -44,15 +44,15 @@ export const useReporting = () => {
       if (error) throw error;
       setReports(data || []);
     } catch (error) {
-      console.error('Error fetching reports:', error);
+      console.error('Error fetching generated reports:', error);
     }
   };
 
-  const createTemplate = async (templateData: {
+  const createReportTemplate = async (templateData: {
     name: string;
     description?: string;
     category: string;
-    template_config: object;
+    template_config: Record<string, any>;
     is_public?: boolean;
   }) => {
     if (!user) return null;
@@ -62,7 +62,8 @@ export const useReporting = () => {
         .from('report_templates')
         .insert([{
           ...templateData,
-          created_by: user.id
+          created_by: user.id,
+          template_config: templateData.template_config as any
         }])
         .select()
         .single();
@@ -74,10 +75,10 @@ export const useReporting = () => {
         description: "Report template created successfully",
       });
 
-      await fetchTemplates();
+      await fetchReportTemplates();
       return data;
     } catch (error) {
-      console.error('Error creating template:', error);
+      console.error('Error creating report template:', error);
       toast({
         title: "Error",
         description: "Failed to create report template",
@@ -87,23 +88,20 @@ export const useReporting = () => {
     }
   };
 
-  const generateReport = async (templateId: string, reportName: string) => {
+  const generateReport = async (templateId: string, reportData: Record<string, any>) => {
     if (!user) return null;
 
     try {
-      // Fetch data based on template configuration
       const template = templates.find(t => t.id === templateId);
-      if (!template) return null;
-
-      // Generate report data (simplified example)
-      const reportData = await generateReportData(template.template_config);
+      if (!template) throw new Error('Template not found');
 
       const { data, error } = await supabase
         .from('generated_reports')
         .insert([{
           template_id: templateId,
-          name: reportName,
-          report_data: reportData,
+          name: `${template.name} - ${new Date().toLocaleDateString()}`,
+          description: `Generated report based on ${template.name}`,
+          report_data: reportData as any,
           generated_by: user.id,
           status: 'generated'
         }])
@@ -117,7 +115,7 @@ export const useReporting = () => {
         description: "Report generated successfully",
       });
 
-      await fetchReports();
+      await fetchGeneratedReports();
       return data;
     } catch (error) {
       console.error('Error generating report:', error);
@@ -130,40 +128,35 @@ export const useReporting = () => {
     }
   };
 
-  const generateReportData = async (config: any) => {
-    // This is a simplified example - in reality, you'd fetch data based on the template configuration
-    const { data: employees } = await supabase.from('employees').select('*');
-    const { data: attendanceRecords } = await supabase.from('attendance_records').select('*');
-    
-    return {
-      totalEmployees: employees?.length || 0,
-      totalAttendanceRecords: attendanceRecords?.length || 0,
-      generatedAt: new Date().toISOString(),
-      config
-    };
-  };
+  const deleteReport = async (reportId: string) => {
+    try {
+      const { error } = await supabase
+        .from('generated_reports')
+        .delete()
+        .eq('id', reportId);
 
-  const getReportingStats = () => {
-    const totalTemplates = templates.length;
-    const totalReports = reports.length;
-    const recentReports = reports.filter(r => {
-      const createdAt = new Date(r.created_at);
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      return createdAt >= lastWeek;
-    }).length;
+      if (error) throw error;
 
-    return {
-      totalTemplates,
-      totalReports,
-      recentReports
-    };
+      toast({
+        title: "Success",
+        description: "Report deleted successfully",
+      });
+
+      await fetchGeneratedReports();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete report",
+        variant: "destructive"
+      });
+    }
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchTemplates(), fetchReports()]);
+      await Promise.all([fetchReportTemplates(), fetchGeneratedReports()]);
       setLoading(false);
     };
 
@@ -174,9 +167,9 @@ export const useReporting = () => {
     templates,
     reports,
     loading,
-    createTemplate,
+    createReportTemplate,
     generateReport,
-    getReportingStats,
-    refetch: () => Promise.all([fetchTemplates(), fetchReports()])
+    deleteReport,
+    refetch: () => Promise.all([fetchReportTemplates(), fetchGeneratedReports()])
   };
 };

@@ -95,6 +95,37 @@ export const useAnalytics = () => {
     }
   };
 
+  // Add analytics property for compatibility
+  const analytics = {
+    totalEvents,
+    moduleBreakdown: events.reduce((acc, event) => {
+      if (event.module) {
+        acc[event.module] = (acc[event.module] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>),
+    userEngagement: {
+      dailyActive: new Set(events.filter(e => {
+        const eventDate = new Date(e.created_at);
+        const today = new Date();
+        return eventDate.toDateString() === today.toDateString();
+      }).map(e => e.user_id)).size,
+      weeklyActive: new Set(events.filter(e => {
+        const eventDate = new Date(e.created_at);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return eventDate >= weekAgo;
+      }).map(e => e.user_id)).size,
+      monthlyActive: new Set(events.filter(e => {
+        const eventDate = new Date(e.created_at);
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return eventDate >= monthAgo;
+      }).map(e => e.user_id)).size
+    },
+    recentActivity: events.slice(0, 10)
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -107,6 +138,7 @@ export const useAnalytics = () => {
 
   return {
     events,
+    analytics,
     loading,
     trackEvent,
     getAnalyticsStats,
