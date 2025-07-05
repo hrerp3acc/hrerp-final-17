@@ -1,106 +1,155 @@
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface AnalyticsEvent {
-  id: string;
-  user_id: string;
-  event_type: string;
-  event_data: any;
-  module: string;
-  created_at: string;
-}
-
-interface AnalyticsData {
-  totalEvents: number;
-  moduleBreakdown: Record<string, number>;
-  recentActivity: AnalyticsEvent[];
-  userEngagement: {
-    dailyActive: number;
-    weeklyActive: number;
-    monthlyActive: number;
-  };
-}
+type AnalyticsEvent = Tables<'analytics_events'>;
+type UserActivityLog = Tables<'user_activity_logs'>;
 
 export const useAnalytics = () => {
-  const { user } = useUser();
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [events, setEvents] = useState<AnalyticsEvent[]>([]);
+  const [activityLogs, setActivityLogs] = useState<UserActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
-  const trackEvent = async (eventType: string, eventData: any, module: string) => {
-    if (!user?.id) return;
+  const fetchAnalyticsEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching analytics events:', error);
+    }
+  };
+
+  const fetchActivityLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_activity_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setActivityLogs(data || []);
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+    }
+  };
+
+  const trackEvent = async (eventType: string, module?: string, eventData?: object) => {
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from('analytics_events')
-        .insert({
+        .insert([{
           user_id: user.id,
           event_type: eventType,
-          event_data: eventData,
-          module: module
-        });
+          module,
+          event_data: eventData || {}
+        }]);
 
       if (error) throw error;
-    } catch (err) {
-      console.error('Error tracking event:', err);
+    } catch (error) {
+      console.error('Error tracking event:', error);
     }
   };
 
-  const fetchAnalytics = async () => {
-    if (!user?.id) return;
+  const logActivity = async (actionType: string, resourceType?: string, resourceId?: string, details?: object) => {
+    if (!user) return;
 
     try {
-      setLoading(true);
-      
-      // Fetch recent events
-      const { data: events, error: eventsError } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const { error } = await supabase
+        .from('user_activity_logs')
+        .insert([{
+          user_id: user.id,
+          action_type: actionType,
+          resource_type: resourceType,
+          resource_id: resourceId,
+          details: details || {}
+        }]);
 
-      if (eventsError) throw eventsError;
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  };
 
-      // Calculate analytics data
-      const moduleBreakdown: Record<string, number> = {};
-      events?.forEach(event => {
-        moduleBreakdown[event.module] = (moduleBreakdown[event.module] || 0) + 1;
-      });
+  const getAnalyticsStats = () => {
+    const totalEvents = events.length;
+    const uniqueUsers = new Set(events.map(e => e.user_id)).size;
+    const topModules = events.reduce((acc, event) => {
+      if (event.module) {
+        acc[event.module] = (acc[event.module] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
 
-      const analyticsData: AnalyticsData = {
-        totalEvents: events?.length || 0,
-        moduleBreakdown,
-        recentActivity: events?.slice(0, 10) || [],
-        userEngagement: {
-          dailyActive: events?.filter(e => 
-            new Date(e.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
-          ).length || 0,
-          weeklyActive: events?.filter(e => 
-            new Date(e.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          ).length || 0,
-          monthlyActive: events?.length || 0
-        }
+    const mostActiveModule = Object.entries(topModules)
+      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'None';
+
+    return {
+      totalEvents,
+      uniqueUsers,
+      mostActiveModule,
+      topModules
+    };
+  };
+
+  const getDashboardMetrics = async () => {
+    try {
+      // Fetch various metrics for dashboard
+      const [employeesResult, attendanceResult, goalsResult, coursesResult] = await Promise.all([
+        supabase.from('employees').select('id', { count: 'exact', head: true }),
+        supabase.from('attendance_records').select('id', { count: 'exact', head: true }),
+        supabase.from('performance_goals').select('id', { count: 'exact', head: true }),
+        supabase.from('courses').select('id', { count: 'exact', head: true })
+      ]);
+
+      return {
+        totalEmployees: employeesResult.count || 0,
+        totalAttendanceRecords: attendanceResult.count || 0,
+        totalGoals: goalsResult.count || 0,
+        totalCourses: coursesResult.count || 0
       };
-
-      setAnalytics(analyticsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch analytics');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching dashboard metrics:', error);
+      return {
+        totalEmployees: 0,
+        totalAttendanceRecords: 0,
+        totalGoals: 0,
+        totalCourses: 0
+      };
     }
   };
 
   useEffect(() => {
-    fetchAnalytics();
-  }, [user?.id]);
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchAnalyticsEvents(), fetchActivityLogs()]);
+      setLoading(false);
+    };
+
+    loadData();
+  }, [user]);
 
   return {
-    analytics,
+    events,
+    activityLogs,
     loading,
-    error,
     trackEvent,
-    refetch: fetchAnalytics
+    logActivity,
+    getAnalyticsStats,
+    getDashboardMetrics,
+    refetch: () => Promise.all([fetchAnalyticsEvents(), fetchActivityLogs()])
   };
 };

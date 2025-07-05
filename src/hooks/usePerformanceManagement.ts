@@ -1,11 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
-import { usePerformanceGoalsService } from '@/services/performanceGoalsService';
-import { usePerformanceReviewsService } from '@/services/performanceReviewsService';
-import { calculatePerformanceStats } from '@/utils/performanceStatsUtils';
 import type { Tables } from '@/integrations/supabase/types';
 
 type PerformanceGoal = Tables<'performance_goals'>;
@@ -15,64 +12,61 @@ export const usePerformanceManagement = () => {
   const [goals, setGoals] = useState<PerformanceGoal[]>([]);
   const [reviews, setReviews] = useState<PerformanceReview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const { user } = useAuth();
-  const { employees } = useSupabaseEmployees();
-
-  const goalsService = usePerformanceGoalsService();
-  const reviewsService = usePerformanceReviewsService();
-
-  const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
-
-  const checkIfManager = async () => {
-    if (!user?.id) return false;
-    
-    try {
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-      
-      return userRoles?.some(role => ['admin', 'manager'].includes(role.role)) || false;
-    } catch (error) {
-      console.error('Error checking manager status:', error);
-      return false;
-    }
-  };
 
   const fetchGoals = async () => {
-    if (!currentEmployee || !user) {
-      setGoals([]);
-      return;
-    }
-    
+    if (!user) return;
+
     try {
-      setError(null);
-      const isManager = await checkIfManager();
-      const data = await goalsService.fetchGoals(user.id, isManager, currentEmployee.id);
-      setGoals(data);
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!employee) return;
+
+      const { data, error } = await supabase
+        .from('performance_goals')
+        .select('*')
+        .eq('employee_id', employee.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setGoals(data || []);
     } catch (error) {
       console.error('Error fetching goals:', error);
-      setError('Failed to fetch performance goals');
-      setGoals([]);
+      toast({
+        title: "Error",
+        description: "Failed to fetch performance goals",
+        variant: "destructive"
+      });
     }
   };
 
   const fetchReviews = async () => {
-    if (!currentEmployee || !user) {
-      setReviews([]);
-      return;
-    }
-    
+    if (!user) return;
+
     try {
-      setError(null);
-      const isManager = await checkIfManager();
-      const data = await reviewsService.fetchReviews(user.id, isManager, currentEmployee.id);
-      setReviews(data);
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!employee) return;
+
+      const { data, error } = await supabase
+        .from('performance_reviews')
+        .select('*')
+        .eq('employee_id', employee.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReviews(data || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
-      setError('Failed to fetch performance reviews');
-      setReviews([]);
     }
   };
 
@@ -83,81 +77,113 @@ export const usePerformanceManagement = () => {
     target_date: string;
     weight?: number;
   }) => {
-    if (!currentEmployee) return null;
-    
-    const result = await goalsService.createGoal(currentEmployee.id, goalData);
-    if (result) {
+    if (!user) return null;
+
+    try {
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!employee) {
+        toast({
+          title: "Error",
+          description: "Employee record not found",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      const { data, error } = await supabase
+        .from('performance_goals')
+        .insert([{
+          employee_id: employee.id,
+          ...goalData
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Goal created successfully",
+      });
+
       await fetchGoals();
+      return data;
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create goal",
+        variant: "destructive"
+      });
+      return null;
     }
-    return result;
   };
 
-  const updateGoal = async (id: string, updates: Partial<PerformanceGoal>) => {
-    const result = await goalsService.updateGoal(id, updates);
-    if (result) {
+  const updateGoal = async (goalId: string, updates: Partial<PerformanceGoal>) => {
+    try {
+      const { error } = await supabase
+        .from('performance_goals')
+        .update(updates)
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Goal updated successfully",
+      });
+
       await fetchGoals();
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update goal",
+        variant: "destructive"
+      });
     }
-    return result;
   };
 
-  const createReview = async (reviewData: {
-    employee_id: string;
-    review_period_start: string;
-    review_period_end: string;
-    overall_rating?: number;
-    goals_rating?: number;
-    competencies_rating?: number;
-    achievements?: string;
-    areas_for_improvement?: string;
-    development_notes?: string;
-  }) => {
-    if (!currentEmployee) return null;
-    
-    const result = await reviewsService.createReview(currentEmployee.id, reviewData);
-    if (result) {
-      await fetchReviews();
-    }
-    return result;
-  };
+  const getGoalStats = () => {
+    const total = goals.length;
+    const completed = goals.filter(g => g.status === 'completed').length;
+    const inProgress = goals.filter(g => g.status === 'in_progress').length;
+    const notStarted = goals.filter(g => g.status === 'not_started').length;
+    const averageProgress = goals.length > 0 
+      ? goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length 
+      : 0;
 
-  const updateReview = async (id: string, updates: Partial<PerformanceReview>) => {
-    const result = await reviewsService.updateReview(id, updates);
-    if (result) {
-      await fetchReviews();
-    }
-    return result;
-  };
-
-  const getPerformanceStats = () => {
-    return calculatePerformanceStats(goals, reviews);
+    return {
+      total,
+      completed,
+      inProgress,
+      notStarted,
+      averageProgress: Math.round(averageProgress)
+    };
   };
 
   useEffect(() => {
-    if (currentEmployee && user) {
-      Promise.all([fetchGoals(), fetchReviews()])
-        .catch((error) => {
-          console.error('Error loading performance data:', error);
-          setError('Failed to load performance data');
-        })
-        .finally(() => setLoading(false));
-    } else {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchGoals(), fetchReviews()]);
       setLoading(false);
-      setGoals([]);
-      setReviews([]);
-      setError(null);
-    }
-  }, [currentEmployee, user]);
+    };
+
+    loadData();
+  }, [user]);
 
   return {
     goals,
     reviews,
     loading,
-    error,
     createGoal,
     updateGoal,
-    createReview,
-    updateReview,
-    getPerformanceStats,
+    getGoalStats,
     refetch: () => Promise.all([fetchGoals(), fetchReviews()])
   };
 };
