@@ -9,9 +9,10 @@ interface AttendanceStatsProps {
     late: number;
     total: number;
   };
+  showDetailed?: boolean;
 }
 
-const AttendanceStats = ({ stats }: AttendanceStatsProps) => {
+const AttendanceStats = ({ stats, showDetailed = false }: AttendanceStatsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card>
@@ -21,6 +22,9 @@ const AttendanceStats = ({ stats }: AttendanceStatsProps) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.total}</div>
+          {showDetailed && (
+            <p className="text-xs text-muted-foreground">All employees</p>
+          )}
         </CardContent>
       </Card>
 
@@ -31,6 +35,11 @@ const AttendanceStats = ({ stats }: AttendanceStatsProps) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">{stats.present}</div>
+          {showDetailed && (
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0}% attendance rate
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -41,6 +50,9 @@ const AttendanceStats = ({ stats }: AttendanceStatsProps) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-yellow-600">{stats.late}</div>
+          {showDetailed && (
+            <p className="text-xs text-muted-foreground">Late arrivals</p>
+          )}
         </CardContent>
       </Card>
 
@@ -51,6 +63,11 @@ const AttendanceStats = ({ stats }: AttendanceStatsProps) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
+          {showDetailed && (
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? Math.round((stats.absent / stats.total) * 100) : 0}% absence rate
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

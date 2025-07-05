@@ -161,7 +161,7 @@ const AttendanceDeviceManager = () => {
                   <p className="text-sm text-gray-600">Type: {device.device_type}</p>
                   <p className="text-sm text-gray-600">Location: {device.location}</p>
                   {device.ip_address && (
-                    <p className="text-sm text-gray-600">IP: {device.ip_address}</p>
+                    <p className="text-sm text-gray-600">IP: {String(device.ip_address)}</p>
                   )}
                   {device.last_sync && (
                     <p className="text-sm text-gray-600">

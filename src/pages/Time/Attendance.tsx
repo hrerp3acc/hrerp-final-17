@@ -16,6 +16,14 @@ const Attendance = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
+  // Mock stats data
+  const mockStats = {
+    present: 45,
+    absent: 5,
+    late: 8,
+    total: 58
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -46,7 +54,7 @@ const Attendance = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <AttendanceStats />
+          <AttendanceStats stats={mockStats} />
           
           <Card>
             <CardHeader>
@@ -116,7 +124,7 @@ const Attendance = () => {
                 <CardTitle>Attendance Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <AttendanceStats showDetailed />
+                <AttendanceStats stats={mockStats} showDetailed />
               </CardContent>
             </Card>
 

@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, Clock, User } from 'lucide-react';
@@ -15,12 +16,75 @@ interface AttendanceRecord {
 }
 
 interface AttendanceTableProps {
-  data: AttendanceRecord[];
-  selectedDate: string;
-  onRecordSelect: (record: AttendanceRecord) => void;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  selectedDepartment: string;
+  selectedStatus: string;
+  limit?: number;
 }
 
-const AttendanceTable = ({ data, selectedDate, onRecordSelect }: AttendanceTableProps) => {
+const AttendanceTable = ({ dateRange, selectedDepartment, selectedStatus, limit }: AttendanceTableProps) => {
+  const [data, setData] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Mock data for demonstration
+  useEffect(() => {
+    const mockData: AttendanceRecord[] = [
+      {
+        id: '1',
+        employee: 'John Doe',
+        department: 'IT',
+        checkIn: '09:00 AM',
+        checkOut: '05:30 PM',
+        totalHours: '8.5',
+        status: 'present',
+        overtime: '0.5'
+      },
+      {
+        id: '2',
+        employee: 'Jane Smith',
+        department: 'HR',
+        checkIn: '09:15 AM',
+        checkOut: '05:00 PM',
+        totalHours: '7.75',
+        status: 'late',
+        overtime: '0'
+      },
+      {
+        id: '3',
+        employee: 'Mike Johnson',
+        department: 'Finance',
+        checkIn: '-',
+        checkOut: '-',
+        totalHours: '0',
+        status: 'absent',
+        overtime: '0'
+      }
+    ];
+
+    // Filter data based on props
+    let filteredData = mockData;
+    
+    if (selectedDepartment !== 'all') {
+      filteredData = filteredData.filter(record => 
+        record.department.toLowerCase() === selectedDepartment.toLowerCase()
+      );
+    }
+    
+    if (selectedStatus !== 'all') {
+      filteredData = filteredData.filter(record => record.status === selectedStatus);
+    }
+    
+    if (limit) {
+      filteredData = filteredData.slice(0, limit);
+    }
+
+    setData(filteredData);
+    setLoading(false);
+  }, [dateRange, selectedDepartment, selectedStatus, limit]);
+
   const getStatusBadge = (status: string) => {
     const styles = {
       present: 'bg-green-100 text-green-800',
@@ -44,10 +108,20 @@ const AttendanceTable = ({ data, selectedDate, onRecordSelect }: AttendanceTable
     }
   };
 
+  const handleRecordSelect = (record: AttendanceRecord) => {
+    console.log('Selected record:', record);
+  };
+
+  if (loading) {
+    return <div>Loading attendance records...</div>;
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Attendance Records - {new Date(selectedDate).toLocaleDateString()}</CardTitle>
+        <CardTitle>
+          Attendance Records - {dateRange.start} to {dateRange.end}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -69,7 +143,7 @@ const AttendanceTable = ({ data, selectedDate, onRecordSelect }: AttendanceTable
                 <tr 
                   key={record.id} 
                   className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => onRecordSelect(record)}
+                  onClick={() => handleRecordSelect(record)}
                 >
                   <td className="py-3 px-4">
                     <div className="flex items-center space-x-3">
@@ -98,7 +172,7 @@ const AttendanceTable = ({ data, selectedDate, onRecordSelect }: AttendanceTable
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Handle edit action separately from row click
+                        console.log('Edit record:', record.id);
                       }}
                     >
                       Edit
@@ -108,6 +182,11 @@ const AttendanceTable = ({ data, selectedDate, onRecordSelect }: AttendanceTable
               ))}
             </tbody>
           </table>
+          {data.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No attendance records found for the selected criteria.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
