@@ -6,11 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
 type AnalyticsEvent = Tables<'analytics_events'>;
-type UserActivityLog = Tables<'user_activity_logs'>;
 
 export const useAnalytics = () => {
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
-  const [activityLogs, setActivityLogs] = useState<UserActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -30,21 +28,6 @@ export const useAnalytics = () => {
     }
   };
 
-  const fetchActivityLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-      setActivityLogs(data || []);
-    } catch (error) {
-      console.error('Error fetching activity logs:', error);
-    }
-  };
-
   const trackEvent = async (eventType: string, module?: string, eventData?: object) => {
     if (!user) return;
 
@@ -61,26 +44,6 @@ export const useAnalytics = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error tracking event:', error);
-    }
-  };
-
-  const logActivity = async (actionType: string, resourceType?: string, resourceId?: string, details?: object) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('user_activity_logs')
-        .insert([{
-          user_id: user.id,
-          action_type: actionType,
-          resource_type: resourceType,
-          resource_id: resourceId,
-          details: details || {}
-        }]);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error logging activity:', error);
     }
   };
 
@@ -135,7 +98,7 @@ export const useAnalytics = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchAnalyticsEvents(), fetchActivityLogs()]);
+      await fetchAnalyticsEvents();
       setLoading(false);
     };
 
@@ -144,12 +107,10 @@ export const useAnalytics = () => {
 
   return {
     events,
-    activityLogs,
     loading,
     trackEvent,
-    logActivity,
     getAnalyticsStats,
     getDashboardMetrics,
-    refetch: () => Promise.all([fetchAnalyticsEvents(), fetchActivityLogs()])
+    refetch: fetchAnalyticsEvents
   };
 };

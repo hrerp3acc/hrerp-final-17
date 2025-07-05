@@ -6,11 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Course = Tables<'courses'>;
-type LearningProgress = Tables<'learning_progress'>;
+type CourseEnrollment = Tables<'course_enrollments'>;
+type Certification = Tables<'certifications'>;
 
 export const useLearningDevelopment = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [learningProgress, setLearningProgress] = useState<LearningProgress[]>([]);
+  const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -35,7 +37,7 @@ export const useLearningDevelopment = () => {
     }
   };
 
-  const fetchLearningProgress = async () => {
+  const fetchEnrollments = async () => {
     if (!user) return;
 
     try {
@@ -48,15 +50,40 @@ export const useLearningDevelopment = () => {
       if (!employee) return;
 
       const { data, error } = await supabase
-        .from('learning_progress')
+        .from('course_enrollments')
+        .select('*')
+        .eq('employee_id', employee.id)
+        .order('enrolled_at', { ascending: false });
+
+      if (error) throw error;
+      setEnrollments(data || []);
+    } catch (error) {
+      console.error('Error fetching enrollments:', error);
+    }
+  };
+
+  const fetchCertifications = async () => {
+    if (!user) return;
+
+    try {
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!employee) return;
+
+      const { data, error } = await supabase
+        .from('certifications')
         .select('*')
         .eq('employee_id', employee.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setLearningProgress(data || []);
+      setCertifications(data || []);
     } catch (error) {
-      console.error('Error fetching learning progress:', error);
+      console.error('Error fetching certifications:', error);
     }
   };
 
@@ -87,12 +114,11 @@ export const useLearningDevelopment = () => {
       }
 
       const { error } = await supabase
-        .from('learning_progress')
+        .from('course_enrollments')
         .insert([{
           employee_id: employee.id,
           course_id: courseId,
-          status: 'in_progress',
-          started_at: new Date().toISOString()
+          status: 'enrolled'
         }]);
 
       if (error) throw error;
@@ -102,7 +128,7 @@ export const useLearningDevelopment = () => {
         description: "Successfully enrolled in course",
       });
 
-      await fetchLearningProgress();
+      await fetchEnrollments();
     } catch (error) {
       console.error('Error enrolling in course:', error);
       toast({
@@ -113,19 +139,19 @@ export const useLearningDevelopment = () => {
     }
   };
 
-  const updateProgress = async (progressId: string, percentage: number) => {
+  const updateProgress = async (enrollmentId: string, progress: number) => {
     try {
-      const status = percentage >= 100 ? 'completed' : 'in_progress';
-      const completedAt = percentage >= 100 ? new Date().toISOString() : null;
+      const status = progress >= 100 ? 'completed' : 'enrolled';
+      const completedAt = progress >= 100 ? new Date().toISOString() : null;
 
       const { error } = await supabase
-        .from('learning_progress')
+        .from('course_enrollments')
         .update({
-          progress_percentage: percentage,
+          progress,
           status,
           completed_at: completedAt
         })
-        .eq('id', progressId);
+        .eq('id', enrollmentId);
 
       if (error) throw error;
 
@@ -134,7 +160,7 @@ export const useLearningDevelopment = () => {
         description: "Progress updated successfully",
       });
 
-      await fetchLearningProgress();
+      await fetchEnrollments();
     } catch (error) {
       console.error('Error updating progress:', error);
       toast({
@@ -148,7 +174,7 @@ export const useLearningDevelopment = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchCourses(), fetchLearningProgress()]);
+      await Promise.all([fetchCourses(), fetchEnrollments(), fetchCertifications()]);
       setLoading(false);
     };
 
@@ -157,10 +183,11 @@ export const useLearningDevelopment = () => {
 
   return {
     courses,
-    learningProgress,
+    enrollments,
+    certifications,
     loading,
     enrollInCourse,
     updateProgress,
-    refetch: () => Promise.all([fetchCourses(), fetchLearningProgress()])
+    refetch: () => Promise.all([fetchCourses(), fetchEnrollments(), fetchCertifications()])
   };
 };

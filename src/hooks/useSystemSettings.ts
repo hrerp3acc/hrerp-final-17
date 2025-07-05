@@ -4,17 +4,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
-type SystemSetting = Tables<'system_settings'>;
+type SystemConfig = Tables<'system_configs'>;
 
 export const useSystemSettings = () => {
-  const [settings, setSettings] = useState<SystemSetting[]>([]);
+  const [settings, setSettings] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchSettings = async () => {
     try {
       const { data, error } = await supabase
-        .from('system_settings')
+        .from('system_configs')
         .select('*')
         .order('category', { ascending: true });
 
@@ -32,15 +32,15 @@ export const useSystemSettings = () => {
     }
   };
 
-  const updateSetting = async (settingKey: string, value: any) => {
+  const updateSetting = async (configKey: string, value: any) => {
     try {
       const { error } = await supabase
-        .from('system_settings')
+        .from('system_configs')
         .update({ 
-          setting_value: typeof value === 'string' ? `"${value}"` : value,
+          config_value: typeof value === 'string' ? `"${value}"` : value,
           updated_at: new Date().toISOString()
         })
-        .eq('setting_key', settingKey);
+        .eq('config_key', configKey);
 
       if (error) throw error;
 
@@ -61,20 +61,20 @@ export const useSystemSettings = () => {
   };
 
   const createSetting = async (settingData: {
-    setting_key: string;
-    setting_value: any;
+    config_key: string;
+    config_value: any;
     category?: string;
     description?: string;
     is_public?: boolean;
   }) => {
     try {
       const { error } = await supabase
-        .from('system_settings')
+        .from('system_configs')
         .insert([{
           ...settingData,
-          setting_value: typeof settingData.setting_value === 'string' 
-            ? `"${settingData.setting_value}"` 
-            : settingData.setting_value
+          config_value: typeof settingData.config_value === 'string' 
+            ? `"${settingData.config_value}"` 
+            : settingData.config_value
         }]);
 
       if (error) throw error;
@@ -96,16 +96,16 @@ export const useSystemSettings = () => {
   };
 
   const getSetting = (key: string) => {
-    const setting = settings.find(s => s.setting_key === key);
+    const setting = settings.find(s => s.config_key === key);
     if (!setting) return null;
     
     try {
       // Handle JSON parsing
-      return typeof setting.setting_value === 'string' 
-        ? JSON.parse(setting.setting_value as string)
-        : setting.setting_value;
+      return typeof setting.config_value === 'string' 
+        ? JSON.parse(setting.config_value as string)
+        : setting.config_value;
     } catch {
-      return setting.setting_value;
+      return setting.config_value;
     }
   };
 
