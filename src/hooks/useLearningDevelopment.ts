@@ -9,9 +9,14 @@ type Course = Tables<'courses'>;
 type CourseEnrollment = Tables<'course_enrollments'>;
 type Certification = Tables<'certifications'>;
 
+// Extended enrollment type with course details
+type EnrollmentWithCourse = CourseEnrollment & {
+  courses: Course;
+};
+
 export const useLearningDevelopment = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -51,12 +56,15 @@ export const useLearningDevelopment = () => {
 
       const { data, error } = await supabase
         .from('course_enrollments')
-        .select('*')
+        .select(`
+          *,
+          courses (*)
+        `)
         .eq('employee_id', employee.id)
         .order('enrolled_at', { ascending: false });
 
       if (error) throw error;
-      setEnrollments(data || []);
+      setEnrollments(data as EnrollmentWithCourse[] || []);
     } catch (error) {
       console.error('Error fetching enrollments:', error);
     }

@@ -38,7 +38,7 @@ export const useAnalytics = () => {
           user_id: user.id,
           event_type: eventType,
           module,
-          event_data: eventData || {}
+          event_data: (eventData || {}) as any
         }]);
 
       if (error) throw error;
@@ -97,7 +97,7 @@ export const useAnalytics = () => {
 
   // Add analytics property for compatibility
   const analytics = {
-    totalEvents,
+    totalEvents: events.length,
     moduleBreakdown: events.reduce((acc, event) => {
       if (event.module) {
         acc[event.module] = (acc[event.module] || 0) + 1;

@@ -115,7 +115,7 @@ export const useRecruitment = () => {
     }
   };
 
-  const updateApplicationStatus = async (applicationId: string, status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected') => {
+  const updateApplicationStatus = async (applicationId: string, status: JobApplication['status']) => {
     try {
       const { error } = await supabase
         .from('job_applications')
@@ -146,6 +146,7 @@ export const useRecruitment = () => {
     const totalApplications = jobApplications.length;
     const pendingApplications = jobApplications.filter(a => a.status === 'applied').length;
     const interviewScheduled = jobApplications.filter(a => a.status === 'interview').length;
+    const hiredApplications = jobApplications.filter(a => a.status === 'hired').length;
 
     return {
       totalPostings,
@@ -156,9 +157,9 @@ export const useRecruitment = () => {
       // Additional stats for compatibility
       totalJobs: totalPostings,
       activeJobs: openPositions,
-      hiredApplications: jobApplications.filter(a => a.status === 'hired').length,
+      hiredApplications,
       avgApplicationsPerJob: totalPostings > 0 ? Math.round(totalApplications / totalPostings) : 0,
-      hireRate: totalApplications > 0 ? Math.round((jobApplications.filter(a => a.status === 'hired').length / totalApplications) * 100) : 0
+      hireRate: totalApplications > 0 ? Math.round((hiredApplications / totalApplications) * 100) : 0
     };
   };
 

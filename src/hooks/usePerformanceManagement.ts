@@ -6,9 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
 type PerformanceGoal = Tables<'performance_goals'>;
+type PerformanceReview = Tables<'performance_reviews'>;
 
 export const usePerformanceManagement = () => {
   const [goals, setGoals] = useState<PerformanceGoal[]>([]);
+  const [reviews, setReviews] = useState<PerformanceReview[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -29,6 +31,20 @@ export const usePerformanceManagement = () => {
         description: "Failed to fetch performance goals",
         variant: "destructive"
       });
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('performance_reviews')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReviews(data || []);
+    } catch (error) {
+      console.error('Error fetching performance reviews:', error);
     }
   };
 
@@ -128,6 +144,15 @@ export const usePerformanceManagement = () => {
       ? Math.round(goals.reduce((acc, goal) => acc + (goal.progress || 0), 0) / goals.length)
       : 0;
 
+    const completionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+    
+    // Add review stats
+    const pendingReviews = reviews.filter(r => r.status === 'in_progress' || r.status === 'draft').length;
+    const completedReviews = reviews.filter(r => r.status === 'completed').length;
+    const avgRating = reviews.length > 0 
+      ? Math.round((reviews.reduce((acc, review) => acc + (review.overall_rating || 0), 0) / reviews.length) * 10) / 10
+      : 0;
+
     return {
       totalGoals,
       completedGoals,
@@ -135,14 +160,17 @@ export const usePerformanceManagement = () => {
       notStartedGoals,
       overdueGoals,
       avgProgress,
-      completionRate: totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
+      completionRate,
+      pendingReviews,
+      completedReviews,
+      avgRating
     };
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await fetchGoals();
+      await Promise.all([fetchGoals(), fetchReviews()]);
       setLoading(false);
     };
 
@@ -151,11 +179,12 @@ export const usePerformanceManagement = () => {
 
   return {
     goals,
+    reviews,
     loading,
     createGoal,
     updateGoal,
     deleteGoal,
     getPerformanceStats,
-    refetch: fetchGoals
+    refetch: () => Promise.all([fetchGoals(), fetchReviews()])
   };
 };

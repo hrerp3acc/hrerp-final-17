@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePerformanceManagement } from '@/hooks/usePerformanceManagement';
+import { useAuth } from '@/contexts/AuthContext';
 import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,16 +28,30 @@ export const GoalDialog = ({ children }: GoalDialogProps) => {
   });
   const [date, setDate] = useState<Date>();
   const { createGoal } = usePerformanceManagement();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!date) return;
+    if (!date || !user) return;
+
+    // Get employee ID from user
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!employee) {
+      console.error('Employee record not found');
+      return;
+    }
     
     const result = await createGoal({
       ...formData,
       target_date: format(date, 'yyyy-MM-dd'),
-      weight: formData.weight || 100
+      weight: formData.weight || 100,
+      employee_id: employee.id
     });
     
     if (result) {
