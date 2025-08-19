@@ -6,6 +6,10 @@ import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 import { useSupabaseAnalytics } from '@/hooks/useSupabaseAnalytics';
 import QuickActions from '@/components/Dashboard/QuickActions';
 import NotificationCenter from '@/components/Notifications/NotificationCenter';
+import AttendanceHeatmap from '@/components/Dashboard/Charts/AttendanceHeatmap';
+import RadialPerformanceChart from '@/components/Dashboard/Charts/RadialPerformanceChart';
+import DepartmentGrowthChart from '@/components/Dashboard/Charts/DepartmentGrowthChart';
+import MultiMetricTimeSeriesChart from '@/components/Dashboard/Charts/MultiMetricTimeSeriesChart';
 
 const Dashboard = () => {
   const { employees, loading: employeesLoading, getEmployeeStats } = useSupabaseEmployees();
@@ -33,95 +37,128 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Employees</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeEmployees}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Analytics Events</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{events.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Modules</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{moduleStats.length}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
-        <div className="lg:col-span-1">
-          <QuickActions />
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Executive Dashboard
+        </h1>
+        <div className="text-sm text-muted-foreground">
+          Real-time HR Analytics
         </div>
+      </div>
 
-        {/* Department Distribution */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Department Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.departmentStats.map((dept, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{dept.department}</span>
-                    <span className="text-sm text-gray-600">{dept.count} employees</span>
-                  </div>
-                ))}
+      {/* Quick Stats - Simplified */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-chart-1/10">
+                <Users className="h-5 w-5 text-chart-1" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+                <div className="text-xs text-muted-foreground">Total Employees</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Notifications Panel */}
-        <div className="lg:col-span-1">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-chart-2/10">
+                <UserCheck className="h-5 w-5 text-chart-2" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{stats.activeEmployees}</div>
+                <div className="text-xs text-muted-foreground">Active Today</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-chart-3/10">
+                <TrendingUp className="h-5 w-5 text-chart-3" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{events.length}</div>
+                <div className="text-xs text-muted-foreground">System Events</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-chart-4/10">
+                <Clock className="h-5 w-5 text-chart-4" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{moduleStats.length}</div>
+                <div className="text-xs text-muted-foreground">Active Modules</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Advanced Analytics Row 1 */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <RadialPerformanceChart />
+        <DepartmentGrowthChart />
+      </div>
+
+      {/* Advanced Analytics Row 2 */}
+      <div className="grid grid-cols-1 gap-6">
+        <MultiMetricTimeSeriesChart />
+      </div>
+
+      {/* Advanced Analytics Row 3 */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <AttendanceHeatmap />
+        </div>
+        
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <QuickActions />
+          
+          {/* Notifications Panel */}
           <NotificationCenter />
         </div>
       </div>
 
-      {/* Module Activity */}
-      <Card>
+      {/* Department Stats - Enhanced */}
+      <Card className="bg-gradient-to-r from-muted/50 to-background">
         <CardHeader>
-          <CardTitle>Module Activity</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Department Overview
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {stats.departmentStats.map((dept, index) => (
+              <div 
+                key={index} 
+                className="text-center p-4 rounded-lg border bg-card hover:shadow-md transition-all"
+              >
+                <div className="text-2xl font-bold text-primary">{dept.count}</div>
+                <div className="text-sm font-medium">{dept.department}</div>
+                <div className="text-xs text-muted-foreground">employees</div>
+              </div>
+            ))}
+            
             {moduleStats.map((module, index) => (
-              <div key={index} className="text-center p-4 border rounded-lg">
-                <h4 className="font-medium capitalize">{module.module}</h4>
-                <p className="text-2xl font-bold text-blue-600">{module.count}</p>
-                <p className="text-xs text-gray-500">events</p>
+              <div 
+                key={`module-${index}`} 
+                className="text-center p-4 rounded-lg border bg-card/50 hover:shadow-md transition-all"
+              >
+                <div className="text-2xl font-bold text-chart-3">{module.count}</div>
+                <div className="text-sm font-medium capitalize">{module.module}</div>
+                <div className="text-xs text-muted-foreground">events</div>
               </div>
             ))}
           </div>
