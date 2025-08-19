@@ -54,7 +54,7 @@ const Attendance = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <AttendanceStats stats={mockStats} />
+          <AttendanceStats />
           
           <Card>
             <CardHeader>
@@ -124,7 +124,7 @@ const Attendance = () => {
                 <CardTitle>Attendance Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <AttendanceStats stats={mockStats} showDetailed />
+                <AttendanceStats showDetailed />
               </CardContent>
             </Card>
 

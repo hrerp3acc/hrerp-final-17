@@ -250,16 +250,36 @@ export const useAttendance = () => {
   };
 
   const getAttendanceStats = () => {
-    const present = attendanceRecords.filter(r => r.status === 'present').length;
-    const absent = attendanceRecords.filter(r => r.status === 'absent').length;
-    const late = attendanceRecords.filter(r => r.status === 'late').length;
-    const total = attendanceRecords.length;
+    const today = new Date().toISOString().split('T')[0];
+    const thisMonth = new Date();
+    const firstDayOfMonth = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 1).toISOString().split('T')[0];
+    
+    // Today's stats
+    const todayRecords = attendanceRecords.filter(r => r.date === today);
+    const todayPresent = todayRecords.filter(r => r.status === 'present').length;
+    const todayAbsent = todayRecords.filter(r => r.status === 'absent').length;
+    const todayTotal = todayRecords.length;
+    
+    // Monthly stats
+    const monthlyRecords = attendanceRecords.filter(r => r.date >= firstDayOfMonth);
+    const totalHours = monthlyRecords.reduce((sum, r) => sum + (r.total_hours || 0), 0);
+    const workingDays = monthlyRecords.filter(r => r.total_hours && r.total_hours > 0).length;
+    const averageHours = workingDays > 0 ? (totalHours / workingDays).toFixed(1) : '0.0';
+    
+    const monthlyPresent = monthlyRecords.filter(r => r.status === 'present').length;
+    const monthlyTotal = monthlyRecords.length;
+    const attendanceRate = monthlyTotal > 0 ? Math.round((monthlyPresent / monthlyTotal) * 100) : 0;
     
     return {
-      present,
-      absent,
-      late,
-      total
+      today: {
+        present: todayPresent,
+        absent: todayAbsent,
+        total: todayTotal
+      },
+      monthly: {
+        averageHours,
+        attendanceRate
+      }
     };
   };
 
