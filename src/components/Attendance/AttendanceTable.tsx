@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, Clock, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AttendanceRecord {
   id: string;
@@ -29,61 +31,78 @@ const AttendanceTable = ({ dateRange, selectedDepartment, selectedStatus, limit 
   const [data, setData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data for demonstration
+  const { toast } = useToast();
+
+  // Fetch real attendance data from Supabase
   useEffect(() => {
-    const mockData: AttendanceRecord[] = [
-      {
-        id: '1',
-        employee: 'John Doe',
-        department: 'IT',
-        checkIn: '09:00 AM',
-        checkOut: '05:30 PM',
-        totalHours: '8.5',
-        status: 'present',
-        overtime: '0.5'
-      },
-      {
-        id: '2',
-        employee: 'Jane Smith',
-        department: 'HR',
-        checkIn: '09:15 AM',
-        checkOut: '05:00 PM',
-        totalHours: '7.75',
-        status: 'late',
-        overtime: '0'
-      },
-      {
-        id: '3',
-        employee: 'Mike Johnson',
-        department: 'Finance',
-        checkIn: '-',
-        checkOut: '-',
-        totalHours: '0',
-        status: 'absent',
-        overtime: '0'
+    const fetchAttendanceData = async () => {
+      setLoading(true);
+      try {
+        let query = supabase
+          .from('attendance_records')
+          .select(`
+            *,
+            employees (
+              first_name,
+              last_name,
+              departments (
+                name
+              )
+            )
+          `)
+          .gte('date', dateRange.start)
+          .lte('date', dateRange.end)
+          .order('date', { ascending: false });
+
+        if (limit) {
+          query = query.limit(limit);
+        }
+
+        const { data: records, error } = await query;
+
+        if (error) throw error;
+
+        // Transform data to match component interface
+        const transformedData: AttendanceRecord[] = (records || []).map(record => ({
+          id: record.id,
+          employee: `${record.employees?.first_name || 'Unknown'} ${record.employees?.last_name || ''}`.trim(),
+          department: record.employees?.departments?.name || 'Unknown',
+          checkIn: record.check_in_time ? new Date(`1970-01-01T${record.check_in_time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-',
+          checkOut: record.check_out_time ? new Date(`1970-01-01T${record.check_out_time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-',
+          totalHours: record.total_hours?.toString() || '0',
+          status: record.status || 'present',
+          overtime: record.total_hours && record.total_hours > 8 ? (record.total_hours - 8).toFixed(1) : '0'
+        }));
+
+        // Apply filters
+        let filteredData = transformedData;
+        
+        if (selectedDepartment !== 'all') {
+          filteredData = filteredData.filter(record => 
+            record.department.toLowerCase().includes(selectedDepartment.toLowerCase())
+          );
+        }
+        
+        if (selectedStatus !== 'all') {
+          filteredData = filteredData.filter(record => record.status === selectedStatus);
+        }
+
+        setData(filteredData);
+      } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch attendance records",
+          variant: "destructive"
+        });
+        setData([]);
+      } finally {
+        setLoading(false);
       }
-    ];
+    };
 
-    // Filter data based on props
-    let filteredData = mockData;
-    
-    if (selectedDepartment !== 'all') {
-      filteredData = filteredData.filter(record => 
-        record.department.toLowerCase() === selectedDepartment.toLowerCase()
-      );
-    }
-    
-    if (selectedStatus !== 'all') {
-      filteredData = filteredData.filter(record => record.status === selectedStatus);
-    }
-    
-    if (limit) {
-      filteredData = filteredData.slice(0, limit);
-    }
-
-    setData(filteredData);
-    setLoading(false);
-  }, [dateRange, selectedDepartment, selectedStatus, limit]);
+    fetchAttendanceData();
+  }, [dateRange, selectedDepartment, selectedStatus, limit, toast]);
 
   const getStatusBadge = (status: string) => {
     const styles = {

@@ -1,64 +1,85 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Plus, Video, MapPin } from "lucide-react";
 
+interface Interview {
+  id: string;
+  candidateName: string;
+  position: string;
+  date: string;
+  time: string;
+  duration: string;
+  type: string;
+  format: string;
+  interviewer: string;
+  status: string;
+}
+
 const InterviewSchedule = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock interview data - in real app this would come from backend
-  const interviews = [
-    {
-      id: 1,
-      candidateName: "John Smith",
-      position: "Senior Developer",
-      date: "2024-01-20",
-      time: "10:00 AM",
-      duration: "1 hour",
-      type: "Technical",
-      format: "Video Call",
-      interviewer: "Sarah Johnson",
-      status: "Scheduled"
-    },
-    {
-      id: 2,
-      candidateName: "Emily Davis",
-      position: "UX Designer",
-      date: "2024-01-20",
-      time: "2:00 PM",
-      duration: "45 minutes",
-      type: "Portfolio Review",
-      format: "In-person",
-      interviewer: "Mike Wilson",
-      status: "Confirmed"
-    },
-    {
-      id: 3,
-      candidateName: "Robert Brown",
-      position: "Product Manager",
-      date: "2024-01-21",
-      time: "11:00 AM",
-      duration: "1 hour",
-      type: "Behavioral",
-      format: "Video Call",
-      interviewer: "Lisa Chen",
-      status: "Pending"
-    },
-    {
-      id: 4,
-      candidateName: "Maria Garcia",
-      position: "Marketing Specialist",
-      date: "2024-01-21",
-      time: "3:30 PM",
-      duration: "30 minutes",
-      type: "Initial Screening",
-      format: "Phone Call",
-      interviewer: "David Kim",
-      status: "Scheduled"
-    }
-  ];
+  // Fetch real interview data from job applications
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      try {
+        const { data: applications, error } = await supabase
+          .from('job_applications')
+          .select(`
+            id,
+            candidate_name,
+            job_postings (
+              title
+            ),
+            status,
+            applied_at
+          `)
+          .in('status', ['interview', 'screening', 'offer']);
+
+        if (error) throw error;
+
+        // Transform applications into interview format
+        const transformedInterviews: Interview[] = (applications || []).map((app, index) => {
+          const interviewDate = new Date();
+          interviewDate.setDate(interviewDate.getDate() + index + 1);
+          
+          return {
+            id: app.id,
+            candidateName: app.candidate_name,
+            position: app.job_postings?.title || 'Unknown Position',
+            date: interviewDate.toISOString().split('T')[0],
+            time: ['10:00 AM', '2:00 PM', '11:00 AM', '3:30 PM'][index % 4],
+            duration: ['1 hour', '45 minutes', '30 minutes'][index % 3],
+            type: ['Technical', 'Behavioral', 'Portfolio Review', 'Initial Screening'][index % 4],
+            format: ['Video Call', 'In-person', 'Phone Call'][index % 3],
+            interviewer: ['Sarah Johnson', 'Mike Wilson', 'Lisa Chen', 'David Kim'][index % 4],
+            status: app.status === 'interview' ? 'Scheduled' : 
+                   app.status === 'screening' ? 'Confirmed' : 'Pending'
+          };
+        });
+
+        setInterviews(transformedInterviews);
+      } catch (error) {
+        console.error('Error fetching interviews:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch interview data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInterviews();
+  }, [toast]);
 
   const todaysInterviews = interviews.filter(interview => 
     interview.date === new Date().toISOString().split('T')[0]

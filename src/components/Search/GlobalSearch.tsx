@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Search, User, Calendar, FileText, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface SearchResult {
   id: string;
@@ -22,28 +24,109 @@ const GlobalSearch = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Mock search data
-  const searchData: SearchResult[] = [
-    { id: '1', title: 'Sarah Johnson', subtitle: 'Marketing Manager', type: 'employee', url: '/employees/1' },
-    { id: '2', title: 'Michael Chen', subtitle: 'Senior Developer', type: 'employee', url: '/employees/2' },
-    { id: '3', title: 'Annual Leave Request', subtitle: 'Pending approval', type: 'leave', url: '/leave/my-leaves' },
-    { id: '4', title: 'Q3 Performance Review', subtitle: 'Due next week', type: 'document', url: '/performance' },
-    { id: '5', title: 'Weekly Timesheet', subtitle: 'Submit by Friday', type: 'timesheet', url: '/time/timesheets' },
-  ];
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (query.length > 1) {
-      const filtered = searchData.filter(item =>
-        item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.subtitle.toLowerCase().includes(query.toLowerCase())
-      );
-      setResults(filtered);
-      setIsOpen(true);
-      setSelectedIndex(-1);
-    } else {
+  // Search across multiple data sources
+  const performSearch = async (searchQuery: string) => {
+    if (searchQuery.length < 2) {
       setResults([]);
       setIsOpen(false);
+      return;
     }
+
+    try {
+      const searchResults: SearchResult[] = [];
+
+      // Search employees
+      const { data: employees } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name, position')
+        .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,position.ilike.%${searchQuery}%`)
+        .limit(3);
+
+      if (employees) {
+        employees.forEach(emp => {
+          searchResults.push({
+            id: emp.id,
+            title: `${emp.first_name} ${emp.last_name}`,
+            subtitle: emp.position || 'Employee',
+            type: 'employee',
+            url: `/employees/${emp.id}`
+          });
+        });
+      }
+
+      // Search leave applications  
+      const { data: leaves } = await supabase
+        .from('leave_applications')
+        .select(`
+          id, 
+          leave_type, 
+          status,
+          employee:employees!leave_applications_employee_id_fkey (first_name, last_name)
+        `)
+        .eq('status', 'pending')
+        .limit(2);
+
+      if (leaves) {
+        leaves.forEach(leave => {
+          if (leave.employee) {
+            searchResults.push({
+              id: leave.id,
+              title: `${leave.leave_type} Leave`,
+              subtitle: `${leave.employee.first_name} ${leave.employee.last_name} - ${leave.status}`,
+              type: 'leave',
+              url: '/leave/management'
+            });
+          }
+        });
+      }
+
+      // Search performance goals
+      const { data: goals } = await supabase
+        .from('performance_goals')
+        .select(`
+          id, 
+          title, 
+          status,
+          employee:employees!performance_goals_employee_id_fkey (first_name, last_name)
+        `)
+        .ilike('title', `%${searchQuery}%`)
+        .limit(2);
+
+      if (goals) {
+        goals.forEach(goal => {
+          if (goal.employee) {
+            searchResults.push({
+              id: goal.id,
+              title: goal.title,
+              subtitle: `${goal.employee.first_name} ${goal.employee.last_name} - ${goal.status}`,
+              type: 'document',
+              url: '/performance'
+            });
+          }
+        });
+      }
+
+      setResults(searchResults);
+      setIsOpen(true);
+      setSelectedIndex(-1);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to perform search",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      performSearch(query);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
   }, [query]);
 
   useEffect(() => {

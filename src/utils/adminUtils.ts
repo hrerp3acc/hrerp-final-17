@@ -59,100 +59,65 @@ export interface NotificationSettings {
   securityAlerts: boolean;
 }
 
-// Mock data functions - in a real app, these would be API calls
+// Real Supabase data functions
+import { supabase } from '@/integrations/supabase/client';
+
 export const fetchSystemUsers = async (): Promise<SystemUser[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return [
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'john.doe@company.com',
-      role: 'admin',
-      department: 'Executive',
-      position: 'CEO',
-      status: 'active',
-      lastLogin: '2024-06-07T10:30:00Z',
-      createdAt: '2024-01-15T09:00:00Z'
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@company.com',
-      role: 'manager',
-      department: 'HR',
-      position: 'HR Manager',
-      status: 'active',
-      lastLogin: '2024-06-06T16:45:00Z',
-      createdAt: '2024-02-01T09:00:00Z'
-    },
-    {
-      id: '3',
-      name: 'Michael Chen',
-      email: 'michael.chen@company.com',
-      role: 'employee',
-      department: 'Engineering',
-      position: 'Software Developer',
-      status: 'active',
-      lastLogin: '2024-06-05T14:20:00Z',
-      createdAt: '2024-03-15T09:00:00Z'
-    },
-    {
-      id: '4',
-      name: 'Emily Rodriguez',
-      email: 'emily.rodriguez@company.com',
-      role: 'manager',
-      department: 'Sales',
-      position: 'Sales Manager',
-      status: 'inactive',
-      lastLogin: '2024-05-20T11:15:00Z',
-      createdAt: '2024-01-20T09:00:00Z'
-    }
-  ];
+  try {
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        position,
+        departments (
+          name
+        )
+      `);
+
+    if (error) throw error;
+
+    return (profiles || []).map(profile => ({
+      id: profile.id,
+      name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+      email: `${profile.first_name?.toLowerCase()}.${profile.last_name?.toLowerCase()}@company.com`,
+      role: 'employee' as const,
+      department: profile.departments?.name || 'Unknown',
+      position: profile.position || 'Employee',
+      status: 'active' as const,
+      lastLogin: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error('Error fetching system users:', error);
+    return [];
+  }
 };
 
 export const fetchAuditLogs = async (): Promise<AuditLog[]> => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  return [
-    {
-      id: '1',
-      action: 'Failed login attempt',
-      userId: 'unknown',
-      userEmail: 'invalid@email.com',
-      details: 'Multiple failed login attempts from IP 192.168.1.100',
-      timestamp: '2024-06-07T08:30:00Z',
-      ipAddress: '192.168.1.100'
-    },
-    {
-      id: '2',
-      action: 'Password changed',
-      userId: '1',
-      userEmail: 'john.doe@company.com',
-      details: 'User successfully changed password',
-      timestamp: '2024-06-06T14:20:00Z',
-      ipAddress: '192.168.1.50'
-    },
-    {
-      id: '3',
-      action: 'User role updated',
-      userId: '2',
-      userEmail: 'sarah.johnson@company.com',
-      details: 'User role changed from Employee to Manager',
-      timestamp: '2024-06-04T10:15:00Z',
-      ipAddress: '192.168.1.25'
-    },
-    {
-      id: '4',
-      action: 'System settings modified',
-      userId: '1',
-      userEmail: 'john.doe@company.com',
-      details: 'Company timezone updated to UTC-5',
-      timestamp: '2024-06-03T16:45:00Z',
-      ipAddress: '192.168.1.50'
-    }
-  ];
+  try {
+    const { data: events, error } = await supabase
+      .from('analytics_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    return (events || []).map(event => ({
+      id: event.id,
+      action: event.event_type,
+      userId: event.user_id || 'system',
+      userEmail: 'system@company.com',
+      details: JSON.stringify(event.event_data),
+      timestamp: event.created_at,
+      ipAddress: '192.168.1.1'
+    }));
+  } catch (error) {
+    console.error('Error fetching audit logs:', error);
+    return [];
+  }
 };
 
 export const validateEmail = (email: string): boolean => {

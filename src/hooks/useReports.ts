@@ -68,12 +68,22 @@ export const useReports = () => {
     if (!user?.id) return null;
 
     try {
-      // Simulate report generation with mock data
-      const mockReportData = {
-        summary: { total_records: 150, processed_at: new Date().toISOString() },
+      // Generate report with real data
+      const { data: employees } = await supabase.from('employees').select('*');
+      const { data: attendance } = await supabase.from('attendance_records').select('*');
+      const { data: leaves } = await supabase.from('leave_applications').select('*');
+      
+      const reportData = {
+        summary: { 
+          total_employees: employees?.length || 0,
+          total_attendance_records: attendance?.length || 0,
+          total_leave_applications: leaves?.length || 0,
+          processed_at: new Date().toISOString() 
+        },
         charts: [
-          { type: 'bar', data: [10, 20, 30, 40, 50] },
-          { type: 'pie', data: [{ label: 'A', value: 30 }, { label: 'B', value: 70 }] }
+          { type: 'employee_distribution', count: employees?.length || 0 },
+          { type: 'attendance_summary', count: attendance?.length || 0 },
+          { type: 'leave_analysis', count: leaves?.length || 0 }
         ]
       };
 
@@ -83,7 +93,7 @@ export const useReports = () => {
           template_id: templateId,
           name,
           description,
-          report_data: mockReportData,
+          report_data: reportData,
           status: 'generated',
           file_size: '2.4 MB',
           generated_by: user.id

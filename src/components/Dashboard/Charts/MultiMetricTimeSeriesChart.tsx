@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
@@ -68,7 +69,7 @@ const MultiMetricTimeSeriesChart = () => {
     generateTimeSeriesData();
   }, [timeRange, events, attendanceRecords, goals]);
 
-  const generateTimeSeriesData = () => {
+  const generateTimeSeriesData = async () => {
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
     const endDate = new Date();
     const startDate = new Date();
@@ -95,16 +96,31 @@ const MultiMetricTimeSeriesChart = () => {
       const dailyEvents = events.filter(e => e.created_at.startsWith(dateStr)).length;
       const activityScore = Math.min(100, dailyEvents * 5);
       
-      // Calculate leave applications (simulated)
-      const leaveScore = Math.random() * 20; // Mock data
-      
-      dataPoints.push({
-        date: dateStr,
-        attendance: Math.round(attendanceRate),
-        performance: Math.round(avgProgress),
-        activity: Math.round(activityScore),
-        leaves: Math.round(leaveScore)
-      });
+      // Calculate leave applications (real data)
+      try {
+        const { data: leaveData } = await supabase
+          .from('leave_applications')
+          .select('id')
+          .eq('start_date', dateStr);
+        const leaveScore = (leaveData?.length || 0) * 5;
+        
+        dataPoints.push({
+          date: dateStr,
+          attendance: Math.round(attendanceRate),
+          performance: Math.round(avgProgress),
+          activity: Math.round(activityScore),
+          leaves: Math.round(leaveScore)
+        });
+      } catch (error) {
+        console.error('Error fetching leave data:', error);
+        dataPoints.push({
+          date: dateStr,
+          attendance: Math.round(attendanceRate),
+          performance: Math.round(avgProgress),
+          activity: Math.round(activityScore),
+          leaves: 0
+        });
+      }
     }
     
     setData(dataPoints);

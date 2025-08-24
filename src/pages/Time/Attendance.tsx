@@ -16,13 +16,6 @@ const Attendance = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
-  // Mock stats data
-  const mockStats = {
-    present: 45,
-    absent: 5,
-    late: 8,
-    total: 58
-  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
